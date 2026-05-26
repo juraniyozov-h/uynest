@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Admin check: looks up the user's role in Firestore users collection.
+    // Works for Google/email-authenticated users who have role:'admin' stored.
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(res) {
+      return isSignedIn() && request.auth.uid == res.data.ownerId;
+    }
+
+    // ── Users ───────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth.uid == userId || isAdmin();
+    }
+
+    // ── Approved listings (public read, owner/admin write) ──────
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      // Owner can update their own listing (premium, views, etc.)
+      // Admin can update/delete any listing
+      allow update: if isOwner(resource) || isAdmin();
+      allow delete: if isOwner(resource) || isAdmin();
+    }
+
+    // ── Pending listings (admin only) ───────────────────────────
+    match /pending_listings/{listingId} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && request.auth.uid == resource.data.ownerId);
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || isOwner(resource);
+    }
+
+    // ── Chat messages (any signed-in user) ──────────────────────
+    match /messages/{msgId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // ── Reviews ─────────────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ── House-finding requests ───────────────────────────────────
+    match /requests/{reqId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Viewing requests ─────────────────────────────────────────
+    match /viewing_requests/{reqId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.requesterId ||
+        request.auth.uid == resource.data.listingOwnerId ||
+        isAdmin()
+      );
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || request.auth.uid == resource.data.listingOwnerId;
+      allow delete: if isAdmin();
+    }
+
+    // ── Reports / complaints ─────────────────────────────────────
+    match /reports/{reportId} {
+      allow create: if isSignedIn();
+      allow read, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Saved searches ───────────────────────────────────────────
+    match /saved_searches/{searchId} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isSignedIn() &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // ── Telegram link codes ──────────────────────────────────────
+    match /telegram_codes/{userId} {
+      allow read, write: if request.auth.uid == userId || isAdmin();
+    }
+
+    // ── Tokens (server-side only for writes) ────────────────────
+    match /tokens/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow write: if false; // only Admin SDK (Vercel backend) writes tokens
+    }
+
+    // ── Statistics / analytics ───────────────────────────────────
+    match /district_stats/{district} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /analytics/{doc=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
