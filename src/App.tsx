@@ -196,7 +196,7 @@ function Navbar(){
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[68px] gap-4">
           <button onClick={()=>nav('home')} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 tracking-tight shrink-0 active:scale-95 transition-transform">
-            <img src="/logo.svg" alt="UyNest" className="h-9 w-auto"/>
+            <img src="/logo.svg" alt="UyNest" className="h-9 w-auto"/>UY<span className="text-emerald-500">NEST</span>
           </button>
           <div className="hidden md:flex gap-0.5 bg-gray-50/80 rounded-2xl p-1">
             {links.map(l=>(
@@ -258,7 +258,7 @@ function Footer(){
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <button onClick={()=>nav('home')} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 mb-3"><img src="/logo.svg" alt="UyNest" className="h-8 w-auto"/></button>
+            <button onClick={()=>nav('home')} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 mb-3"><img src="/logo.svg" alt="UyNest" className="h-8 w-auto"/>UY<span className="text-emerald-500">NEST</span></button>
             <p className="text-gray-500 text-sm leading-relaxed">Toshkentdagi talabalar va ijarachilar uchun ishonchli uy-joy platformasi.</p>
           </div>
           <div><h5 className="font-bold text-xs uppercase tracking-widest text-gray-700 mb-4">Sahifalar</h5>{[['home','Bosh sahifa'],['rent','Ijara uylar'],['sale','Sotuvdagi uylar'],['map','Xarita']].map(([p,l])=><button key={p} onClick={()=>nav(p)} className="block text-sm text-gray-500 mb-2 hover:text-emerald-700 transition active:translate-x-1">{l}</button>)}</div>
@@ -1506,7 +1506,7 @@ function AuthPage(){
   const uc=AuthAPI.getUsers().length;
   return(<div className="min-h-[calc(100vh-68px)] flex items-center justify-center p-5 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 relative overflow-hidden"><div className="absolute -top-32 -right-32 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"/><div className="absolute -bottom-32 -left-32 w-80 h-80 bg-emerald-300/10 rounded-full blur-3xl"/>
     <div className="bg-white rounded-3xl p-8 md:p-10 w-full max-w-md shadow-2xl relative z-10 border border-gray-100">
-      <button onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 mx-auto mb-6 justify-center"><img src="/logo.svg" alt="UyNest" className="h-9 w-auto"/></button>
+      <button onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 mx-auto mb-6 justify-center"><img src="/logo.svg" alt="UyNest" className="h-9 w-auto"/>UY<span className="text-emerald-500">NEST</span></button>
       <div className="flex bg-emerald-50 p-1 rounded-xl mb-6 gap-1">
         {['login','register'].map(t => (
           <button key={t} onClick={() => { dispatch({type:'AUTH_TAB', payload:t}); setErr(''); }} className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition ${tab===t ? 'bg-white text-emerald-800 shadow-sm' : 'text-gray-500'}`}>
@@ -1544,7 +1544,7 @@ function AdminPage(){
   const links=[{id:'overview',icon:'ri-dashboard-3-line',l:'Overview'},{id:'listings',icon:'ri-list-check-2',l:"E'lonlar",c:state.approved.length},{id:'pending',icon:'ri-time-line',l:'Tekshiruv',c:state.pending.length,clr:'bg-amber-400'},{id:'verifications',icon:'ri-verified-badge-line',l:'Tasdiqlash',c:state.approved.filter(p=>!p.verified).length,clr:'bg-emerald-500'},{id:'premium',icon:'ri-vip-crown-line',l:'Premium',c:state.approved.filter(p=>p.isPremium).length,clr:'bg-amber-500'},{id:'requests',icon:'ri-mail-line',l:"So'rovlar",c:state.requests.length,clr:'bg-blue-500'},{id:'reviews',icon:'ri-star-line',l:'Sharhlar',c:state.reviews.length,clr:'bg-amber-500'},{id:'complaints',icon:'ri-flag-line',l:'Shikoyatlar',c:u?ChatAPI.unreadComplaints(u.id):0,clr:'bg-red-500'},{id:'reports',icon:'ri-alert-line',l:"Xabarlar",clr:'bg-red-400'},{id:'chat',icon:'ri-chat-3-line',l:'Xabarlar',c:ChatAPI.unreadCount(u!.id),clr:'bg-red-500'},{id:'users',icon:'ri-group-line',l:'Foydalanuvchilar'},{id:'settings',icon:'ri-settings-3-line',l:'Sozlamalar'}];
   return(<div className="flex min-h-[calc(100vh-68px)] bg-emerald-50">
     <aside className="w-60 shrink-0 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border-r border-emerald-100 flex-col p-4 hidden md:flex">
-      <button onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="flex items-center gap-2 font-extrabold text-emerald-800 mb-4 px-2 active:scale-95 transition-transform"><img src="/logo.svg" alt="UyNest" className="h-8 w-auto"/></button>
+      <button onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="flex items-center gap-2 font-extrabold text-emerald-800 mb-4 px-2 active:scale-95 transition-transform"><img src="/logo.svg" alt="UyNest" className="h-8 w-auto"/>UY<span className="text-emerald-500">NEST</span></button>
       <div className="flex items-center gap-2.5 px-2 mb-4 pb-4 border-b border-emerald-200/60"><div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow">{u?.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover rounded-full"/>:initials('Admin')}</div><div className="min-w-0"><div className="font-bold text-sm truncate text-gray-800">Admin</div><div className="text-[10px] text-emerald-600 font-semibold">Admin</div></div></div>
       <nav className="flex flex-col gap-1 flex-1">{links.map(l=>{
         const count = l.id === 'reviews' ? state.reviews.filter(r => !r.read).length : l.c;
