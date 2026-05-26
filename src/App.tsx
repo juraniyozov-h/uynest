@@ -3003,8 +3003,7 @@ async function callGroq(systemPrompt:string, userMsg:string, history:{role:strin
   return data.choices?.[0]?.message?.content||'';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const AI_TOOLS = [{
+const _AI_TOOLS = [{
   functionDeclarations:[
     {
       name:'search_listings',
