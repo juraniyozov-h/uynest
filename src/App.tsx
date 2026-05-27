@@ -603,12 +603,18 @@ function MapPage(){
     if(_geoWatchId===null){
       _geoWatchId=navigator.geolocation.watchPosition(
         pos=>{
-          const p:[number,number]=[pos.coords.latitude,pos.coords.longitude];
+          const la=pos.coords.latitude,lo=pos.coords.longitude;
+          // Validate within Uzbekistan bounds (±3° buffer) to reject stale/wrong-country positions
+          if(la<34||la>48||lo<53||lo>76){
+            toast('GPS noto\'g\'ri joylashuv qaytardi, qaytadan urining','warn');
+            return;
+          }
+          const p:[number,number]=[la,lo];
           _cachedPos=p;
           _posListeners.forEach(fn=>fn(p));
         },
         ()=>{toast('Joylashuvni aniqlashda xatolik','warn');},
-        {enableHighAccuracy:false,timeout:15000,maximumAge:60000}
+        {enableHighAccuracy:true,timeout:15000,maximumAge:10000}
       );
     }
   };
@@ -1473,12 +1479,14 @@ function SubmitPage(){
     setGpsLocked(false);
     navigator.geolocation.getCurrentPosition(
       pos=>{
-        setLat(pos.coords.latitude);
-        setLng(pos.coords.longitude);
+        const la=pos.coords.latitude,lo=pos.coords.longitude;
+        if(la<34||la>48||lo<53||lo>76){
+          setLocationMsg("GPS noto'g'ri joy qaytardi (boshqa davlat). Qaytadan urining.");
+          setGpsLocked(false);return;
+        }
+        setLat(la);setLng(lo);
         setGpsAccuracy(Math.round(pos.coords.accuracy));
-        setGpsLocked(true);
-        setMapKey(k=>k+1);
-        setLocationMsg('');
+        setGpsLocked(true);setMapKey(k=>k+1);setLocationMsg('');
       },
       ()=>{
         setLocationMsg("Joylashuvni aniqlash muvaffaqiyatsiz. GPS ruxsatini tekshiring.");
@@ -3474,13 +3482,25 @@ function AiChatModal({onClose}:{onClose:()=>void}){
             fd.append('model','whisper-large-v3');
             fd.append('language','uz');
             fd.append('response_format','text');
+            // Vocabulary hint — tells Whisper to expect these words, greatly improves accuracy
+            fd.append('prompt',"Termiz, Toshkent, Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Chirchiq, Yunusobod, Chilonzor, Olmazor, Mirobod, ijara, sotuv, kvartira, xonadon, xona, narx, dollar, arzon, qimmat");
             const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{
               method:'POST',
               headers:{'Authorization':'Bearer '+GROQ_KEY},
               body:fd
             });
             if(!r.ok)throw new Error('Whisper '+r.status);
-            const t=(await r.text()).trim();
+            // Correct common Whisper misrecognitions of Uzbek city names
+            const VOICE_FIX:Record<string,string>={
+              'hermes':'termiz','hermès':'termiz','termas':'termiz','ermas':'termiz',
+              'термез':'termiz','термес':'termiz',
+              'хошкент':'toshkent','ташкент':'toshkent','хашкент':'toshkent',
+              'самарканд':'samarqand','самаркан':'samarqand',
+              'бухара':'buxoro','наманган':'namangan','андижан':'andijon',
+            };
+            let t=(await r.text()).trim();
+            const tLow=t.toLowerCase();
+            for(const[wrong,right]of Object.entries(VOICE_FIX)){if(tLow.includes(wrong))t=tLow.replace(new RegExp(wrong,'gi'),right);}
             if(t){
               setInput(t);
               setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},200);
