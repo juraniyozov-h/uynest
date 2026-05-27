@@ -188,7 +188,7 @@ function Navbar(){
     dispatch({type:'NAV',payload:p});window.scrollTo({top:0,behavior:'smooth'});
   };
 
-  const logout=async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();dispatch({type:'LOGOUT'});toast('Chiqildi');nav('home');};
+  const logout=async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();CompareAPI.clear();dispatch({type:'LOGOUT'});toast('Chiqildi');nav('home');};
 
   const links=[{id:'home',label:'Bosh sahifa',icon:'ri-home-4-line'},{id:'rent',label:'Ijara',icon:'ri-key-2-line'},{id:'sale',label:'Sotuv',icon:'ri-shopping-bag-3-line'},{id:'saved',label:'Sevimlilar',icon:'ri-heart-line'},{id:'map',label:'Xarita',icon:'ri-map-2-line'},{id:'chat',label:'Xabarlar',icon:'ri-chat-3-line'},{id:'submit',label:'E\'lon berish',icon:'ri-add-circle-line'}];
 
@@ -201,8 +201,8 @@ function Navbar(){
           </button>
           <div className="hidden md:flex gap-0.5 bg-gray-50/80 rounded-2xl p-1">
             {links.map(l=>(
-              <button key={l.id} onClick={()=>nav(l.id)} className={`relative px-4 py-2 rounded-xl text-[13px] font-medium transition-all active:scale-95 ${state.page===l.id?'bg-white text-emerald-800 shadow-sm font-semibold':'text-gray-500 hover:text-emerald-700 hover:bg-white/50'}`}>
-                <i className={`${l.icon} mr-1.5`}/>{l.label}
+              <button key={l.id} onClick={()=>nav(l.id)} title={l.label} className={`relative px-3 lg:px-4 py-2 rounded-xl text-[13px] font-medium transition-all active:scale-95 flex items-center gap-1.5 ${state.page===l.id?'bg-white text-emerald-800 shadow-sm font-semibold':'text-gray-500 hover:text-emerald-700 hover:bg-white/50'}`}>
+                <i className={`${l.icon} text-base`}/><span className="hidden lg:inline">{l.label}</span>
                 {l.id==='chat'&&unread>0&&<span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">{unread}</span>}
               </button>
             ))}
@@ -2287,6 +2287,60 @@ function ComparePage(){
   </div>);
 }
 
+// ─── SECURITY TAB ───────────────────────────────────────────
+function SecurityTab({u}:{u:User}){
+  const{dispatch}=useApp();
+  const[confirm,setConfirm]=useState(false);
+  const[deleting,setDeleting]=useState(false);
+  const handleDelete=async()=>{
+    setDeleting(true);
+    try{
+      const{deleteUser}=await import('firebase/auth');
+      const fbUser=auth.currentUser;
+      if(fbUser){await deleteUser(fbUser);}
+      CompareAPI.clear();
+      dispatch({type:'LOGOUT'});
+      toast('Hisob o\'chirildi');
+    }catch(e:any){
+      if(e?.code==='auth/requires-recent-login'){
+        toast('Xavfsizlik uchun qayta login qiling, keyin o\'chiring','error');
+      } else {
+        toast('Xatolik yuz berdi. Adminiga murojaat qiling','error');
+      }
+    }
+    setDeleting(false);setConfirm(false);
+  };
+  return(
+    <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <h3 className="font-bold text-lg mb-5">Xavfsizlik</h3>
+      <div className="p-5 bg-red-50 border border-red-100 rounded-2xl">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0"><i className="ri-delete-bin-6-line text-red-600 text-xl"/></div>
+          <div>
+            <div className="font-bold text-red-700 mb-1">Hisobni o'chirish</div>
+            <p className="text-xs text-red-500 leading-relaxed">Bu amal qaytarib bo'lmaydi. Barcha e'lonlar, xabarlar va ma'lumotlar butunlay o'chib ketadi.</p>
+          </div>
+        </div>
+        {!confirm?(
+          <button onClick={()=>setConfirm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl active:scale-95 transition shadow">
+            <i className="ri-delete-bin-6-line"/>Hisobni o'chirish
+          </button>
+        ):(
+          <div className="bg-white border border-red-200 rounded-xl p-4">
+            <p className="text-sm font-semibold text-red-700 mb-3">Rostdan ham <b>{u.name||u.email}</b> hisobini o'chirmoqchimisiz?</p>
+            <div className="flex gap-3">
+              <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl disabled:opacity-60 active:scale-95 transition">
+                {deleting?<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>O'chirilmoqda...</>:<><i className="ri-check-line"/>Ha, o'chirish</>}
+              </button>
+              <button onClick={()=>setConfirm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 active:scale-95 transition">Bekor qilish</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── FULL PROFILE PAGE (Module 9) ───────────────────────────
 function FullProfilePage(){
   const{state,dispatch}=useApp();
@@ -2511,7 +2565,7 @@ function FullProfilePage(){
         {tab==='saved'&&(<div>{savedItems.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-heart-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Sevimlilarga hech narsa qo'shilmagan</p></div>:<div className="grid sm:grid-cols-2 gap-4">{savedItems.map(p=><Card key={p.id} p={p}/>)}</div>}</div>)}
 
         {/* ── SECURITY ── */}
-        {tab==='security'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Xavfsizlik</h3><div className="space-y-4"><div className="p-4 bg-gray-50 rounded-xl"><div className="font-semibold text-sm mb-1">Parol o'zgartirish</div><p className="text-xs text-gray-500 mb-3">Yangi parol kamida 6 belgidan iborat bo'lishi kerak</p><button onClick={()=>toast('Ushbu funksiya tez kunda qo\'shiladi','warn')} className="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-xl active:scale-95 transition">Parolni o'zgartirish</button></div><div className="p-4 bg-red-50 border border-red-100 rounded-xl"><div className="font-semibold text-sm text-red-700 mb-1">Hisobni o'chirish</div><p className="text-xs text-red-500 mb-3">Bu amal qaytarib bo'lmaydi. Barcha ma'lumotlar o'chib ketadi.</p><button onClick={()=>toast('Hisob o\'chirishni tasdiqlash uchun adminiga murojaat qiling','warn')} className="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-xl active:scale-95 transition">Hisobni o'chirish</button></div></div></div>)}
+        {tab==='security'&&<SecurityTab u={u}/>}
       </div>
     </div>
   </div>);
@@ -3675,8 +3729,8 @@ export default function App(){
   return(
     <AppCtx.Provider value={{state,dispatch}}>
       <div id="tw" style={{position:'fixed',top:18,right:18,zIndex:500,display:'flex',flexDirection:'column',gap:9,pointerEvents:'none'}}/>
-      {/* AI Chat floating button */}
-      {!showAiChat&&(
+      {/* AI Chat floating button — hidden on map page (has its own AI panel) */}
+      {!showAiChat&&state.page!=='map'&&(
         <button onClick={()=>setShowAiChat(true)} className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[350] w-14 h-14 md:w-16 md:h-16 rounded-2xl shadow-2xl shadow-emerald-500/40 overflow-hidden hover:scale-110 active:scale-95 transition-transform border-2 border-emerald-400" title="AI Maslahatchi">
           <img src="/ai-robot.png" alt="AI Maslahatchi" className="w-full h-full object-cover"/>
         </button>
