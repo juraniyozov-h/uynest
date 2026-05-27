@@ -208,6 +208,8 @@ function Navbar(){
             ))}
           </div>
           <div className="flex items-center gap-2 md:gap-3 relative">
+            {/* E'lon qo'shish — always visible on mobile in the header */}
+            <button onClick={()=>nav('submit')} className="md:hidden flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow active:scale-95 transition shrink-0"><i className="ri-add-line text-sm"/>E'lon</button>
             {state.auth&&u?(
               <div className="relative">
                 <button onClick={()=>setUm(!um)} className="flex items-center gap-2 pl-1.5 pr-2 md:pr-3 py-1 bg-white border border-gray-200 rounded-full hover:border-emerald-300 transition shadow-sm active:scale-95">
@@ -1432,6 +1434,8 @@ function SubmitPage(){
   const[lng,setLng]=useState<number>(69.2401);
   const[mapKey,setMapKey]=useState(0);
   const[locationMsg,setLocationMsg]=useState<string>('');
+  const[gpsLocked,setGpsLocked]=useState(false);
+  const[gpsAccuracy,setGpsAccuracy]=useState<number|null>(null);
   const[loading,setLoading]=useState(false);
   const[selectedRegion,setSelectedRegion]=useState('Toshkent shahri');
   const[selectedPropType,setSelectedPropType]=useState('Kvartira');
@@ -1452,51 +1456,45 @@ function SubmitPage(){
   const removeImg=(i:number)=>setFileObjects(prev=>prev.filter((_,idx)=>idx!==i));
 
   const handleRegionChange=(e:React.ChangeEvent<HTMLSelectElement>)=>{
-    const region=e.target.value;
-    setSelectedRegion(region);
-    // Move map to region center
-    const regionCenters:Record<string,{lat:number;lng:number}>={
-      "Toshkent shahri":{lat:41.2995,lng:69.2401},"Toshkent viloyati":{lat:41.1800,lng:69.8000},
-      "Andijon viloyati":{lat:40.7821,lng:72.3442},"Farg'ona viloyati":{lat:40.3842,lng:71.7843},
-      "Namangan viloyati":{lat:41.0011,lng:71.6725},"Samarqand viloyati":{lat:39.6542,lng:66.9597},
-      "Buxoro viloyati":{lat:39.7747,lng:64.4286},"Navoiy viloyati":{lat:40.0840,lng:65.3791},
-      "Qashqadaryo viloyati":{lat:38.8600,lng:65.7900},"Surxondaryo viloyati":{lat:37.2244,lng:67.2783},
-      "Sirdaryo viloyati":{lat:40.4897,lng:68.7750},"Jizzax viloyati":{lat:40.1219,lng:67.8428},
-      "Xorazm viloyati":{lat:41.5500,lng:60.6333},"Qoraqalpog'iston":{lat:42.4600,lng:59.6200},
-    };
-    const c=regionCenters[region]||{lat:41.2995,lng:69.2401};
-    setLat(c.lat);setLng(c.lng);setMapKey(k=>k+1);
+    setSelectedRegion(e.target.value);
+    // GPS is the authoritative coordinate source — do not override lat/lng from dropdown
   };
 
-  const handleDistrictChange=(e:React.ChangeEvent<HTMLSelectElement>)=>{
-    const district=e.target.value;
-    const coords=DISTRICT_COORDS[district]||{lat:41.2995,lng:69.2401};
-    setLat(coords.lat);setLng(coords.lng);setMapKey(k=>k+1);
+  const handleDistrictChange=(_e:React.ChangeEvent<HTMLSelectElement>)=>{
+    // GPS is the authoritative coordinate source — do not override lat/lng from dropdown
   };
 
   const detectLocation=()=>{
     if(!navigator.geolocation){
-      setLocationMsg('Brauzeringiz geolokatsiyani qoʻllab-quvvatlamaydi.');
+      setLocationMsg("Brauzeringiz geolokatsiyani qo'llab-quvvatlamaydi.");
       return;
     }
     setLocationMsg('Joylashuv aniqlanmoqda...');
+    setGpsLocked(false);
     navigator.geolocation.getCurrentPosition(
       pos=>{
         setLat(pos.coords.latitude);
         setLng(pos.coords.longitude);
+        setGpsAccuracy(Math.round(pos.coords.accuracy));
+        setGpsLocked(true);
         setMapKey(k=>k+1);
-        setLocationMsg('Joylashuv topildi.');
+        setLocationMsg('');
       },
       ()=>{
-        setLocationMsg('Joylashuvni aniqlashda xato yuz berdi.');
+        setLocationMsg("Joylashuvni aniqlash muvaffaqiyatsiz. GPS ruxsatini tekshiring.");
+        setGpsLocked(false);
       },
-      {enableHighAccuracy:true,timeout:10000}
+      {enableHighAccuracy:true,timeout:15000}
     );
   };
+
+  // Auto-detect GPS on page load
+  useEffect(()=>{detectLocation();},[]);
 
   const submit=async(e:React.FormEvent<HTMLFormElement>)=>{
     e.preventDefault();const fd=new FormData(e.currentTarget);
     if(fileObjects.length===0){toast('Kamida bitta rasm yuklang','error');return;}
+    if(!gpsLocked){toast("Joylashuvni aniqlash shart. GPS tugmasini bosing.",'error');return;}
     setLoading(true);
     try{
       const listingPhone = state.currentUser?.phone || '';
@@ -1608,16 +1606,28 @@ function SubmitPage(){
             <i className="ri-upload-cloud-2-line text-4xl text-emerald-400 block mb-2"/><div className="font-semibold text-gray-700 text-sm">Rasmlarni tanlang yoki shu yerga tashlang</div><div className="text-xs text-gray-400 mt-1">JPG, PNG — maks 5MB • 10 tagacha</div>
           </div>
         </div>
-        {/* MAP */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-map-pin-line text-emerald-600"/>Xarita</h3>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <p className="text-sm text-gray-600">Marker'ni suring yoki xaritada joylang: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{lat.toFixed(4)}, {lng.toFixed(4)}</code></p>
-            <button type="button" onClick={detectLocation} className="inline-flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 px-4 py-2 text-sm font-semibold hover:bg-emerald-100 transition">Joylashuvni aniqlash</button>
-          </div>
-          {locationMsg && <div className="text-sm text-emerald-700 mb-3">{locationMsg}</div>}
-          <MapContainer key={mapKey} center={[lat,lng]} zoom={13} className="h-64 rounded-xl border border-gray-200">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-            <Marker position={[lat,lng]} draggable={true} eventHandlers={{dragend:(e:any)=>{const p=e.target.getLatLng();setLat(p.lat);setLng(p.lng);}}} />
+        {/* MAP — GPS locked, no manual override */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-map-pin-line text-emerald-600"/>Joylashuv</h3>
+          <p className="text-xs text-gray-500 mb-4 flex items-start gap-1.5"><i className="ri-information-line text-blue-500 text-base shrink-0 mt-0.5"/>Joylashuv faqat GPS orqali aniqlanadi. Soxta e'lonlarning oldini olish uchun qo'lda o'zgartirib bo'lmaydi.</p>
+          {locationMsg&&<div className={`flex items-center gap-2 text-sm mb-3 px-3 py-2 rounded-xl ${gpsLocked?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}`}><i className={gpsLocked?'ri-map-pin-2-fill':'ri-loader-4-line animate-spin'}/>{locationMsg||'Aniqlanmoqda...'}</div>}
+          {gpsLocked?(
+            <div className="flex items-center gap-3 mb-3 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <i className="ri-lock-2-fill text-emerald-600 text-xl shrink-0"/>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-sm text-emerald-800">GPS qulflandi</div>
+                <div className="text-xs text-emerald-600">{lat.toFixed(5)}, {lng.toFixed(5)}{gpsAccuracy!=null&&` • ±${gpsAccuracy}m`}</div>
+              </div>
+              <button type="button" onClick={detectLocation} className="shrink-0 text-xs text-emerald-600 font-semibold underline">Yangilash</button>
+            </div>
+          ):(
+            <button type="button" onClick={detectLocation} className="w-full mb-3 flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow active:scale-95 transition">
+              <i className="ri-focus-3-line text-lg"/>GPS joylashuvni aniqlash
+            </button>
+          )}
+          <MapContainer key={mapKey} center={[lat,lng]} zoom={17} className="h-56 rounded-xl border border-gray-200">
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap'/>
+            <Marker position={[lat,lng]}/>
           </MapContainer>
         </div>
         {/* CONTACT */}
