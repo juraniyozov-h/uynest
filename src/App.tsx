@@ -54,6 +54,7 @@ function reducer(s:AppState,a:Action):AppState{
     case'SET_REVIEWS':return{...s,reviews:a.payload};
     case'SET_LOADING':return{...s,loading:a.payload};
     case'TOGGLE_FAVORITE':return{...s,favorites:s.favorites.includes(a.payload)?s.favorites.filter(x=>x!==a.payload):[...s.favorites,a.payload]};
+    case'UPDATE_USER':return{...s,currentUser:s.currentUser?{...s.currentUser,...a.payload}:s.currentUser};
     default:return s;
   }
 }
@@ -274,7 +275,7 @@ function Footer(){
 // ─── Modals ─────────────────────────────────────────────────
 function ContactModal(){const{state,dispatch}=useApp();if(!state.contactModal)return null;return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={()=>dispatch({type:'CONTACT',payload:false})}><div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'CONTACT',payload:false})} className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button><div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-emerald-500/30"><i className="ri-customer-service-2-fill"/></div><h3 className="text-xl font-extrabold text-center mb-1">Biz bilan bog'lanish</h3><p className="text-gray-500 text-sm text-center mb-5">Tezkor javob uchun quyidagi kanallardan foydalaning</p><a href="tel:+998996767742" className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl mb-3 hover:bg-emerald-100 transition"><span className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white text-lg"><i className="ri-phone-fill"/></span><div><div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Telefon</div><div className="font-bold text-gray-900">+998 99 676 77 42</div></div></a><a href="https://t.me/jrnyzv" target="_blank" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition"><span className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center text-white text-lg"><i className="ri-telegram-fill"/></span><div><div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Telegram</div><div className="font-bold text-gray-900">@jrnyzv</div></div></a></div></div>);}
 function AuthReqModal(){const{state,dispatch}=useApp();if(!state.authRequiredModal)return null;const go=(t:string)=>{dispatch({type:'AUTH_REQ',payload:{open:false}});dispatch({type:'AUTH_TAB',payload:t});dispatch({type:'NAV',payload:'auth'});};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={()=>dispatch({type:'AUTH_REQ',payload:{open:false}})}><div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'AUTH_REQ',payload:{open:false}})} className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-300 text-white flex items-center justify-center text-3xl mx-auto mb-4"><i className="ri-shield-user-line"/></div><h3 className="text-xl font-extrabold text-center mb-1">Avval ro'yxatdan o'ting</h3><p className="text-gray-500 text-sm text-center mb-5">{state.authReqAction||'Bu amal'} uchun tizimga kiring.</p><button onClick={()=>go('register')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl mb-3 shadow"><i className="ri-user-add-line"/>Ro'yxatdan o'tish</button><button onClick={()=>go('login')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:border-emerald-300 transition"><i className="ri-login-circle-line"/>Kirish</button></div></div>);}
-function GoogleModal(){const{state,dispatch}=useApp();if(!state.googleDemoModal)return null;const submit=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();dispatch({type:'GOOGLE_MODAL',payload:false});const r=await AuthAPI.googleSignIn();if(r.ok){dispatch({type:'LOGIN',payload:{user:r.user,token:r.token}});toast(`Xush kelibsiz, ${r.user.name}! 👋`);const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});dispatch({type:'NAV',payload:r.user.role==='admin'?'admin':(nx||'home')});}else toast(r.error||'Xato','error');};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})} className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="flex items-center gap-3 mb-5"><svg width="28" height="28" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.3-11.3-8L6.2 33C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C41.3 36 44 30.5 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg><div><div className="font-bold">Google bilan kirish</div><div className="text-xs text-gray-400">Tez va xavfsiz</div></div></div><form onSubmit={submit} className="space-y-3"><button type="submit" className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition">Google bilan davom etish</button></form></div></div>);}
+function GoogleModal(){const{state,dispatch}=useApp();if(!state.googleDemoModal)return null;const submit=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();dispatch({type:'GOOGLE_MODAL',payload:false});_authInProgress=true;const r=await AuthAPI.googleSignIn();_authInProgress=false;if(r.ok){dispatch({type:'LOGIN',payload:{user:r.user,token:r.token}});toast(`Xush kelibsiz, ${r.user.name}! 👋`);const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});dispatch({type:'NAV',payload:r.user.role==='admin'?'admin':(nx||'home')});}else toast(r.error||'Xato','error');};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})} className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="flex items-center gap-3 mb-5"><svg width="28" height="28" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.3-11.3-8L6.2 33C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C41.3 36 44 30.5 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg><div><div className="font-bold">Google bilan kirish</div><div className="text-xs text-gray-400">Tez va xavfsiz</div></div></div><form onSubmit={submit} className="space-y-3"><button type="submit" className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition">Google bilan davom etish</button></form></div></div>);}
 
 // ─── HOME ───────────────────────────────────────────────────
 function HomePage(){
@@ -532,7 +533,29 @@ function MapPage(){
   const[filterType,setFilterType]=useState('');
   const[highlightIds,setHighlightIds]=useState<number[]>([]);
   const[aiMode,setAiMode]=useState(true);
+  const[userPos,setUserPos]=useState<[number,number]|null>(null);
   const filtered=allItems.filter(p=>!filterType||p.type===filterType);
+
+  // Live location watch
+  useEffect(()=>{
+    if(!navigator.geolocation) return;
+    const wid=navigator.geolocation.watchPosition(
+      pos=>{setUserPos([pos.coords.latitude,pos.coords.longitude]);},
+      ()=>{},
+      {enableHighAccuracy:true,timeout:15000}
+    );
+    return()=>navigator.geolocation.clearWatch(wid);
+  },[]);
+
+  const meIcon=L.divIcon({
+    html:`<div style="background:#2563eb;color:#fff;border:3px solid #fff;border-radius:20px;padding:3px 10px 5px;text-align:center;font-family:Inter,-apple-system,sans-serif;box-shadow:0 2px 10px rgba(37,99,235,.5);min-width:42px;position:relative">
+      <div style="font-size:9px;font-weight:700;opacity:.85;letter-spacing:.3px;line-height:1.3">📍</div>
+      <div style="font-size:12px;font-weight:800;line-height:1.2">Men</div>
+      <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #2563eb"></div>
+    </div>`,
+    className:'',
+    iconAnchor:[27,46],
+  });
 
   // ── District average prices for color coding ──
   const districtAvgMap=React.useMemo(()=>{
@@ -596,11 +619,22 @@ function MapPage(){
             </div>
           ))}
         </div>
+        {/* "My location" button */}
+        {userPos&&(
+          <button onClick={()=>{setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}} className="absolute bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
+            <i className="ri-focus-3-line text-xl"/>
+          </button>
+        )}
         <MapContainer key={mapKey} center={mapCenter} zoom={mapZoom} className="w-full h-full z-0" scrollWheelZoom>
           <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
           {filtered.map(p=>(
             <Marker key={p.id} position={[p.lat!,p.lng!]} icon={makeIcon(p)} eventHandlers={{click:()=>selectListing(p)}}/>
           ))}
+          {userPos&&(
+            <Marker position={userPos} icon={meIcon}>
+              <Popup><b>📍 Mening joylashuvim</b></Popup>
+            </Marker>
+          )}
         </MapContainer>
 
         {/* ── Floating listing detail card ── */}
@@ -1035,6 +1069,7 @@ function RequestPage(){
   const[selRegion,setSelRegion]=useState('Toshkent shahri');
   const[selAmens,setSelAmens]=useState<string[]>([]);
   const[listingType,setListingType]=useState<'ijara'|'sotuv'>('ijara');
+  const[showPhoneConnect,setShowPhoneConnect]=useState(false);
 
   if(!state.auth){
     return(
@@ -1064,11 +1099,13 @@ function RequestPage(){
 
   const hs=async(e:React.FormEvent<HTMLFormElement>)=>{
     e.preventDefault();
+    const userPhone=state.currentUser?.phone||'';
+    if(!userPhone){setShowPhoneConnect(true);return;}
     const fd=new FormData(e.currentTarget);
     const req:AppRequest={
       id:Date.now(),
-      name:fd.get('name') as string,
-      phone:fd.get('phone') as string,
+      name:state.currentUser?.name||(fd.get('name') as string)||'',
+      phone:userPhone,
       region:selRegion,
       district:fd.get('district') as string,
       listingType,
@@ -1242,7 +1279,9 @@ function RequestPage(){
             </div>
             <div>
               <label className="text-sm font-semibold mb-1.5 block">Telefon raqam *</label>
-              <input name="phone" defaultValue={state.currentUser?.phone||''} placeholder="+998 90 123 45 67" required className={ic}/>
+              {state.currentUser?.phone
+                ?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{state.currentUser.phone}</div>
+                :<button type="button" onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqamni ulang</button>}
             </div>
           </div>
           <div>
@@ -1267,6 +1306,7 @@ function RequestPage(){
       </form>
 
       {showPayment&&<PaymentModal purpose="find_house" onSuccess={submitAfterPayment} onClose={()=>setShowPayment(false)}/>}
+      {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={()=>setShowPhoneConnect(false)}/>}
     </div>
   );
 }
@@ -1290,6 +1330,7 @@ function SubmitPage(){
   const[selectedPropType,setSelectedPropType]=useState('Kvartira');
   const[submitRooms,setSubmitRooms]=useState(2);
   const[submitArea,setSubmitArea]=useState(65);
+  const[showPhoneConnect,setShowPhoneConnect]=useState(false);
   const showFloors=FLOOR_CATEGORIES.includes(selectedPropType);
   const fileRef=useRef<HTMLInputElement>(null);
   const videoRef=useRef<HTMLInputElement>(null);
@@ -1351,11 +1392,10 @@ function SubmitPage(){
     if(fileObjects.length===0){toast('Kamida bitta rasm yuklang','error');return;}
     setLoading(true);
     try{
+      const listingPhone = state.currentUser?.phone || '';
+      if(!listingPhone){toast('Telefon raqam ulash kerak','warn');setLoading(false);setShowPhoneConnect(true);return;}
       const imageUrls = await uploadImages(fileObjects);
-      const ownerName = state.currentUser?.name || (fd.get('owner') as string) || 'ToshkentOasis';
-      const contactInfo = state.currentUser?.phone || (fd.get('contact') as string) || state.currentUser?.email || '';
-      const listingPhone = (fd.get('phone') as string)||contactInfo;
-      if(!listingPhone){toast('Telefon raqam majburiy','error');setLoading(false);return;}
+      const ownerName = state.currentUser?.name || (fd.get('owner') as string) || 'UyNest';
       const listing:Listing={
         id:Date.now(),
         type:(fd.get('type')as'rent'|'sale')||'rent',
@@ -1375,7 +1415,7 @@ function SubmitPage(){
         images:imageUrls,
         badge:'new',
         owner:ownerName,
-        contact:contactInfo,
+        contact:listingPhone,
         phone:listingPhone,
         ownerId:state.currentUser?.id,
         telegram:fd.get('telegram')as string||undefined,
@@ -1405,7 +1445,7 @@ function SubmitPage(){
         <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-file-list-3-line text-emerald-600"/>Asosiy ma'lumotlar</h3>
           <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">E'lon turi</label><select name="type" required className={ic}><option value="rent">Ijaraga</option><option value="sale">Sotish</option></select></div><div><label className="text-sm font-semibold mb-1.5 block">Mulk turi *</label><select name="propType" required className={ic} value={selectedPropType} onChange={e=>setSelectedPropType(e.target.value)}>{PROPERTY_CATEGORIES.map((c:string)=><option key={c}>{c}</option>)}</select></div></div>
           <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Narxi (USD)</label><input name="price" type="number" placeholder="500" required className={ic}/></div><div><label className="text-sm font-semibold mb-1.5 block">Viloyat *</label><select name="region" required className={ic} onChange={handleRegionChange}><option value="">Tanlang...</option>{Object.keys(REGIONS_MAP).map((r:string)=><option key={r}>{r}</option>)}</select></div></div>
-          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Tuman / Shahar *</label><select name="district" required onChange={handleDistrictChange} className={ic}><option value="">Viloyatni tanlang</option>{(REGIONS_MAP[selectedRegion]||[]).map((d:string)=><option key={d}>{d}</option>)}</select></div><div><label className="text-sm font-semibold mb-1.5 block">Telefon raqam *</label><input name="phone" placeholder="+998 90 123 45 67" required defaultValue={state.currentUser?.phone||''} className={ic}/><p className="text-xs text-gray-400 mt-1">Xaridor siz bilan bog'lanadi</p></div></div>
+          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Tuman / Shahar *</label><select name="district" required onChange={handleDistrictChange} className={ic}><option value="">Viloyatni tanlang</option>{(REGIONS_MAP[selectedRegion]||[]).map((d:string)=><option key={d}>{d}</option>)}</select></div><div><label className="text-sm font-semibold mb-1.5 block">Telefon raqam *</label>{state.currentUser?.phone?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{state.currentUser.phone}</div>:<button type="button" onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon ulash</button>}<p className="text-xs text-gray-400 mt-1">Xaridor siz bilan bog'lanadi</p></div></div>
           <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Manzil</label><input name="address" placeholder="Ko'cha, uy raqami" required className={ic}/></div>
           <div><label className="text-sm font-semibold mb-1.5 block">Sarlavha</label><input name="title" placeholder="Masalan: Yunusobod markazida zamonaviy xonadon" required className={ic}/></div>
         </div>
@@ -1481,9 +1521,10 @@ function SubmitPage(){
               <label className="text-sm font-semibold mb-1.5 block">Telegram (ixtiyoriy)</label><input name="telegram" placeholder="@username yoki +998..." className={ic}/>
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold mb-1.5 block">Ismingiz</label><input name="owner" placeholder="To'liq ism" required className={ic}/></div>
-              <div><label className="text-sm font-semibold mb-1.5 block">Telefon</label><input name="contact" placeholder="+998 90..." required className={ic}/></div>
+            <div className="p-4 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-center">
+              <i className="ri-phone-line text-2xl text-amber-500 block mb-2"/>
+              <p className="text-sm font-semibold text-amber-800">E'lon berish uchun tizimga kirib, telefon raqamni ulang</p>
+              <button type="button" onClick={()=>dispatch({type:'NAV',payload:'auth'})} className="mt-3 px-5 py-2 bg-emerald-600 text-white font-bold text-sm rounded-xl active:scale-95 transition">Kirish / Ro'yxatdan o'tish</button>
             </div>
           )}
         </div>
@@ -1492,17 +1533,33 @@ function SubmitPage(){
           <button type="submit" disabled={loading} className="flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 disabled:opacity-50"><i className="ri-send-plane-fill"/>{loading?'Yuborilmoqda...':'E\'lonni yuborish'}</button>
         </div>
       </form>
+      {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={()=>setShowPhoneConnect(false)}/>}
     </div>
   );
 }
 
+// Prevents onAuthStateChanged from racing with explicit login/register handlers
+let _authInProgress = false;
+
 // ─── AUTH PAGE ───────────────────────────────────────────────
 function AuthPage(){
-  const{state,dispatch}=useApp();const[err,setErr]=useState('');const[sp,setSp]=useState(false);const tab=state.authTab||'login';
+  const{state,dispatch}=useApp();const[err,setErr]=useState('');const[sp,setSp]=useState(false);const[loading,setLoading]=useState(false);const tab=state.authTab||'login';
   const ic="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition";
   const afterAuth=(user:User,token:string)=>{dispatch({type:'LOGIN',payload:{user,token}});const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});if(user.role==='admin'){toast('Admin paneliga xush kelibsiz! 👑');dispatch({type:'NAV',payload:'admin'});}else{toast(`Xush kelibsiz, ${user.name}! 👋`);dispatch({type:'NAV',payload:nx||'home'});}window.scrollTo({top:0});};
-  const doLogin=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const fd=new FormData(e.currentTarget);const r=await AuthAPI.login({email:fd.get('email')as string,password:fd.get('password')as string});if(r.ok)afterAuth(r.user,r.token);else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}};
-  const doReg=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();const fd=new FormData(e.currentTarget);const r=await AuthAPI.register({name:fd.get('name')as string,email:fd.get('email')as string,phone:fd.get('phone')as string,password:fd.get('password')as string});if(r.ok){afterAuth(r.user,r.token);toast('Hisob yaratildi 🎉');}else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}};
+  const doLogin=async(e:React.FormEvent<HTMLFormElement>)=>{
+    e.preventDefault();setLoading(true);_authInProgress=true;
+    const fd=new FormData(e.currentTarget);
+    const r=await AuthAPI.login({email:fd.get('email')as string,password:fd.get('password')as string});
+    _authInProgress=false;setLoading(false);
+    if(r.ok)afterAuth(r.user,r.token);else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}
+  };
+  const doReg=async(e:React.FormEvent<HTMLFormElement>)=>{
+    e.preventDefault();setLoading(true);_authInProgress=true;
+    const fd=new FormData(e.currentTarget);
+    const r=await AuthAPI.register({name:fd.get('name')as string,email:fd.get('email')as string,phone:fd.get('phone')as string,password:fd.get('password')as string});
+    _authInProgress=false;setLoading(false);
+    if(r.ok){afterAuth(r.user,r.token);toast('Hisob yaratildi 🎉');}else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}
+  };
   const uc=AuthAPI.getUsers().length;
   return(<div className="min-h-[calc(100vh-68px)] flex items-center justify-center p-5 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 relative overflow-hidden"><div className="absolute -top-32 -right-32 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"/><div className="absolute -bottom-32 -left-32 w-80 h-80 bg-emerald-300/10 rounded-full blur-3xl"/>
     <div className="bg-white rounded-3xl p-8 md:p-10 w-full max-w-md shadow-2xl relative z-10 border border-gray-100">
@@ -1519,15 +1576,14 @@ function AuthPage(){
         <form onSubmit={doLogin} className="space-y-4">
           <div><label className="text-sm font-semibold mb-1.5 block">Email</label><div className="relative"><i className="ri-mail-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type="email" name="email" placeholder="email@example.com" required className={ic}/></div></div>
           <div><label className="text-sm font-semibold mb-1.5 block">Parol</label><div className="relative"><i className="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type={sp?'text':'password'} name="password" placeholder="••••••••" required className={ic}/><button type="button" onClick={()=>setSp(!sp)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-700"><i className={sp?'ri-eye-off-line':'ri-eye-line'}/></button></div></div>
-          <button type="submit" className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95"><i className="ri-login-circle-line"/>Kirish</button>
+          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 disabled:opacity-60">{loading?<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Kirmoqda...</>:<><i className="ri-login-circle-line"/>Kirish</>}</button>
         </form>
       ) : tab==='register' ? (
         <form onSubmit={doReg} className="space-y-4">
           <div><label className="text-sm font-semibold mb-1.5 block">To'liq ism</label><div className="relative"><i className="ri-user-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input name="name" placeholder="Ism Familiya" required className={ic}/></div></div>
           <div><label className="text-sm font-semibold mb-1.5 block">Email</label><div className="relative"><i className="ri-mail-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type="email" name="email" placeholder="email@example.com" required className={ic}/></div></div>
-          <div><label className="text-sm font-semibold mb-1.5 block">Telefon</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input name="phone" placeholder="+998 90..." className={ic}/></div></div>
           <div><label className="text-sm font-semibold mb-1.5 block">Parol</label><div className="relative"><i className="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type={sp?'text':'password'} name="password" placeholder="Kamida 6 belgi" minLength={6} required className={ic}/><button type="button" onClick={()=>setSp(!sp)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i className={sp?'ri-eye-off-line':'ri-eye-line'}/></button></div></div>
-          <button type="submit" className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95"><i className="ri-user-add-line"/>Ro'yxatdan o'tish</button>
+          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95 disabled:opacity-60">{loading?<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Yaratilmoqda...</>:<><i className="ri-user-add-line"/>Ro'yxatdan o'tish</>}</button>
         </form>
       ) : null}
       <div className="flex items-center gap-3 my-5 text-gray-300 text-sm"><div className="flex-1 h-px bg-gray-100"/><span>yoki</span><div className="flex-1 h-px bg-gray-100"/></div>
@@ -1909,6 +1965,59 @@ function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
   </div></div>);
 }
 
+// ─── PHONE CONNECT MODAL ─────────────────────────────────────
+function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phone:string)=>void}){
+  const{state,dispatch}=useApp();
+  const[phone,setPhone]=useState('');
+  const[otp,setOtp]=useState('');
+  const[confirmResult,setConfirmResult]=useState<any>(null);
+  const[loading,setLoading]=useState(false);
+
+  const sendOtp=async()=>{
+    const p=phone.trim();
+    if(!p){toast('Telefon raqam kiriting','error');return;}
+    setLoading(true);
+    const r=await AuthAPI.sendPhoneVerification(p);
+    setLoading(false);
+    if(r.ok){setConfirmResult(r.confirmationResult);toast('SMS kod yuborildi 📱');}
+    else toast(r.error||'SMS yuborishda xato','error');
+  };
+
+  const verify=async()=>{
+    if(!otp.trim()||!confirmResult){toast('Kodni kiriting','error');return;}
+    setLoading(true);
+    try{
+      await confirmResult.confirm(otp.trim());
+      const uid=state.currentUser?.id;
+      if(uid){await updateDoc(doc(db,'users',uid),{phone:phone.trim()});}
+      dispatch({type:'UPDATE_USER',payload:{phone:phone.trim()}});
+      toast('Telefon raqam ulandi ✅');
+      onSuccess(phone.trim());
+    }catch{toast('Kod noto\'g\'ri','error');}
+    setLoading(false);
+  };
+
+  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
+    <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
+    {!confirmResult?(
+      <>
+        <p className="text-sm text-gray-500 mb-4">Telefon raqamingizni tasdiqlash uchun SMS kod yuboriladi.</p>
+        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+998 90 123 45 67" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
+        <button onClick={sendOtp} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'SMS kod yuborish'}</button>
+      </>
+    ):(
+      <>
+        <p className="text-sm text-gray-500 mb-4"><b>{phone}</b> raqamiga yuborilgan 6 raqamli kodni kiriting.</p>
+        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">SMS kod</label><input value={otp} onChange={e=>setOtp(e.target.value)} placeholder="123456" maxLength={6} className="w-full px-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition text-center text-xl font-bold tracking-widest"/></div>
+        <div className="flex gap-3">
+          <button onClick={()=>setConfirmResult(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:scale-95 transition">Orqaga</button>
+          <button onClick={verify} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Tekshirilmoqda...':'Tasdiqlash'}</button>
+        </div>
+      </>
+    )}
+  </div></div>);
+}
+
 // ─── VIEWING REQUEST MODAL (Module 7) ───────────────────────
 function ViewingModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
   const{state}=useApp();
@@ -1916,6 +2025,7 @@ function ViewingModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
   const[time,setTime]=useState('');
   const[phone,setPhone]=useState(state.currentUser?.phone||'');
   const[loading,setLoading]=useState(false);
+  const[showPhoneConnect,setShowPhoneConnect]=useState(false);
   const today=new Date();
   const minDate=new Date(today);minDate.setDate(minDate.getDate()+1);
   const maxDate=new Date(today);maxDate.setDate(maxDate.getDate()+30);
@@ -1940,7 +2050,7 @@ function ViewingModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
       onClose();
     }catch(e){toast('Xato yuz berdi','error');}finally{setLoading(false);}
   };
-  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl" onClick={e=>e.stopPropagation()}>
+  return(<><div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl" onClick={e=>e.stopPropagation()}>
     <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-calendar-check-line text-emerald-600"/>Ko'rikka yozilish</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button></div>
     <div className="mb-5">
       <div className="font-semibold text-sm mb-3 text-gray-600">Sana tanlang</div>
@@ -1955,9 +2065,15 @@ function ViewingModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
       {date&&<div className="mt-2 text-xs text-emerald-700 font-semibold">✓ {new Date(date).toLocaleDateString('uz-Latn',{weekday:'long',day:'numeric',month:'long'})}</div>}
     </div>
     <div className="mb-5"><div className="font-semibold text-sm mb-3 text-gray-600">Vaqt tanlang</div><div className="grid grid-cols-5 gap-2">{TIME_SLOTS.map(t=><button key={t} onClick={()=>setTime(t)} className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition active:scale-95 ${time===t?'bg-emerald-600 text-white border-emerald-600':'border-gray-200 hover:border-emerald-300'}`}>{t}</button>)}</div></div>
-    <div className="mb-5"><label className="font-semibold text-sm mb-2 block text-gray-600">Telefon raqam *</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+998 90 123 45 67" className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200 transition"/></div>
-    <div className="flex gap-3"><button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:scale-95 transition">Bekor qilish</button><button onClick={submit} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'So\'rov yuborish'}</button></div>
-  </div></div>);
+    <div className="mb-5"><label className="font-semibold text-sm mb-2 block text-gray-600">Telefon raqam *</label>
+      {phone
+        ?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{phone}</div>
+        :<button onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqamni ulang</button>}
+    </div>
+    <div className="flex gap-3"><button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:scale-95 transition">Bekor qilish</button><button onClick={submit} disabled={loading||!phone} className="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'So\'rov yuborish'}</button></div>
+  </div></div>
+  {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{setPhone(p);setShowPhoneConnect(false);}}/>}
+  </>);
 }
 
 // ─── REPORT MODAL (Module 20) ───────────────────────────────
@@ -2108,7 +2224,7 @@ function FullProfilePage(){
   const u=state.currentUser;
   const[tab,setTab]=useState('info');
   const[name,setName]=useState(u.name||'');
-  const[phone,setPhone]=useState(u.phone||'');
+  const[showPhoneConnect,setShowPhoneConnect]=useState(false);
   const[saving,setSaving]=useState(false);
   const[viewReqs,setViewReqs]=useState<ViewingRequest[]>([]);
   const[savedSearches,setSavedSearches]=useState<SavedSearch[]>([]);
@@ -2129,7 +2245,8 @@ function FullProfilePage(){
   const saveProfile=async()=>{
     setSaving(true);
     try{
-      await updateDoc(doc(db,'users',u.id),{name,phone});
+      await updateDoc(doc(db,'users',u.id),{name});
+      dispatch({type:'UPDATE_USER',payload:{name}});
       toast('Profil saqlandi ✅');
     }catch{toast('Xatolik','error');}
     finally{setSaving(false);}
@@ -2191,7 +2308,8 @@ function FullProfilePage(){
 
       <div className="flex-1 min-w-0">
         {/* ── INFO ── */}
-        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+998 90..." className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="flex items-center gap-3"><div className="flex-1 flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600"/>{u.phone}</div><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full">✅ Ulangan</span></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
         {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Hali e'lonlaringiz yo'q</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">E'lon qo'shish</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600">⭐ {p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">Ko'rish</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100">⭐ Premium</button></div></div>)}</div>)}
@@ -3454,6 +3572,8 @@ export default function App(){
   useEffect(() => {
     let pendingUnsub:()=>void=()=>{};
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      // Skip if doLogin/doReg/googleSignIn is already handling this auth change
+      if (_authInProgress) return;
       if (fbUser) {
         let u = await AuthAPI.fetchUserByUid(fbUser.uid);
         // Admin may have id='admin' stored separately — check by email too
