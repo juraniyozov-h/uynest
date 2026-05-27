@@ -272,15 +272,16 @@ function BottomNav(){
           const active=activePage===t.id;
           return(
             <button key={t.id} onClick={()=>nav(t.id)} className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all active:scale-90 ${active?'text-emerald-600':'text-gray-400'}`}>
+              {active&&<span className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-b-full"/>}
               <i className={`text-[22px] leading-none ${active?t.iconActive:t.icon}`}/>
               <span className={`text-[9px] font-semibold ${active?'text-emerald-600':'text-gray-400'}`}>{t.label}</span>
               {t.id==='chat'&&unread>0&&<span className="absolute top-1.5 right-[calc(50%-14px)] w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">{unread}</span>}
-              {active&&<span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"/>}
             </button>
           );
         })}
         {/* Profile / Login tab */}
-        <button onClick={()=>u?nav('profile'):nav('auth')} className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-90 ${activePage==='profile'||activePage==='auth'?'text-emerald-600':'text-gray-400'}`}>
+        <button onClick={()=>u?nav('profile'):nav('auth')} className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all active:scale-90 ${activePage==='profile'||activePage==='auth'?'text-emerald-600':'text-gray-400'}`}>
+          {(activePage==='profile'||activePage==='auth')&&<span className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-b-full"/>}
           {u?(
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden border-2 border-white shadow">
               {u.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover"/>:initials(u.name||u.email||'')}
@@ -289,7 +290,6 @@ function BottomNav(){
             <i className="text-[22px] leading-none ri-user-line"/>
           )}
           <span className="text-[9px] font-semibold">{u?'Profil':'Kirish'}</span>
-          {(activePage==='profile'||activePage==='auth')&&<span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"/>}
         </button>
       </div>
     </nav>
@@ -568,6 +568,11 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
   );
 }
 
+// Module-level geo state — persists across MapPage mounts so we don't re-ask permission
+let _geoWatchId:number|null=null;
+let _cachedPos:[number,number]|null=null;
+const _posListeners=new Set<(p:[number,number])=>void>();
+
 // ─── MAP PAGE (Real Leaflet + AI Assistant) ─────────────────
 function MapPage(){
   const{state,dispatch}=useApp();
@@ -579,18 +584,26 @@ function MapPage(){
   const[filterType,setFilterType]=useState('');
   const[highlightIds,setHighlightIds]=useState<number[]>([]);
   const[aiMode,setAiMode]=useState(true);
-  const[userPos,setUserPos]=useState<[number,number]|null>(null);
+  const[userPos,setUserPos]=useState<[number,number]|null>(_cachedPos);
   const filtered=allItems.filter(p=>!filterType||p.type===filterType);
 
-  // Live location watch
+  // Live location — module-level watcher so permission is only asked once per session
   useEffect(()=>{
-    if(!navigator.geolocation) return;
-    const wid=navigator.geolocation.watchPosition(
-      pos=>{setUserPos([pos.coords.latitude,pos.coords.longitude]);},
-      ()=>{},
-      {enableHighAccuracy:true,timeout:15000}
-    );
-    return()=>navigator.geolocation.clearWatch(wid);
+    const cb=(p:[number,number])=>setUserPos(p);
+    _posListeners.add(cb);
+    if(_cachedPos) setUserPos(_cachedPos);
+    if(_geoWatchId===null&&navigator.geolocation){
+      _geoWatchId=navigator.geolocation.watchPosition(
+        pos=>{
+          const p:[number,number]=[pos.coords.latitude,pos.coords.longitude];
+          _cachedPos=p;
+          _posListeners.forEach(fn=>fn(p));
+        },
+        ()=>{},
+        {enableHighAccuracy:false,timeout:15000,maximumAge:60000}
+      );
+    }
+    return()=>{_posListeners.delete(cb);};
   },[]);
 
   const meIcon=L.divIcon({
@@ -654,19 +667,29 @@ function MapPage(){
         <div className="absolute top-3 left-14 z-[100] w-56 md:w-72 max-w-[55%]">
           <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}/>
         </div>
-        {/* Price legend */}
-        <div className="absolute top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-lg border border-gray-100">
-          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Narx darajasi</div>
-          {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
-            <div key={x.l} className="flex items-center gap-1.5 mb-1 last:mb-0">
-              <div style={{background:x.c}} className="w-3 h-3 rounded-full shrink-0"/>
-              <span className="text-[10.5px] font-semibold text-gray-600">{x.l}</span>
+        {/* Price legend — collapsed on mobile, expanded on desktop */}
+        <details className="absolute top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden group" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
+          <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer list-none select-none">
+            <div className="flex items-center gap-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0"/>
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"/>
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"/>
             </div>
-          ))}
-        </div>
+            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Narx</span>
+            <i className="ri-arrow-down-s-line text-gray-400 text-sm ml-0.5 group-open:rotate-180 transition-transform"/>
+          </summary>
+          <div className="px-3 pb-2.5 space-y-1">
+            {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
+              <div key={x.l} className="flex items-center gap-1.5">
+                <div style={{background:x.c}} className="w-3 h-3 rounded-full shrink-0"/>
+                <span className="text-[10.5px] font-semibold text-gray-600">{x.l}</span>
+              </div>
+            ))}
+          </div>
+        </details>
         {/* "My location" button */}
         {userPos&&(
-          <button onClick={()=>{setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}} className="absolute bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
+          <button onClick={()=>{setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
             <i className="ri-focus-3-line text-xl"/>
           </button>
         )}
@@ -684,7 +707,7 @@ function MapPage(){
 
         {/* ── Floating listing detail card ── */}
         {sel&&(
-          <div className="absolute bottom-4 left-1/2 z-[200] w-[calc(100%-32px)] max-w-sm"
+          <div className="absolute bottom-[72px] md:bottom-4 left-1/2 z-[200] w-[calc(100%-32px)] max-w-sm"
                style={{transform:'translateX(-50%)',animation:'slideUp .22s ease'}}>
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
               {/* Image */}
@@ -836,7 +859,7 @@ function DetailPage(){
       </div>}
 
       {/* Mobile sticky bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-100 px-4 py-3 flex gap-3 shadow-2xl">
+      <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-100 px-4 py-3 flex gap-3 shadow-2xl">
         <div className="flex-1"><div className="text-xs text-gray-400">{p.type==='rent'?'Oylik ijara':'Narx'}</div><div className="font-extrabold text-emerald-700">${p.type==='rent'?p.price:(p.price||0).toLocaleString()} <span className="text-xs font-normal text-gray-400">USD</span></div></div>
         {ownerPhone
           ?<a href={`tel:${ownerPhone}`} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm shadow active:scale-95 transition"><i className="ri-phone-fill"/>Qo'ng'iroq</a>
@@ -2228,11 +2251,13 @@ function CompareBar({compareIds,onChange}:{compareIds:number[];onChange:(ids:num
   const{state,dispatch}=useApp();
   if(compareIds.length===0) return null;
   const items=compareIds.map(id=>state.approved.find(p=>p.id===id)).filter(Boolean) as Listing[];
-  return(<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl p-4 flex items-center gap-4 flex-wrap">
-    <span className="font-bold text-sm text-gray-700 shrink-0">⚖️ Solishtirish ({compareIds.length}/3):</span>
-    {items.map(p=><div key={p.id} className="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-1.5"><span className="text-sm font-medium truncate max-w-[120px]">{p.title.split(',')[0]}</span><button onClick={()=>onChange(CompareAPI.remove(p.id))} className="text-gray-400 hover:text-red-500">✕</button></div>)}
+  return(<div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-[55] bg-white border-t border-gray-200 shadow-2xl px-4 py-3 flex items-center gap-3 flex-wrap">
+    <i className="ri-scales-2-line text-emerald-600 shrink-0"/>
+    <span className="font-bold text-sm text-gray-700 shrink-0">Solishtirish ({compareIds.length}/3):</span>
+    {items.map(p=><div key={p.id} className="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-1.5"><span className="text-sm font-medium truncate max-w-[100px]">{p.title.split(',')[0]}</span><button onClick={()=>onChange(CompareAPI.remove(p.id))} className="text-gray-400 hover:text-red-500 ml-1">✕</button></div>)}
     {compareIds.length<3&&<span className="text-sm text-gray-400">+ Qo'sh</span>}
-    <button onClick={()=>{dispatch({type:'NAV',payload:'compare'});window.scrollTo({top:0});}} className="ml-auto flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold text-sm rounded-xl shadow active:scale-95 transition">Solishtirish →</button>
+    <button onClick={()=>onChange([])} className="text-gray-400 hover:text-red-500 text-lg ml-1" title="Yopish"><i className="ri-close-line"/></button>
+    <button onClick={()=>{dispatch({type:'NAV',payload:'compare'});window.scrollTo({top:0});}} className="ml-auto flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold text-sm rounded-xl shadow active:scale-95 transition">Solishtirish →</button>
   </div>);
 }
 
@@ -3652,7 +3677,7 @@ export default function App(){
       <div id="tw" style={{position:'fixed',top:18,right:18,zIndex:500,display:'flex',flexDirection:'column',gap:9,pointerEvents:'none'}}/>
       {/* AI Chat floating button */}
       {!showAiChat&&(
-        <button onClick={()=>setShowAiChat(true)} className="fixed bottom-6 right-6 z-[350] w-16 h-16 rounded-2xl shadow-2xl shadow-emerald-500/40 overflow-hidden hover:scale-110 active:scale-95 transition-transform border-2 border-emerald-400" title="AI Maslahatchi">
+        <button onClick={()=>setShowAiChat(true)} className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[350] w-14 h-14 md:w-16 md:h-16 rounded-2xl shadow-2xl shadow-emerald-500/40 overflow-hidden hover:scale-110 active:scale-95 transition-transform border-2 border-emerald-400" title="AI Maslahatchi">
           <img src="/ai-robot.png" alt="AI Maslahatchi" className="w-full h-full object-cover"/>
         </button>
       )}
