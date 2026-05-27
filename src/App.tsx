@@ -3436,67 +3436,12 @@ function AiChatModal({onClose}:{onClose:()=>void}){
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
   const[transcribing,setTranscribing]=useState(false);
-  const[voiceOn,setVoiceOn]=useState(true);
   const endRef=useRef<HTMLDivElement>(null);
   const recogRef=useRef<any>(null);
   const mediaRecorderRef=useRef<MediaRecorder|null>(null);
   const audioChunksRef=useRef<BlobPart[]>([]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
 
-  // Text-to-speech: Google Translate TTS — O'zbek tilida yaxshi, bepul, kalit shart emas
-  const audioRef=useRef<HTMLAudioElement|null>(null);
-  const AZURE_KEY=((import.meta as any).env?.VITE_AZURE_TTS_KEY as string)||'';
-  const AZURE_REGION=((import.meta as any).env?.VITE_AZURE_TTS_REGION as string)||'eastus';
-
-  const speak=(text:string)=>{
-    if(!voiceOn)return;
-    const clean=text.replace(/[🏠💰📍🛏✅⭐🔥⏳📅🎯🔔]/g,'').replace(/\n/g,'. ').trim().slice(0,300);
-    if(!clean)return;
-    if(audioRef.current){audioRef.current.pause();audioRef.current=null;}
-    window.speechSynthesis?.cancel();
-
-    // 1. ResponsiveVoice — CDN, ro'yxatsiz, O'zbek tili bor
-    const rv=(window as any).responsiveVoice;
-    if(rv&&rv.voiceSupport()){
-      rv.cancel();
-      rv.speak(clean,'Uzbek Female',{rate:0.9,pitch:1,volume:1,
-        onstart:()=>{},onerror:()=>speakFallback(clean)});
-      return;
-    }
-
-    // 2. Azure TTS (agar kalit bo'lsa)
-    if(AZURE_KEY){
-      const ssml=`<speak version='1.0' xml:lang='uz-UZ'><voice name='uz-UZ-MadinaNeural'><prosody rate='0%'>${clean}</prosody></voice></speak>`;
-      fetch(`https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`,{
-        method:'POST',
-        headers:{'Ocp-Apim-Subscription-Key':AZURE_KEY,'Content-Type':'application/ssml+xml','X-Microsoft-OutputFormat':'audio-16khz-32kbitrate-mono-mp3'},
-        body:ssml
-      }).then(r=>r.ok?r.blob():Promise.reject(''+r.status))
-        .then(blob=>{const url=URL.createObjectURL(blob);const a=new Audio(url);audioRef.current=a;a.onended=()=>URL.revokeObjectURL(url);a.play().catch(()=>{});})
-        .catch(()=>speakFallback(clean));
-      return;
-    }
-
-    // 3. Web Speech API fallback
-    speakFallback(clean);
-  };
-
-  const speakFallback=(clean:string)=>{
-    if(!('speechSynthesis' in window))return;
-    const synth=window.speechSynthesis;
-    const utt=new SpeechSynthesisUtterance(clean);
-    const voices=synth.getVoices();
-    const best=
-      voices.find(v=>v.lang==='uz-UZ')||
-      voices.find(v=>v.lang.startsWith('uz'))||
-      voices.find(v=>v.lang.startsWith('tr'))||   // Turk — o'zbekchaga eng yaqin
-      voices.find(v=>v.lang.startsWith('ru'))||
-      voices[0];
-    if(best)utt.voice=best;
-    utt.lang=best?.lang||'ru-RU';
-    utt.rate=0.95;utt.pitch=1;utt.volume=1;
-    synth.speak(utt);
-  };
 
   // Mikrofon: Groq Whisper — O'zbek tilini yaxshi taniydi, bepul
   const startListening=async()=>{
@@ -3696,16 +3641,23 @@ function AiChatModal({onClose}:{onClose:()=>void}){
                 found=nearby.slice(0,5);
                 note=`"${geoName}" atrofida ${nearby.length} ta e'lon:`;
               }else{
-                note=`"${geoName}" hududida hozircha e'lon mavjud emas.`;
-                found=[];
+                // No listings near this city — fall back to all listings with a clear note
+                const fallback=(parsed.type?state.approved.filter(p=>p.type===(parsed.type==='ijara'?'rent':'sale')):state.approved).slice(0,5);
+                found=fallback;
+                note=`"${geoName}" hududida hozircha e'lon yo'q. Platformadagi boshqa e'lonlar:`;
               }
             }
           }catch{/* geocoding xato */}
         }
 
+        // If still nothing found at all (no district, no approved listings), show empty
+        if(found.length===0&&!parsed.district){
+          const all=state.approved.slice(0,5);
+          found=all;note='Barcha e\'lonlar:';
+        }
         let reply='';
         if(found.length===0){
-          reply=note||`"${parsed.district||'Bu joy'}" bo'yicha hozircha e'lon yo'q.\nBoshqa joy nomi yoki keng filtr bilan urinib ko'ring.`;
+          reply=note||`"${parsed.district||'Bu joy'}" bo'yicha hozircha e'lon yo'q.`;
         }else{
           const distLabel=geoName||parsed.district
             ?(geoName||parsed.district).charAt(0).toUpperCase()+(geoName||parsed.district).slice(1)
@@ -3714,13 +3666,12 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           reply=prefix+found.slice(0,3).map((l:Listing,i:number)=>`${i+1}. ${l.title} — $${l.price}${l.type==='rent'?'/oy':''}, ${l.district}, ${l.rooms} xona`).join('\n');
         }
         setMsgs(p=>[...p,{role:'assistant',text:reply,listings:found}]);
-        speak(reply);
       }else if(parsed.action==='stats'){
         const reply=String(execTool('get_price_stats',{district:parsed.district}));
-        setMsgs(p=>[...p,{role:'assistant',text:reply}]);speak(reply);
+        setMsgs(p=>[...p,{role:'assistant',text:reply}]);
       }else{
         const reply=parsed.reply||raw||'Tushunmadim, qaytadan so\'rang.';
-        setMsgs(p=>[...p,{role:'assistant',text:reply}]);speak(reply);
+        setMsgs(p=>[...p,{role:'assistant',text:reply}]);
       }
     }catch(e:any){
       const msg=String(e?.message||e);
@@ -3741,8 +3692,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-700 to-emerald-500 sm:rounded-t-3xl rounded-t-3xl">
           <div className={`w-10 h-10 rounded-xl overflow-hidden ${listening?'animate-pulse ring-2 ring-white':''}`}><img src="/ai-robot.png" alt="AI" className="w-full h-full object-cover"/></div>
           <div className="flex-1"><div className="font-bold text-white">UyNest AI</div><div className="text-emerald-100 text-xs">{listening?'🎙️ Gapiring... (to\'xtatish uchun bosing)':transcribing?'⏳ Ovoz tanilmoqda...':'Llama 3.3 70B • Yozing yoki gapiring'}</div></div>
-          <button onClick={()=>{window.speechSynthesis?.cancel();setVoiceOn(v=>!v);}} title={voiceOn?'Ovozni o\'chirish':'Ovozni yoqish'} className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition ${voiceOn?'bg-white/30 text-white':'bg-white/10 text-white/40'}`}><i className={voiceOn?'ri-volume-up-line':'ri-volume-mute-line'}/></button>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30">✕</button>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30"><i className="ri-close-line"/></button>
         </div>
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
