@@ -456,7 +456,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
           <input value={q} onChange={e=>{setQ(e.target.value);if(!e.target.value)setResults([]);}} onKeyDown={e=>e.key==='Enter'&&search()} placeholder="Ko'cha, mahalla, metro, shahar..." className="flex-1 text-sm outline-none min-w-0"/>
           {loading&&<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0"/>}
         </div>
-        <button onClick={search} className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 whitespace-nowrap shadow-md">Qidiruv</button>
+        <button onClick={search} className="px-3 md:px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0"><i className="ri-search-line md:hidden"/><span className="hidden md:inline">Qidiruv</span></button>
       </div>
       <div className="flex gap-2 mb-1">
         {['','rent','sale'].map((t,i)=><button key={t} onClick={()=>setFilterType(t)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===t?(t==='rent'?'bg-blue-500 text-white':t==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?'Hammasi':t==='rent'?'Ijara':'Sotuv'}</button>)}
@@ -587,24 +587,29 @@ function MapPage(){
   const[userPos,setUserPos]=useState<[number,number]|null>(_cachedPos);
   const filtered=allItems.filter(p=>!filterType||p.type===filterType);
 
-  // Live location — module-level watcher so permission is only asked once per session
+  // Subscribe to module-level position listener; restore cached position on remount
   useEffect(()=>{
     const cb=(p:[number,number])=>setUserPos(p);
     _posListeners.add(cb);
     if(_cachedPos) setUserPos(_cachedPos);
-    if(_geoWatchId===null&&navigator.geolocation){
+    return()=>{_posListeners.delete(cb);};
+  },[]);
+
+  // Start location watch only when user explicitly clicks the button — avoids permission prompt on every visit
+  const startLocationWatch=()=>{
+    if(!navigator.geolocation) return;
+    if(_geoWatchId===null){
       _geoWatchId=navigator.geolocation.watchPosition(
         pos=>{
           const p:[number,number]=[pos.coords.latitude,pos.coords.longitude];
           _cachedPos=p;
           _posListeners.forEach(fn=>fn(p));
         },
-        ()=>{},
+        ()=>{toast('Joylashuvni aniqlashda xatolik','warn');},
         {enableHighAccuracy:false,timeout:15000,maximumAge:60000}
       );
     }
-    return()=>{_posListeners.delete(cb);};
-  },[]);
+  };
 
   const meIcon=L.divIcon({
     html:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
@@ -669,14 +674,14 @@ function MapPage(){
         </div>
         {/* Price legend — collapsed on mobile, expanded on desktop */}
         <details className="absolute top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden group" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
-          <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer list-none select-none">
-            <div className="flex items-center gap-1">
+          <summary className="list-none select-none cursor-pointer px-3 py-2" style={{display:'flex',alignItems:'center',gap:'6px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'3px'}}>
               <div className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0"/>
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"/>
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"/>
             </div>
-            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Narx</span>
-            <i className="ri-arrow-down-s-line text-gray-400 text-sm ml-0.5 group-open:rotate-180 transition-transform"/>
+            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider leading-none">Narx</span>
+            <i className="ri-arrow-down-s-line text-gray-400 text-sm group-open:rotate-180 transition-transform leading-none"/>
           </summary>
           <div className="px-3 pb-2.5 space-y-1">
             {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
@@ -687,12 +692,10 @@ function MapPage(){
             ))}
           </div>
         </details>
-        {/* "My location" button */}
-        {userPos&&(
-          <button onClick={()=>{setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
-            <i className="ri-focus-3-line text-xl"/>
-          </button>
-        )}
+        {/* "My location" button — always visible; first click asks permission, subsequent clicks center map */}
+        <button onClick={()=>{if(userPos){setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}else startLocationWatch();}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
+          <i className={userPos?"ri-focus-3-line text-xl":"ri-map-pin-user-line text-xl"}/>
+        </button>
         <MapContainer key={mapKey} center={mapCenter} zoom={mapZoom} className="w-full h-full z-0" scrollWheelZoom>
           <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
           {filtered.map(p=>(
@@ -1088,8 +1091,8 @@ function ChatPage(){
         {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha suhbat yo'q. Uy sahifasidan xabar yuboring.</div>}
         {contacts.map(contact=>{const unr=ChatAPI.getAll().filter(m=>m.from===contact.id&&m.to===u.id&&!m.read).length;return(
           <button key={contact.id} onClick={()=>selectContact(contact.id)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===contact.id?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.name)}</div>
-            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contact.name}{contact.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{contact.email||contact.phone||'Kontakt mavjud'}</div></div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.role==='admin'?'Admin':contact.name)}</div>
+            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contact.role==='admin'?'Admin':contact.name}{contact.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{contact.role==='admin'?'UyNest Administrator':contact.email||contact.phone||'Kontakt mavjud'}</div></div>
             {unr>0&&<span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}
           </button>
         );})}
@@ -2300,11 +2303,13 @@ function CompareBar({compareIds,onChange}:{compareIds:number[];onChange:(ids:num
 function ComparePage(){
   const{state,dispatch}=useApp();
   const[ids,setIds]=useState<number[]>(CompareAPI.get());
+  // Auto-clear compare list when leaving this page so CompareBar is clean on return
+  useEffect(()=>()=>{CompareAPI.clear();},[]);
   const items=ids.map(id=>state.approved.find(p=>p.id===id)).filter(Boolean) as Listing[];
   if(items.length===0) return(<div className="max-w-2xl mx-auto px-4 py-20 text-center"><i className="ri-scales-2-line text-6xl text-gray-200 block mb-4"/><h3 className="font-bold text-xl mb-2">Solishtirish ro'yxati bo'sh</h3><p className="text-gray-500 mb-6">E'lon sahifalaridan "Solishtirish" tugmasini bosing</p><button onClick={()=>{dispatch({type:'NAV',payload:'rent'});window.scrollTo({top:0});}} className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl">E'lonlarni ko'rish</button></div>);
   const rows=[{l:"Narx",v:(p:Listing)=>p.type==='rent'?`$${p.price}/oy`:`$${(p.price||0).toLocaleString()}`},{l:"Maydon",v:(p:Listing)=>`${p.area} m²`},{l:"Xonalar",v:(p:Listing)=>`${p.rooms} xona`},{l:"Qavat",v:(p:Listing)=>p.floor?`${p.floor}/${p.floors}`:'—'},{l:"Tuman",v:(p:Listing)=>p.district},{l:"Tur",v:(p:Listing)=>p.type==='rent'?'Ijara':'Sotuv'},{l:"Tasdiqlangan",v:(p:Listing)=>p.verified?'✅ Ha':'❌ Yo\'q'},{l:"Ko'rishlar",v:(p:Listing)=>String(p.viewsCount||0)},{l:"Telegram",v:(p:Listing)=>p.telegram||'—'}];
   return(<div className="max-w-5xl mx-auto px-4 py-10">
-    <div className="mb-7 flex items-center gap-4"><h2 className="text-3xl font-extrabold">⚖️ E'lonlarni solishtirish</h2><button onClick={()=>{CompareAPI.clear();setIds([]);}} className="text-sm text-red-500 hover:underline">Tozalash</button></div>
+    <div className="mb-7 flex items-center gap-4"><h2 className="text-3xl font-extrabold flex items-center gap-2"><i className="ri-scales-2-line text-emerald-600"/>E'lonlarni solishtirish</h2><button onClick={()=>{CompareAPI.clear();setIds([]);}} className="text-sm text-red-500 hover:underline">Tozalash</button></div>
     <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
       <div className="grid overflow-x-auto" style={{gridTemplateColumns:`180px repeat(${items.length},1fr)`}}>
         <div className="p-4 bg-gray-50 border-b border-gray-100"/>
