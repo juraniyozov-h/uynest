@@ -3751,7 +3751,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
               {loading?<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>:<i className="ri-send-plane-fill"/>}
             </button>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1.5 text-center">Groq Whisper • O'zbek tilini yaxshi taniydi • Ovoz bilan javob beradi</div>
+          <div className="text-[10px] text-gray-400 mt-1.5 text-center">Groq Whisper • O'zbek tilini yaxshi taniydi • Matn ko'rinishida javob beradi</div>
         </div>
       </div>
     </div>
