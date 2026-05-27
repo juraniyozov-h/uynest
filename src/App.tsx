@@ -1011,42 +1011,53 @@ function ChatPage(){
   // For admin: show thread list on left
   if(isAdmin(u)){
     const users=AuthAPI.getUsers();
+    const[adminMobileView,setAdminMobileView]=useState<'contacts'|'chat'>(state.chatTarget?'chat':'contacts');
+    const selectThread=(id:string)=>{dispatch({type:'CHAT_TARGET',payload:id});setAdminMobileView('chat');};
+    const backToThreads=()=>{dispatch({type:'CHAT_TARGET',payload:null});setAdminMobileView('contacts');};
+    const selName=users.find(x=>x.id===state.chatTarget)?.name||'?';
+    const adminContactsList=(
+      <div className={`${adminMobileView==='chat'?'hidden md:flex':'flex'} w-full md:w-80 border-r border-gray-100 flex-col shrink-0`}>
+        <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-chat-3-line text-emerald-600"/>Xabarlar</h3></div>
+        <div className="flex-1 overflow-y-auto">
+          {threads.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha xabar yo'q</div>}
+          {threads.map(t=>{const tu=users.find(x=>x.id===t.userId);const unr=ChatAPI.getAll().filter(m=>m.from===t.userId&&m.to===u.id&&!m.read).length;return(
+            <button key={t.userId} onClick={()=>selectThread(t.userId)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===t.userId?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(tu?.name||t.name)}</div>
+              <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{tu?.name||t.name}{tu?.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{t.lastMsg.text}</div></div>
+              <div className="flex flex-col items-end gap-1"><span className="text-[10px] text-gray-400">{fmtTime(t.lastMsg.time)}</span>{unr>0&&<span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}</div>
+            </button>
+          );})}
+        </div>
+      </div>
+    );
+    const adminChatPanel=(
+      <div className={`${adminMobileView==='contacts'?'hidden md:flex':'flex'} flex-1 flex-col min-w-0`}>
+        {state.chatTarget?(
+          <>
+            <div className="h-14 md:h-16 px-3 md:px-6 bg-white border-b border-gray-100 flex items-center gap-3">
+              <button onClick={backToThreads} className="md:hidden w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shrink-0 active:scale-90 transition"><i className="ri-arrow-left-line text-lg"/></button>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs shrink-0">{initials(selName)}</div>
+              <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{selName}</div><div className="text-[11px] text-emerald-500 font-semibold">Foydalanuvchi</div></div>
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={deleteChat} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Chatni o'chirish"><i className="ri-delete-bin-line"/></button>
+                <button onClick={()=>setShowComplaintModal(true)} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition" title="Shikoyat"><i className="ri-flag-line"/></button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 bg-gray-50/50">
+              {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}</div></div></div>)}
+              <div ref={endRef}/>
+            </div>
+            <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Javob yozing..." className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button></div>
+          </>
+        ):(<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">Suhbatni tanlang</p><p className="text-sm">Chap tarafdan foydalanuvchini tanlang</p></div></div>)}
+      </div>
+    );
     return(
-      <div className="flex h-[calc(100vh-68px)] bg-white">
-        <div className="w-80 border-r border-gray-100 flex flex-col shrink-0">
-          <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-chat-3-line text-emerald-600"/>Xabarlar</h3></div>
-          <div className="flex-1 overflow-y-auto">
-            {threads.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha xabar yo'q</div>}
-            {threads.map(t=>{const tu=users.find(x=>x.id===t.userId);const unr=ChatAPI.getAll().filter(m=>m.from===t.userId&&m.to===u.id&&!m.read).length;return(
-              <button key={t.userId} onClick={()=>dispatch({type:'CHAT_TARGET',payload:t.userId})} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===t.userId?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(tu?.name||t.name)}</div>
-                <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{tu?.name||t.name}{tu?.role==='admin'&&<span className="ml-1 text-emerald-600">✓</span>}</div><div className="text-xs text-gray-400 truncate">{t.lastMsg.text}</div></div>
-                <div className="flex flex-col items-end gap-1"><span className="text-[10px] text-gray-400">{fmtTime(t.lastMsg.time)}</span>{unr>0&&<span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}</div>
-              </button>
-            );})}
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col">
-          {state.chatTarget?(
-            <>
-              <div className="h-16 px-6 bg-white border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs">{initials(users.find(x=>x.id===state.chatTarget)?.name||'?')}</div>
-                  <div><div className="font-bold text-sm">{users.find(x=>x.id===state.chatTarget)?.role === 'admin' ? 'Admin' : users.find(x=>x.id===state.chatTarget)?.name || '?'}</div><div className="text-[11px] text-emerald-500 font-semibold">Foydalanuvchi</div></div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={deleteChat} className="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition">Chatni o'chirish</button>
-                  <button onClick={()=>setShowComplaintModal(true)} className="px-3 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold rounded-lg hover:bg-yellow-100 transition">Shikoyat</button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
-                {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}</div></div></div>)}
-                <div ref={endRef}/>
-              </div>
-              <div className="p-4 bg-white border-t border-gray-100 flex gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Javob yozing..." className="flex-1 px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-12 h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-12 h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition"><i className="ri-send-plane-fill"/></button></div>
-            </>
-          ):(<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">Suhbatni tanlang</p><p className="text-sm">Chap tarafdan foydalanuvchini tanlang</p></div></div>)}
-        </div>
+      <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
+        {adminContactsList}
+        {adminChatPanel}
+        {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}><div className="flex justify-between items-center mb-4"><h3 className="font-bold text-lg">Uy tanlang</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div><div className="grid sm:grid-cols-2 gap-4">{state.approved.slice(0,20).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div></button>)}</div></div></div>}
+        {showComplaintModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={()=>{setShowComplaintModal(false);setComplaintText('');}}><div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4" onClick={e=>e.stopPropagation()}><h3 className="font-bold text-lg mb-4">Shikoyat</h3><textarea value={complaintText} onChange={e=>setComplaintText(e.target.value)} className="w-full border rounded-xl p-3 text-sm h-28 resize-none outline-none" placeholder="Shikoyat matnini yozing..."/><div className="flex gap-3 mt-4"><button onClick={()=>{setShowComplaintModal(false);setComplaintText('');}} className="flex-1 py-2.5 border rounded-xl text-sm font-semibold">Bekor qilish</button><button onClick={sendComplaint} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold">Yuborish</button></div></div></div>}
       </div>
     );
   }
@@ -1063,45 +1074,70 @@ function ChatPage(){
   // Admin always at top
   if(adminUser && !contacts.some(c=>c.id===adminId)) contacts.unshift(adminUser);
 
-  return(
-    <div className="flex h-[calc(100vh-68px)] bg-white">
-      <div className="w-80 border-r border-gray-100 flex flex-col shrink-0">
-        <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>Kontaktlar</h3></div>
-        <div className="flex-1 overflow-y-auto">
-          {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha suhbat yo'q. Uy sahifasidan xabar yuboring.</div>}
-          {contacts.map(contact=>{const unr=ChatAPI.getAll().filter(m=>m.from===contact.id&&m.to===u.id&&!m.read).length;return(
-            <button key={contact.id} onClick={()=>dispatch({type:'CHAT_TARGET',payload:contact.id})} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===contact.id?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.name)}</div>
-              <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contact.name}{contact.role==='admin'&&<span className="ml-1 text-emerald-600">✓</span>}</div><div className="text-xs text-gray-400 truncate">{contact.email||contact.phone||'Kontakt mavjud'}</div></div>
-              {unr>0&&<span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}
-            </button>
-          );})}
+  // Mobile: show contacts or chat view
+  const[mobileView,setMobileView]=useState<'contacts'|'chat'>(partnerId?'chat':'contacts');
+  const selectContact=(id:string)=>{dispatch({type:'CHAT_TARGET',payload:id});setMobileView('chat');};
+  const backToContacts=()=>{dispatch({type:'CHAT_TARGET',payload:null});setMobileView('contacts');};
+
+  const contactName=partnerId===adminId?'Admin':contacts.find(x=>x.id===partnerId)?.name||adminUser?.name||'Foydalanuvchi';
+
+  const contactsList=(
+    <div className={`${mobileView==='chat'?'hidden md:flex':'flex'} w-full md:w-80 border-r border-gray-100 flex-col shrink-0`}>
+      <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>Kontaktlar</h3></div>
+      <div className="flex-1 overflow-y-auto">
+        {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha suhbat yo'q. Uy sahifasidan xabar yuboring.</div>}
+        {contacts.map(contact=>{const unr=ChatAPI.getAll().filter(m=>m.from===contact.id&&m.to===u.id&&!m.read).length;return(
+          <button key={contact.id} onClick={()=>selectContact(contact.id)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===contact.id?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.name)}</div>
+            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contact.name}{contact.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{contact.email||contact.phone||'Kontakt mavjud'}</div></div>
+            {unr>0&&<span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}
+          </button>
+        );})}
+      </div>
+      <div className="p-4 border-t border-gray-100">
+        <button onClick={()=>selectContact(adminId!)} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold rounded-xl text-sm shadow active:scale-95 transition"><i className="ri-customer-service-2-line"/>Admin bilan bog'lanish</button>
+      </div>
+    </div>
+  );
+
+  const chatPanel=(
+    <div className={`${mobileView==='contacts'?'hidden md:flex':'flex'} flex-1 flex-col min-w-0`}>
+      {partnerId ? (
+        <>
+          <div className="h-14 md:h-16 px-3 md:px-6 bg-white border-b border-gray-100 flex items-center gap-3">
+            <button onClick={backToContacts} className="md:hidden w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shrink-0 active:scale-90 transition"><i className="ri-arrow-left-line text-lg"/></button>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs shrink-0">{initials(contactName)}</div>
+            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contactName}</div><div className="text-[11px] text-emerald-500 font-semibold">{partnerId===adminId?'Admin':'Foydalanuvchi'}</div></div>
+            <div className="flex gap-1.5 shrink-0">
+              <button onClick={deleteChat} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Chatni o'chirish"><i className="ri-delete-bin-line"/></button>
+              <button onClick={()=>setShowComplaintModal(true)} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition" title="Shikoyat"><i className="ri-flag-line"/></button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 bg-gray-50/50">
+            {msgs.length===0&&<div className="text-center py-12 text-gray-400"><i className="ri-chat-3-line text-5xl text-gray-200 block mb-3"/><p className="font-semibold">Suhbatni boshlang</p></div>}
+            {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[80%] md:max-w-[75%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{m.text.includes('Uy topdim:')?<button onClick={()=>{const id=m.text.match(/\(id:(\d+)\)/)?.[1]||m.text.match(/id:(\d+)/)?.[1];if(id)dispatch({type:'DETAIL',payload:parseInt(id)});}} className={`${m.from===u.id?'text-emerald-200 underline':'text-emerald-700 underline'}`}>{renderMessage(m)}</button>:renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}{m.from===u.id&&<span className="ml-1">{m.read?'✓✓':'✓'}</span>}</div></div></div>)}
+            <div ref={endRef}/>
+          </div>
+          <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3">
+            <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Xabar yozing..." className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
+            <button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button>
+            <button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4 p-6">
+          <i className="ri-chat-smile-3-line text-6xl text-gray-200 block"/>
+          <p className="font-semibold">Kontaktni tanlang</p>
+          <p className="text-sm text-center">Chap tarafdan suhbat qilmoqchi bo'lgan foydalanuvchini tanlang</p>
         </div>
-      </div>
-      <div className="flex-1 flex flex-col">
-        {partnerId ? (
-          <>
-            <div className="h-16 px-6 bg-white border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs">{initials(contacts.find(x=>x.id===partnerId)?.name||adminUser?.name||'U')}</div>
-                <div><div className="font-bold text-sm">{partnerId === adminId ? 'Admin' : contacts.find(x=>x.id===partnerId)?.name||adminUser?.name||'Foydalanuvchi'}</div><div className="text-[11px] text-emerald-500 font-semibold">{partnerId===adminId ? 'Admin' : 'Foydalanuvchi'}</div></div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={deleteChat} className="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-100 transition">Chatni o'chirish</button>
-                <button onClick={()=>setShowComplaintModal(true)} className="px-3 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold rounded-lg hover:bg-yellow-100 transition">Shikoyat</button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
-              {msgs.length===0&&<div className="text-center py-12 text-gray-400"><i className="ri-chat-3-line text-5xl text-gray-200 block mb-3"/><p className="font-semibold">Suhbatni boshlang</p><p className="text-sm">Yuqoridagi kontaktni tanlang yoki yangi xabar yozing</p></div>}
-              {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{m.text.includes('Uy topdim:')?<button onClick={()=>{const id=m.text.match(/\(id:(\d+)\)/)?.[1] || m.text.match(/id:(\d+)/)?.[1];if(id)dispatch({type:'DETAIL',payload:parseInt(id)});}} className={`${m.from===u.id?'text-emerald-200 underline':'text-emerald-700 underline'}`}>{renderMessage(m)}</button>:renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}{m.from===u.id&&<span className="ml-1">{m.read?'✓✓':'✓'}</span>}</div></div></div>)}
-              <div ref={endRef}/>
-            </div>
-            <div className="p-4 bg-white border-t border-gray-100 flex gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Xabar yozing..." className="flex-1 px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-12 h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-12 h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition transform active:scale-95"><i className="ri-send-plane-fill"/></button></div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">Kontaktni tanlang</p><p className="text-sm">Chap tarafdan suhbat qilmoqchi bo'lgan foydalanuvchini tanlang</p></div><button onClick={()=>dispatch({type:'CHAT_TARGET',payload:adminId})} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold rounded-xl text-sm shadow"><i className="ri-customer-service-2-line"/>Admin bilan bog'lanish</button></div>
-        )}
-      </div>
+      )}
+    </div>
+  );
+
+  return(
+    <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
+      {contactsList}
+      {chatPanel}
       {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}><div className="flex justify-between items-center mb-4"><h3 className="font-bold text-lg">Uy tanlang</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div><div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5 mb-4"><i className="ri-search-line text-gray-400"/><input className="bg-transparent flex-1 text-sm outline-none" placeholder="Uy qidirish..." value={houseSearch} onChange={e=>setHouseSearch(e.target.value)}/></div><div className="grid sm:grid-cols-2 gap-4">{state.approved.filter(p=>!houseSearch||p.title.toLowerCase().includes(houseSearch.toLowerCase())||p.district.toLowerCase().includes(houseSearch.toLowerCase())).slice(0,20).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div></button>)}</div></div></div>}
       {showComplaintModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={()=>{setShowComplaintModal(false);setComplaintText('');setComplaintImg(null);setComplaintImgPreview('');}}>
