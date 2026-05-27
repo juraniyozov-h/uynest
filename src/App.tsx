@@ -139,17 +139,17 @@ function Card({p,compareIds,onCompareChange}:{p:Listing;compareIds?:number[];onC
   return(
     <div className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col group ${showPremium&&p.premiumType==='featured'?'ring-2 ring-amber-400':''}`} onClick={()=>{ListingExtAPI.addLastViewed(p.id);dispatch({type:'DETAIL',payload:p.id});}}>
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-emerald-100 to-emerald-50">
-        {p.img?<img src={p.img} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e=>{(e.target as HTMLImageElement).src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23d1fae5" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23065f46" font-size="14">🏠</text></svg>';}}/>:<div className="w-full h-full flex items-center justify-center text-5xl">🏠</div>}
+        {p.img?<img src={p.img} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>:<div className="w-full h-full flex items-center justify-center"><i className="ri-home-4-line text-5xl text-emerald-300"/></div>}
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
           <span className={`${p.type==='rent'?'bg-blue-500':'bg-emerald-600'} text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide`}>{p.type==='rent'?'IJARA':'SOTUV'}</span>
           {p.badge==='new'&&<span className="bg-amber-400 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">YANGI</span>}
-          {p.badge==='top'&&<span className="bg-white/90 backdrop-blur text-[10px] font-bold px-2.5 py-1 rounded-full text-amber-600">⭐ TOP</span>}
-          {showPremium&&p.premiumType==='top'&&<span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">🏆 TOP</span>}
-          {showPremium&&p.premiumType==='urgent'&&<span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">🔥 SHOSHILINCH</span>}
+          {p.badge==='top'&&<span className="bg-white/90 backdrop-blur text-[10px] font-bold px-2.5 py-1 rounded-full text-amber-600 flex items-center gap-1"><i className="ri-star-fill"/>TOP</span>}
+          {showPremium&&p.premiumType==='top'&&<span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-trophy-fill"/>TOP</span>}
+          {showPremium&&p.premiumType==='urgent'&&<span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-fire-fill"/>SHOSHILINCH</span>}
           {p.verified&&<span className="bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-verified-badge-fill"/>Tasdiqlangan</span>}
         </div>
         <div className="absolute top-3 right-3 flex flex-col gap-1.5">
-          {!isOwn&&<button className={`w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all active:scale-90 ${isFavorite?'text-red-500':'text-gray-400 hover:text-red-500'}`} onClick={e=>{e.stopPropagation();if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:'Sevimlilar'}});return;}dispatch({type:'TOGGLE_FAVORITE',payload:p.id.toString()});if(state.currentUser)FavoritesAPI.toggle(state.currentUser.id,p.id.toString());if(!isFavorite)toast('Sevimlilarga qo\'shildi ❤️');}}>
+          {!isOwn&&<button className={`w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all active:scale-90 ${isFavorite?'text-red-500':'text-gray-400 hover:text-red-500'}`} onClick={e=>{e.stopPropagation();if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:'Sevimlilar'}});return;}dispatch({type:'TOGGLE_FAVORITE',payload:p.id.toString()});if(state.currentUser)FavoritesAPI.toggle(state.currentUser.id,p.id.toString());if(!isFavorite)toast('Sevimlilarga qo\'shildi');}}>
             <i className={isFavorite?'ri-heart-fill':'ri-heart-line'}/>
           </button>}
           {onCompareChange&&<button className={`w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center transition-all active:scale-90 ${inCompare?'text-emerald-600':'text-gray-400 hover:text-emerald-600'}`} title="Solishtirish" onClick={e=>{e.stopPropagation();onCompareChange(inCompare?CompareAPI.remove(p.id):CompareAPI.add(p.id));}}><i className="ri-scales-2-line"/></button>}
@@ -195,9 +195,9 @@ function Navbar(){
   return(
     <nav className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-emerald-100/60" style={{backdropFilter:'saturate(180%) blur(16px)'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[68px] gap-4">
+        <div className="flex items-center justify-between h-[60px] md:h-[68px] gap-4">
           <button onClick={()=>nav('home')} className="flex items-center gap-2 font-extrabold text-lg text-emerald-800 tracking-tight shrink-0 active:scale-95 transition-transform">
-            <img src="/logo.svg" alt="UyNest" className="h-9 w-auto"/>UY<span className="text-emerald-500">NEST</span>
+            <img src="/logo.svg" alt="UyNest" className="h-8 md:h-9 w-auto"/>UY<span className="text-emerald-500">NEST</span>
           </button>
           <div className="hidden md:flex gap-0.5 bg-gray-50/80 rounded-2xl p-1">
             {links.map(l=>(
@@ -207,10 +207,10 @@ function Navbar(){
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3 relative">
+          <div className="flex items-center gap-2 md:gap-3 relative">
             {state.auth&&u?(
               <div className="relative">
-                <button onClick={()=>setUm(!um)} className="flex items-center gap-2 pl-1.5 pr-3 py-1 bg-white border border-gray-200 rounded-full hover:border-emerald-300 transition shadow-sm active:scale-95">
+                <button onClick={()=>setUm(!um)} className="flex items-center gap-2 pl-1.5 pr-2 md:pr-3 py-1 bg-white border border-gray-200 rounded-full hover:border-emerald-300 transition shadow-sm active:scale-95">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
                     {u.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover"/>:initials(u.name||u.email||'')}
                   </div>
@@ -239,13 +239,59 @@ function Navbar(){
                 </>}
               </div>
             ):(
-              <button onClick={()=>{dispatch({type:'AUTH_TAB',payload:'login'});nav('auth');}} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition"><i className="ri-login-circle-line"/>Kirish</button>
+              <button onClick={()=>{dispatch({type:'AUTH_TAB',payload:'login'});nav('auth');}} className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition"><i className="ri-login-circle-line"/><span className="hidden sm:inline">Kirish</span></button>
             )}
-            <button className="md:hidden p-2 text-emerald-700 text-xl" onClick={()=>setMob(!mob)}><i className={mob?'ri-close-line':'ri-menu-4-line'}/></button>
           </div>
         </div>
       </div>
-      {mob&&<div className="md:hidden bg-white border-t border-gray-100 px-3 pb-3 space-y-1">{links.map(l=><button key={l.id} onClick={()=>nav(l.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${state.page===l.id?'bg-emerald-50 text-emerald-800 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><i className={l.icon}/>{l.label}</button>)}</div>}
+    </nav>
+  );
+}
+
+// ─── Bottom Nav (mobile only) ────────────────────────────────
+function BottomNav(){
+  const{state,dispatch}=useApp();
+  const u=state.currentUser;
+  const unread=u?ChatAPI.unreadCount(u.id):0;
+  const nav=(p:string)=>{
+    if((p==='submit')&&!state.auth){dispatch({type:'AUTH_NEXT',payload:p});dispatch({type:'AUTH_REQ',payload:{open:true,action:'E\'lon qo\'shish'}});return;}
+    dispatch({type:'NAV',payload:p});window.scrollTo({top:0});
+  };
+  const tabs=[
+    {id:'home',icon:'ri-home-4-line',iconActive:'ri-home-4-fill',label:'Bosh'},
+    {id:'rent',icon:'ri-key-2-line',iconActive:'ri-key-2-fill',label:'Ijara'},
+    {id:'sale',icon:'ri-shopping-bag-3-line',iconActive:'ri-shopping-bag-3-fill',label:'Sotuv'},
+    {id:'map',icon:'ri-map-2-line',iconActive:'ri-map-2-fill',label:'Xarita'},
+    {id:'chat',icon:'ri-chat-3-line',iconActive:'ri-chat-3-fill',label:'Chat'},
+  ];
+  const activePage=state.page;
+  return(
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,.07)]" style={{paddingBottom:'env(safe-area-inset-bottom,0px)'}}>
+      <div className="flex items-stretch h-14">
+        {tabs.map(t=>{
+          const active=activePage===t.id;
+          return(
+            <button key={t.id} onClick={()=>nav(t.id)} className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all active:scale-90 ${active?'text-emerald-600':'text-gray-400'}`}>
+              <i className={`text-[22px] leading-none ${active?t.iconActive:t.icon}`}/>
+              <span className={`text-[9px] font-semibold ${active?'text-emerald-600':'text-gray-400'}`}>{t.label}</span>
+              {t.id==='chat'&&unread>0&&<span className="absolute top-1.5 right-[calc(50%-14px)] w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">{unread}</span>}
+              {active&&<span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"/>}
+            </button>
+          );
+        })}
+        {/* Profile / Login tab */}
+        <button onClick={()=>u?nav('profile'):nav('auth')} className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-90 ${activePage==='profile'||activePage==='auth'?'text-emerald-600':'text-gray-400'}`}>
+          {u?(
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden border-2 border-white shadow">
+              {u.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover"/>:initials(u.name||u.email||'')}
+            </div>
+          ):(
+            <i className="text-[22px] leading-none ri-user-line"/>
+          )}
+          <span className="text-[9px] font-semibold">{u?'Profil':'Kirish'}</span>
+          {(activePage==='profile'||activePage==='auth')&&<span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-emerald-500"/>}
+        </button>
+      </div>
     </nav>
   );
 }
@@ -275,7 +321,7 @@ function Footer(){
 // ─── Modals ─────────────────────────────────────────────────
 function ContactModal(){const{state,dispatch}=useApp();if(!state.contactModal)return null;return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={()=>dispatch({type:'CONTACT',payload:false})}><div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'CONTACT',payload:false})} className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button><div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-emerald-500/30"><i className="ri-customer-service-2-fill"/></div><h3 className="text-xl font-extrabold text-center mb-1">Biz bilan bog'lanish</h3><p className="text-gray-500 text-sm text-center mb-5">Tezkor javob uchun quyidagi kanallardan foydalaning</p><a href="tel:+998996767742" className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl mb-3 hover:bg-emerald-100 transition"><span className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center text-white text-lg"><i className="ri-phone-fill"/></span><div><div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Telefon</div><div className="font-bold text-gray-900">+998 99 676 77 42</div></div></a><a href="https://t.me/jrnyzv" target="_blank" className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl hover:bg-blue-100 transition"><span className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center text-white text-lg"><i className="ri-telegram-fill"/></span><div><div className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">Telegram</div><div className="font-bold text-gray-900">@jrnyzv</div></div></a></div></div>);}
 function AuthReqModal(){const{state,dispatch}=useApp();if(!state.authRequiredModal)return null;const go=(t:string)=>{dispatch({type:'AUTH_REQ',payload:{open:false}});dispatch({type:'AUTH_TAB',payload:t});dispatch({type:'NAV',payload:'auth'});};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={()=>dispatch({type:'AUTH_REQ',payload:{open:false}})}><div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'AUTH_REQ',payload:{open:false}})} className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-300 text-white flex items-center justify-center text-3xl mx-auto mb-4"><i className="ri-shield-user-line"/></div><h3 className="text-xl font-extrabold text-center mb-1">Avval ro'yxatdan o'ting</h3><p className="text-gray-500 text-sm text-center mb-5">{state.authReqAction||'Bu amal'} uchun tizimga kiring.</p><button onClick={()=>go('register')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl mb-3 shadow"><i className="ri-user-add-line"/>Ro'yxatdan o'tish</button><button onClick={()=>go('login')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:border-emerald-300 transition"><i className="ri-login-circle-line"/>Kirish</button></div></div>);}
-function GoogleModal(){const{state,dispatch}=useApp();if(!state.googleDemoModal)return null;const submit=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();dispatch({type:'GOOGLE_MODAL',payload:false});_authInProgress=true;const r=await AuthAPI.googleSignIn();_authInProgress=false;if(r.ok){dispatch({type:'LOGIN',payload:{user:r.user,token:r.token}});toast(`Xush kelibsiz, ${r.user.name}! 👋`);const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});dispatch({type:'NAV',payload:r.user.role==='admin'?'admin':(nx||'home')});}else toast(r.error||'Xato','error');};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})} className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="flex items-center gap-3 mb-5"><svg width="28" height="28" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.3-11.3-8L6.2 33C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C41.3 36 44 30.5 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg><div><div className="font-bold">Google bilan kirish</div><div className="text-xs text-gray-400">Tez va xavfsiz</div></div></div><form onSubmit={submit} className="space-y-3"><button type="submit" className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition">Google bilan davom etish</button></form></div></div>);}
+function GoogleModal(){const{state,dispatch}=useApp();if(!state.googleDemoModal)return null;const submit=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();dispatch({type:'GOOGLE_MODAL',payload:false});_authInProgress=true;const r=await AuthAPI.googleSignIn();_authInProgress=false;if(r.ok){dispatch({type:'LOGIN',payload:{user:r.user,token:r.token}});toast(`Xush kelibsiz, ${r.user.name}!`);const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});dispatch({type:'NAV',payload:r.user.role==='admin'?'admin':(nx||'home')});}else toast(r.error||'Xato','error');};return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e=>e.stopPropagation()}><button onClick={()=>dispatch({type:'GOOGLE_MODAL',payload:false})} className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">✕</button><div className="flex items-center gap-3 mb-5"><svg width="28" height="28" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.3-11.3-8L6.2 33C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.2 5.2C41.3 36 44 30.5 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg><div><div className="font-bold">Google bilan kirish</div><div className="text-xs text-gray-400">Tez va xavfsiz</div></div></div><form onSubmit={submit} className="space-y-3"><button type="submit" className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition">Google bilan davom etish</button></form></div></div>);}
 
 // ─── HOME ───────────────────────────────────────────────────
 function HomePage(){
@@ -435,7 +481,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
 // ─── MAP AI ASSISTANT ────────────────────────────────────────
 function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onFocus:(lat:number,lng:number,zoom:number)=>void;onHighlight:(ids:number[])=>void}){
   const[q,setQ]=useState('');const[loading,setLoading]=useState(false);
-  const[aiMsg,setAiMsg]=useState('Joy nomi yoki tuman yozing, men atrofdagi uylarni topaman 🗺️');
+  const[aiMsg,setAiMsg]=useState('Joy nomi yoki tuman yozing, men atrofdagi uylarni topaman');
   const[aiListings,setAiListings]=useState<Listing[]>([]);
   const{dispatch}=useApp();
 
@@ -548,13 +594,12 @@ function MapPage(){
   },[]);
 
   const meIcon=L.divIcon({
-    html:`<div style="background:#2563eb;color:#fff;border:3px solid #fff;border-radius:20px;padding:3px 10px 5px;text-align:center;font-family:Inter,-apple-system,sans-serif;box-shadow:0 2px 10px rgba(37,99,235,.5);min-width:42px;position:relative">
-      <div style="font-size:9px;font-weight:700;opacity:.85;letter-spacing:.3px;line-height:1.3">📍</div>
-      <div style="font-size:12px;font-weight:800;line-height:1.2">Men</div>
-      <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #2563eb"></div>
+    html:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div class="me-marker-dot" style="width:18px;height:18px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(37,99,235,.6)"></div>
+      <div style="background:#2563eb;color:#fff;font-family:Inter,-apple-system,sans-serif;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(37,99,235,.4)">Men</div>
     </div>`,
     className:'',
-    iconAnchor:[27,46],
+    iconAnchor:[9,32],
   });
 
   // ── District average prices for color coding ──
@@ -603,11 +648,11 @@ function MapPage(){
   const selDiff=selAvg&&sel?Math.round(((sel.price-selAvg)/selAvg)*100):null;
 
   return(
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-68px)]">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)]">
       <div className="flex-1 relative overflow-hidden">
         {/* Search bar */}
         <div className="absolute top-3 left-14 z-[100] w-56 md:w-72 max-w-[55%]">
-          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(`📍 ${name.split(',')[0]}`);}}/>
+          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}/>
         </div>
         {/* Price legend */}
         <div className="absolute top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-lg border border-gray-100">
@@ -632,7 +677,7 @@ function MapPage(){
           ))}
           {userPos&&(
             <Marker position={userPos} icon={meIcon}>
-              <Popup><b>📍 Mening joylashuvim</b></Popup>
+              <Popup><b>Mening joylashuvim</b></Popup>
             </Marker>
           )}
         </MapContainer>
@@ -644,14 +689,14 @@ function MapPage(){
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
               {/* Image */}
               <div className="relative" style={{aspectRatio:'16/6'}}>
-                {sel.img?<img src={sel.img} alt="" className="w-full h-full object-cover"/>:<div className="w-full h-full bg-emerald-50 flex items-center justify-center text-4xl">🏠</div>}
+                {sel.img?<img src={sel.img} alt="" className="w-full h-full object-cover"/>:<div className="w-full h-full bg-emerald-50 flex items-center justify-center"><i className="ri-home-4-line text-4xl text-emerald-300"/></div>}
                 <button onClick={()=>setSel(null)} className="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center text-base hover:bg-black/70 transition active:scale-90">✕</button>
                 <div className="absolute bottom-2 left-2 flex gap-1.5">
                   <span style={{background:priceColor(sel)}} className="text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                    {sel.type==='rent'?'🔑 Ijara':'🏠 Sotuv'}
+                    {sel.type==='rent'?<><i className="ri-key-2-line mr-0.5"/>Ijara</>:<><i className="ri-home-4-line mr-0.5"/>Sotuv</>}
                   </span>
-                  {sel.verified&&<span className="bg-white/90 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full">✅ Tasdiqlangan</span>}
-                  {sel.isPremium&&<span className="bg-amber-400/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">⭐ Premium</span>}
+                  {sel.verified&&<span className="bg-white/90 text-emerald-700 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Tasdiqlangan</span>}
+                  {sel.isPremium&&<span className="bg-amber-400/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-star-fill"/>Premium</span>}
                 </div>
               </div>
               <div className="p-4">
@@ -773,7 +818,7 @@ function DetailPage(){
           {allImgs[selImg]&&<img src={allImgs[selImg]} alt="" className="w-full h-full object-cover"/>}
           <div className="absolute top-4 left-4 flex gap-2">
             {p.verified&&<div className="bg-emerald-500/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1"><i className="ri-verified-badge-fill"/>Tasdiqlangan</div>}
-            {p.isPremium&&p.premiumType&&<div className="bg-amber-500/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-white">{p.premiumType==='top'?'🏆 TOP':p.premiumType==='featured'?'⭐ FEATURED':'🔥 SHOSHILINCH'}</div>}
+            {p.isPremium&&p.premiumType&&<div className="bg-amber-500/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1">{p.premiumType==='top'?<><i className="ri-trophy-fill"/>TOP</>:p.premiumType==='featured'?<><i className="ri-star-fill"/>FEATURED</>:<><i className="ri-fire-fill"/>SHOSHILINCH</>}</div>}
           </div>
           <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full font-semibold">{selImg+1} / {allImgs.length}</div>
           {allImgs.length>1&&<><button onClick={e=>{e.stopPropagation();setSelImg(i=>Math.max(i-1,0));}} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-700 hover:bg-white transition active:scale-90 shadow"><i className="ri-arrow-left-s-line text-xl"/></button><button onClick={e=>{e.stopPropagation();setSelImg(i=>Math.min(i+1,allImgs.length-1));}} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-gray-700 hover:bg-white transition active:scale-90 shadow"><i className="ri-arrow-right-s-line text-xl"/></button></>}
@@ -832,7 +877,7 @@ function DetailPage(){
           {similar.length>0&&<div className="mb-8"><h3 className="font-bold text-lg mb-4 flex items-center gap-2"><i className="ri-home-3-line text-emerald-600"/>O'xshash e'lonlar</h3><div className="grid sm:grid-cols-2 gap-4">{similar.map(s=><Card key={s.id} p={s}/>)}</div></div>}
           {/* Report button (Module 20) */}
           <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center">
-            <p className="text-gray-500 text-sm mb-3">⚠️ E'lon bilan muammo bormi?</p>
+            <p className="text-gray-500 text-sm mb-3 flex items-center justify-center gap-1"><i className="ri-alert-line text-amber-500"/>E'lon bilan muammo bormi?</p>
             <button onClick={()=>{if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:'Shikoyat'}});return;}setShowReport(true);}} className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-red-200 text-red-500 font-semibold rounded-xl text-sm hover:bg-red-50 transition mx-auto"><i className="ri-flag-line"/>Adminga xabar yuboring</button>
           </div>
         </div>
@@ -913,7 +958,7 @@ function ChatPage(){
 
   const send=async()=>{if(!text.trim()||!partnerId)return;await ChatAPI.send(u.id,partnerId,text.trim());setText('');await loadMsgs();};
 
-  const sendHouse=async(p:Listing)=>{if(!partnerId) return;try{const msg=`Uy topdim: ${p.title} (id:${p.id})\nNarx: $${p.price}${p.type==='rent'?'/oy':''}\nManzil: ${p.address||p.district}\nXonalar: ${p.rooms}\nMaydon: ${p.area} m²\n${p.img}`;setShowHouseModal(false);setText('');await ChatAPI.send(u.id,partnerId,msg);await loadMsgs();toast('Uy yuborildi! 🏠');}catch(e){toast('Xatolik yuz berdi','error');console.error('Send house error:',e);}};
+  const sendHouse=async(p:Listing)=>{if(!partnerId) return;try{const msg=`Uy topdim: ${p.title} (id:${p.id})\nNarx: $${p.price}${p.type==='rent'?'/oy':''}\nManzil: ${p.address||p.district}\nXonalar: ${p.rooms}\nMaydon: ${p.area} m²\n${p.img}`;setShowHouseModal(false);setText('');await ChatAPI.send(u.id,partnerId,msg);await loadMsgs();toast('Uy yuborildi!');}catch(e){toast('Xatolik yuz berdi','error');console.error('Send house error:',e);}};
 
   const deleteChat = async () => {
     if (!confirm('Haqiqatan ham bu chatni o\'chirishni xohlaysizmi? Barcha xabarlar o\'chib ketadi.')) return;
@@ -1130,7 +1175,7 @@ function RequestPage(){
     if(!pendingReq) return;
     dispatch({type:'ADD_REQUEST',payload:pendingReq});
     await RequestsAPI.add(pendingReq);
-    toast("So'rov yuborildi! Admin 24 soat ichida bog'lanadi 📞");
+    toast("So'rov yuborildi! Admin 24 soat ichida bog'lanadi");
     setPendingReq(null);
     setTimeout(()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});},1400);
   };
@@ -1427,7 +1472,7 @@ function SubmitPage(){
       };
       dispatch({type:'ADD_PENDING',payload:listing});
       await ListingAPI.addPending(listing);
-      toast("E'lon yuborildi! Admin tasdiqlaydi 🎉");
+      toast("E'lon yuborildi! Admin tasdiqlaydi");
       notifyAdmin(`📬 <b>Yangi e'lon tasdiqlash kutmoqda</b>\n\n🏠 ${listing.title}\n📍 ${listing.district}${listing.city?', '+listing.city:''}\n💰 $${listing.price}${listing.type==='rent'?'/oy':''}\n🛏 ${listing.rooms} xona • ${listing.area} m²\n👤 Egasi: ${listing.owner||'—'} | ${listing.phone||listing.contact||'—'}\n\n👉 Admin panelda tasdiqlang`);
       (e.target as HTMLFormElement).reset();setAmens([]);setFileObjects([]);setTimeout(()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});},1400);
     }catch(err){
@@ -1474,7 +1519,7 @@ function SubmitPage(){
         </div>
         {/* DOCUMENT UPLOAD FOR VERIFICATION */}
         <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-file-shield-2-line text-emerald-600"/>Hujjatlar (Tasdiqlash uchun)</h3>
-          <p className="text-sm text-gray-500 mb-4">Hujjat yuklasangiz, e'loningiz <span className="font-bold text-emerald-700">✅ Tasdiqlangan mulk</span> belgisiga ega bo'ladi. Manba: <a href="https://my.gov.uz" target="_blank" className="text-emerald-700 underline">my.gov.uz</a></p>
+          <p className="text-sm text-gray-500 mb-4">Hujjat yuklasangiz, e'loningiz <span className="font-bold text-emerald-700 inline-flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Tasdiqlangan mulk</span> belgisiga ega bo'ladi. Manba: <a href="https://my.gov.uz" target="_blank" className="text-emerald-700 underline">my.gov.uz</a></p>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               {key:'kadastr',label:'Kadastr hujjati',icon:'ri-map-2-line',accept:'.pdf,image/*'},
@@ -1484,7 +1529,7 @@ function SubmitPage(){
               <label key={d.key} className={`flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer transition ${docFiles[d.key as keyof typeof docFiles]?'border-emerald-400 bg-emerald-50':'border-gray-200 hover:border-emerald-300'}`}>
                 <i className={`${d.icon} text-2xl ${docFiles[d.key as keyof typeof docFiles]?'text-emerald-600':'text-gray-400'}`}/>
                 <span className="text-xs font-semibold text-center text-gray-700">{d.label}</span>
-                {docFiles[d.key as keyof typeof docFiles]?<span className="text-[10px] text-emerald-600 font-bold">✅ Yuklandi</span>:<span className="text-[10px] text-gray-400">Bosing va yuklang</span>}
+                {docFiles[d.key as keyof typeof docFiles]?<span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5"><i className="ri-checkbox-circle-fill"/>Yuklandi</span>:<span className="text-[10px] text-gray-400">Bosing va yuklang</span>}
                 <input type="file" accept={d.accept} className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)setDocFiles(p=>({...p,[d.key]:f}));}}/>
               </label>
             ))}
@@ -1545,7 +1590,7 @@ let _authInProgress = false;
 function AuthPage(){
   const{state,dispatch}=useApp();const[err,setErr]=useState('');const[sp,setSp]=useState(false);const[loading,setLoading]=useState(false);const tab=state.authTab||'login';
   const ic="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition";
-  const afterAuth=(user:User,token:string)=>{dispatch({type:'LOGIN',payload:{user,token}});const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});if(user.role==='admin'){toast('Admin paneliga xush kelibsiz! 👑');dispatch({type:'NAV',payload:'admin'});}else{toast(`Xush kelibsiz, ${user.name}! 👋`);dispatch({type:'NAV',payload:nx||'home'});}window.scrollTo({top:0});};
+  const afterAuth=(user:User,token:string)=>{dispatch({type:'LOGIN',payload:{user,token}});const nx=state.authNext;dispatch({type:'AUTH_NEXT',payload:null});if(user.role==='admin'){toast('Admin paneliga xush kelibsiz!');dispatch({type:'NAV',payload:'admin'});}else{toast(`Xush kelibsiz, ${user.name}!`);dispatch({type:'NAV',payload:nx||'home'});}window.scrollTo({top:0});};
   const doLogin=async(e:React.FormEvent<HTMLFormElement>)=>{
     e.preventDefault();setLoading(true);_authInProgress=true;
     const fd=new FormData(e.currentTarget);
@@ -1558,7 +1603,7 @@ function AuthPage(){
     const fd=new FormData(e.currentTarget);
     const r=await AuthAPI.register({name:fd.get('name')as string,email:fd.get('email')as string,phone:fd.get('phone')as string,password:fd.get('password')as string});
     _authInProgress=false;setLoading(false);
-    if(r.ok){afterAuth(r.user,r.token);toast('Hisob yaratildi 🎉');}else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}
+    if(r.ok){afterAuth(r.user,r.token);toast('Hisob yaratildi!');}else{setErr(r.error||'Xato');setTimeout(()=>setErr(''),4500);}
   };
   const uc=AuthAPI.getUsers().length;
   return(<div className="min-h-[calc(100vh-68px)] flex items-center justify-center p-5 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 relative overflow-hidden"><div className="absolute -top-32 -right-32 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"/><div className="absolute -bottom-32 -left-32 w-80 h-80 bg-emerald-300/10 rounded-full blur-3xl"/>
@@ -1683,8 +1728,8 @@ function AdminListingDetail({p,onClose,onApprove,onReject}:{p:Listing;onClose:()
             <h2 className="font-extrabold text-lg leading-tight truncate max-w-sm">{p.title}</h2>
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${p.type==='rent'?'bg-blue-100 text-blue-700':'bg-emerald-100 text-emerald-700'}`}>{p.type==='rent'?'Ijara':'Sotuv'}</span>
-              {p.verified&&<span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white">✅ Tasdiqlangan hujjat</span>}
-              {p.isPremium&&<span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">⭐ Premium</span>}
+              {p.verified&&<span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500 text-white flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Tasdiqlangan hujjat</span>}
+              {p.isPremium&&<span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 flex items-center gap-1"><i className="ri-star-fill"/>Premium</span>}
               <span className="text-xs text-gray-400">#{p.id}</span>
             </div>
           </div>
@@ -1749,7 +1794,7 @@ function AdminPending(){
   const approve=async(p:Listing)=>{
     dispatch({type:'APPROVE',payload:{...p,status:'active'}});
     await ListingAPI.approveListing({...p,status:'active'});
-    toast(`"${p.title}" tasdiqlandi ✅`);
+    toast(`"${p.title}" tasdiqlandi`);
     notifyAdmin(`✅ <b>E'lon tasdiqlandi</b>\n🏠 ${p.title}\n📍 ${p.district}\n💰 $${p.price}${p.type==='rent'?'/oy':''}\n👤 ${p.owner||'—'}`);
     if(p.ownerId)notifyUser(p.ownerId,`✅ <b>E'loningiz tasdiqlandi!</b>\n\n🏠 "${p.title}"\n📍 ${p.district} • $${p.price}${p.type==='rent'?'/oy':''}\n\nEndi barcha foydalanuvchilar ko'ra oladi!\n👉 https://uynest.vercel.app`);
   };
@@ -1771,7 +1816,7 @@ function AdminPending(){
           {state.pending.map(p=>(
             <div key={p.id} onClick={()=>setSelected(p)} className="bg-white rounded-2xl p-4 shadow-sm flex gap-4 items-center cursor-pointer hover:shadow-md hover:border-emerald-200 border-2 border-transparent transition group">
               <div className="w-24 h-18 rounded-xl overflow-hidden shrink-0 bg-emerald-50 aspect-[4/3]">
-                {p.img?<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🏠</div>}
+                {p.img?<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>:<div className="w-full h-full flex items-center justify-center"><i className="ri-home-4-line text-2xl text-emerald-300"/></div>}
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold mb-1 truncate">{p.title}</h4>
@@ -1905,7 +1950,7 @@ function ReviewPage(){
     const review:Review={id:'r_'+Date.now().toString(36),userId:u.id,userName:u.name||u.email||'Foydalanuvchi',userAvatar:u.avatar,stars,text:text.trim(),createdAt:new Date().toISOString(),read:false};
     try {
       await ReviewsAPI.add(review);
-      toast('Sharh yuborildi! ⭐');
+      toast('Sharh yuborildi!');
       notifyAdmin(`⭐ <b>Yangi sharh</b>\n👤 ${review.userName}\n${'⭐'.repeat(review.stars)} (${review.stars}/5)\n💬 ${review.text.slice(0,100)}${review.text.length>100?'...':''}`);
 
       dispatch({type:'NAV',payload:'home'});
@@ -1938,7 +1983,7 @@ function ReviewPage(){
 function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
   const url=`https://uynest.vercel.app/listing/${listing.id}`;
   const text=encodeURIComponent(`${listing.title} — $${listing.price}${listing.type==='rent'?'/oy':''} | UyNest`);
-  const copy=()=>{navigator.clipboard.writeText(url).then(()=>toast('Havola nusxalandi ✅'));};
+  const copy=()=>{navigator.clipboard.writeText(url).then(()=>toast('Havola nusxalandi'));};;
   const share=(platform:string)=>{
     const links:Record<string,string>={
       telegram:`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${text}`,
@@ -1979,7 +2024,7 @@ function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phon
     setLoading(true);
     const r=await AuthAPI.sendPhoneVerification(p);
     setLoading(false);
-    if(r.ok){setConfirmResult(r.confirmationResult);toast('SMS kod yuborildi 📱');}
+    if(r.ok){setConfirmResult(r.confirmationResult);toast('SMS kod yuborildi');}
     else toast(r.error||'SMS yuborishda xato','error');
   };
 
@@ -1991,7 +2036,7 @@ function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phon
       const uid=state.currentUser?.id;
       if(uid){await updateDoc(doc(db,'users',uid),{phone:phone.trim()});}
       dispatch({type:'UPDATE_USER',payload:{phone:phone.trim()}});
-      toast('Telefon raqam ulandi ✅');
+      toast('Telefon raqam ulandi');
       onSuccess(phone.trim());
     }catch{toast('Kod noto\'g\'ri','error');}
     setLoading(false);
@@ -2042,7 +2087,7 @@ function ViewingModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
         requesterName:state.currentUser.name||'',requesterPhone:phone,
         date,time,status:'pending'
       });
-      toast('Ko\'rik so\'rovi yuborildi! 📅 Egasi tez orada javob beradi.');
+      toast('Ko\'rik so\'rovi yuborildi! Egasi tez orada javob beradi.');
       // Notify listing owner + admin
       const ownerTg=`📅 <b>Yangi ko'rik so'rovi</b>\n\n🏠 ${listing.title}\n📆 Sana: ${date} soat ${time}\n👤 ${state.currentUser?.name||'—'} | ${phone}\n\nTezda javob bering!`;
       if(listing.ownerId) notifyUser(listing.ownerId, ownerTg);
@@ -2247,7 +2292,7 @@ function FullProfilePage(){
     try{
       await updateDoc(doc(db,'users',u.id),{name});
       dispatch({type:'UPDATE_USER',payload:{name}});
-      toast('Profil saqlandi ✅');
+      toast('Profil saqlandi');
     }catch{toast('Xatolik','error');}
     finally{setSaving(false);}
   };
@@ -2260,7 +2305,7 @@ function FullProfilePage(){
         expiresAt:new Date(Date.now()+10*60*1000).toISOString()
       });
       setTgCode(c);
-      toast('Kod yaratildi! Botga yuboring ✅');
+      toast('Kod yaratildi! Botga yuboring');
     }catch{toast('Xato yuz berdi','error');}
   };
   const unlinkTg=async()=>{
@@ -2270,9 +2315,9 @@ function FullProfilePage(){
   const[premiumPurpose,setPremiumPurpose]=useState<'premium_top'|'premium_featured'|'premium_urgent'>('premium_top');
   const[showPremiumPay,setShowPremiumPay]=useState(false);
   const premiumOptions=[
-    {purpose:'premium_top' as const,label:'🏆 TOP',price:'50,000',days:7,color:'from-amber-500 to-amber-400',desc:'Qidiruvda va sahifada eng tepada ko\'rinadi'},
-    {purpose:'premium_featured' as const,label:'⭐ FEATURED',price:'100,000',days:7,color:'from-purple-600 to-purple-500',desc:'Bosh sahifada katta kartochka sifatida ko\'rinadi'},
-    {purpose:'premium_urgent' as const,label:'🔥 URGENT',price:'30,000',days:3,color:'from-red-500 to-red-400',desc:'Qizil "Shoshilinch" belgisi bilan diqqatni tortadi'},
+    {purpose:'premium_top' as const,label:'TOP',icon:'ri-trophy-fill',price:'50,000',days:7,color:'from-amber-500 to-amber-400',desc:'Qidiruvda va sahifada eng tepada ko\'rinadi'},
+    {purpose:'premium_featured' as const,label:'FEATURED',icon:'ri-star-fill',price:'100,000',days:7,color:'from-purple-600 to-purple-500',desc:'Bosh sahifada katta kartochka sifatida ko\'rinadi'},
+    {purpose:'premium_urgent' as const,label:'URGENT',icon:'ri-fire-fill',price:'30,000',days:3,color:'from-red-500 to-red-400',desc:'Qizil "Shoshilinch" belgisi bilan diqqatni tortadi'},
   ];
   const activatePremium=()=>{
     if(!premiumListing)return;
@@ -2281,7 +2326,7 @@ function FullProfilePage(){
     ListingExtAPI.setPremium(premiumListing.id,premiumPurpose.replace('premium_','') as any,days,premiumListing._docId);
     dispatch({type:'SET_APPROVED',payload:state.approved.map(x=>x.id===premiumListing.id?{...x,isPremium:true,premiumType:premiumPurpose.replace('premium_','') as any,premiumUntil:new Date(Date.now()+days*24*60*60*1000).toISOString()}:x)});
     notifyAdmin(`⭐ <b>Premium faollashtirildi</b>\n🏠 ${premiumListing.title}\n🏅 Tur: ${premiumPurpose}\n👤 ${u.name}`);
-    toast(`Premium faollashtirildi! ✨ ${days} kun`);
+    toast(`Premium faollashtirildi! ${days} kun`);
   };
 
   const tabs=[{id:'info',icon:'ri-user-line',l:'Ma\'lumot'},{id:'listings',icon:'ri-home-4-line',l:'E\'lonlarim'},{id:'premium',icon:'ri-vip-crown-line',l:'Premium'},{id:'notifications',icon:'ri-notification-3-line',l:'Bildirishnomalar'},{id:'searches',icon:'ri-search-line',l:'Qidiruvlar'},{id:'saved',icon:'ri-heart-line',l:'Sevimlilar'},{id:'security',icon:'ri-shield-line',l:'Xavfsizlik'}];
@@ -2298,7 +2343,7 @@ function FullProfilePage(){
         </div>
         {/* ── PREMIUM CTA between sidebar sections ── */}
         {!isAdmin(u)&&<div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 mb-4 text-center">
-          <div className="text-lg mb-1">⭐</div>
+          <div className="text-lg mb-1"><i className="ri-star-fill text-amber-500"/></div>
           <div className="font-bold text-amber-800 text-sm mb-1">E'lonni premium qiling</div>
           <div className="text-xs text-amber-600 mb-3">3x ko'proq xaridor</div>
           <button onClick={()=>setTab('premium')} className={`w-full py-2 rounded-xl text-xs font-bold transition active:scale-95 ${tab==='premium'?'bg-amber-500 text-white':'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>Premium tanlash →</button>
@@ -2308,16 +2353,16 @@ function FullProfilePage(){
 
       <div className="flex-1 min-w-0">
         {/* ── INFO ── */}
-        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="flex items-center gap-3"><div className="flex-1 flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600"/>{u.phone}</div><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full">✅ Ulangan</span></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="flex items-center gap-3"><div className="flex-1 flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600"/>{u.phone}</div><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
         {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
-        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Hali e'lonlaringiz yo'q</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">E'lon qo'shish</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600">⭐ {p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">Ko'rish</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100">⭐ Premium</button></div></div>)}</div>)}
+        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Hali e'lonlaringiz yo'q</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">E'lon qo'shish</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600 flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">Ko'rish</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100 flex items-center gap-1"><i className="ri-star-line"/>Premium</button></div></div>)}</div>)}
 
         {/* ── PREMIUM ── */}
         {tab==='premium'&&(<div>
           <div className="bg-gradient-to-r from-amber-500 to-orange-400 rounded-2xl p-6 text-white mb-6 shadow-lg">
-            <div className="text-2xl font-extrabold mb-1">⭐ Premium xizmat</div>
+            <div className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-star-fill"/>Premium xizmat</div>
             <p className="text-amber-100 text-sm">E'loningizni ko'proq odamga ko'rsating va tezroq xaridor toping</p>
           </div>
           {/* STEP 1 — Select listing */}
@@ -2329,7 +2374,7 @@ function FullProfilePage(){
               :<div className="space-y-2">{myListings.map(p=>(
                 <button key={p.id} onClick={()=>setPremiumListing(p)} className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition text-left ${premiumListing?.id===p.id?'border-amber-400 bg-amber-50':'border-gray-200 hover:border-amber-200'}`}>
                   <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div>
-                  <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div>{p.isPremium&&<div className="text-xs text-amber-600 font-bold">✨ Hozir {p.premiumType?.toUpperCase()} aktiv</div>}</div>
+                  <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div>{p.isPremium&&<div className="text-xs text-amber-600 font-bold flex items-center gap-0.5"><i className="ri-star-fill"/>Hozir {p.premiumType?.toUpperCase()} aktiv</div>}</div>
                   {premiumListing?.id===p.id&&<i className="ri-checkbox-circle-fill text-amber-500 text-xl shrink-0"/>}
                 </button>
               ))}</div>
@@ -2375,7 +2420,7 @@ function FullProfilePage(){
             {tgLinked?(
               <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl shrink-0"><i className="ri-telegram-fill"/></div>
-                <div className="flex-1"><div className="font-bold text-blue-900">✅ Telegram ulangan</div><div className="text-sm text-blue-600 mt-0.5">Barcha bildirishnomalar Telegramga keladi</div></div>
+                <div className="flex-1"><div className="font-bold text-blue-900 flex items-center gap-1"><i className="ri-checkbox-circle-fill text-blue-500"/>Telegram ulangan</div><div className="text-sm text-blue-600 mt-0.5">Barcha bildirishnomalar Telegramga keladi</div></div>
                 <button onClick={unlinkTg} className="px-3 py-1.5 bg-red-50 text-red-500 text-xs font-bold rounded-lg hover:bg-red-100 transition">Uzish</button>
               </div>
             ):(
@@ -2386,7 +2431,7 @@ function FullProfilePage(){
                     <b>Qanday ulash:</b><br/>
                     1. Quyidagi tugmani bosing — 6 raqamli kod yaratiladi<br/>
                     2. Telegram'dagi <b>@TashkentHomeBot</b> ga yozing: <code className="bg-amber-100 px-1 rounded">/start KOD</code><br/>
-                    3. Bot "✅ Ulandi!" deb javob beradi
+                    3. Bot "Ulandi!" deb javob beradi
                   </div>
                 </div>
                 <button onClick={genTgCode} className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white font-bold rounded-xl text-sm active:scale-95 transition hover:bg-blue-600">
@@ -2408,18 +2453,18 @@ function FullProfilePage(){
 
           {/* Notification types explained */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-base mb-4">📋 Qachon va nima uchun bildirishnoma keladi?</h3>
+            <h3 className="font-bold text-base mb-4 flex items-center gap-2"><i className="ri-notification-3-line text-emerald-600"/>Qachon va nima uchun bildirishnoma keladi?</h3>
             <div className="space-y-3">
               {[
-                {icon:'📬',title:'Yangi xabar keldi',when:'Kimdir e\'loningizga xabar yuborganda',why:'Tezda javob bersangiz, xaridor boshqasiga ketmaydi'},
-                {icon:'✅',title:'E\'lon tasdiqlandi',when:'Admin e\'loningizni tasdiqlagan paytda',why:'E\'lon endi barcha foydalanuvchilarga ko\'rinadi'},
-                {icon:'❌',title:'E\'lon rad etildi',when:'Admin e\'loningizni rad etgan paytda',why:'Sababini bilish va qayta yuborish uchun'},
-                {icon:'📅',title:'Ko\'rik so\'rovi keldi',when:'Kimdir e\'loningizga ko\'rikka yozilganda',why:'Aniq sana va vaqtni ko\'rsatadi — tasdiqlash kerak'},
-                {icon:'🔔',title:'Mos e\'lon topildi',when:'Saqlagan qidiruvingizga yangi e\'lon tushganda',why:'Tez xabar beradi — eng yaxshi variantlarni birinchi bo\'lib ko\'rasiz'},
-                {icon:'⚠️',title:'E\'lon eskirmoqda',when:"E'lon muddati tugashdan 3 kun oldin",why:'Yangilash uchun vaqt bo\'ladi — e\'lon o\'chib ketmaydi'},
+                {icon:'ri-mail-send-line',title:'Yangi xabar keldi',when:'Kimdir e\'loningizga xabar yuborganda',why:'Tezda javob bersangiz, xaridor boshqasiga ketmaydi'},
+                {icon:'ri-checkbox-circle-line',title:'E\'lon tasdiqlandi',when:'Admin e\'loningizni tasdiqlagan paytda',why:'E\'lon endi barcha foydalanuvchilarga ko\'rinadi'},
+                {icon:'ri-close-circle-line',title:'E\'lon rad etildi',when:'Admin e\'loningizni rad etgan paytda',why:'Sababini bilish va qayta yuborish uchun'},
+                {icon:'ri-calendar-check-line',title:'Ko\'rik so\'rovi keldi',when:'Kimdir e\'loningizga ko\'rikka yozilganda',why:'Aniq sana va vaqtni ko\'rsatadi — tasdiqlash kerak'},
+                {icon:'ri-notification-3-line',title:'Mos e\'lon topildi',when:'Saqlagan qidiruvingizga yangi e\'lon tushganda',why:'Tez xabar beradi — eng yaxshi variantlarni birinchi bo\'lib ko\'rasiz'},
+                {icon:'ri-alert-line',title:'E\'lon eskirmoqda',when:"E'lon muddati tugashdan 3 kun oldin",why:'Yangilash uchun vaqt bo\'ladi — e\'lon o\'chib ketmaydi'},
               ].map(n=>(
                 <div key={n.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                  <span className="text-xl shrink-0">{n.icon}</span>
+                  <i className={`${n.icon} text-xl text-emerald-600 shrink-0 mt-0.5`}/>
                   <div><div className="font-semibold text-sm">{n.title}</div><div className="text-xs text-gray-500 mt-0.5"><b>Qachon:</b> {n.when}</div><div className="text-xs text-emerald-700 mt-0.5"><b>Nima uchun muhim:</b> {n.why}</div></div>
                 </div>
               ))}
@@ -2428,7 +2473,7 @@ function FullProfilePage(){
 
           {/* Viewing requests list */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-base mb-4">📅 Ko'rik so'rovlarim</h3>
+            <h3 className="font-bold text-base mb-4 flex items-center gap-2"><i className="ri-calendar-check-line text-emerald-600"/>Ko'rik so'rovlarim</h3>
             {viewReqs.length===0?<div className="text-center py-6 text-gray-400"><i className="ri-calendar-line text-3xl text-gray-200 block mb-2"/>Ko'rik so'rovlari yo'q</div>:
             <div className="space-y-3">{viewReqs.map(r=><div key={r.id} className="border border-gray-100 rounded-xl p-4 flex items-start gap-3"><div className="flex-1"><div className="font-semibold text-sm">{r.listingTitle}</div><div className="text-sm text-gray-500 mt-0.5">📆 {r.date} soat {r.time}</div></div><span className={`text-xs px-2.5 py-1 rounded-full font-semibold shrink-0 ${r.status==='confirmed'?'bg-emerald-100 text-emerald-700':r.status==='cancelled'?'bg-red-100 text-red-600':'bg-amber-100 text-amber-700'}`}>{r.status==='confirmed'?'✅ Tasdiqlangan':r.status==='cancelled'?'❌ Bekor':'⏳ Kutmoqda'}</span></div>)}</div>}
           </div>
@@ -2490,14 +2535,14 @@ function AdminVerifications(){
   const verify=async(p:Listing)=>{
     await ListingExtAPI.verify(p.id,u?.id||'admin',p._docId);
     dispatch({type:'SET_APPROVED',payload:state.approved.map(x=>x.id===p.id?{...x,verified:true,verifiedAt:new Date().toISOString(),verifiedBy:u?.id||'admin'}:x)});
-    toast(`"${p.title}" tasdiqlandi ✅`);
+    toast(`"${p.title}" tasdiqlandi`);
     if(p.ownerId) notifyUser(p.ownerId, `✅ <b>E'loningiz tasdiqlandi!</b>\n\n🏠 "${p.title}"\n📍 ${p.district}\n\nEndi e'loningiz <b>Tasdiqlangan mulk</b> belgisiga ega. Ko'proq xaridorlar ishonadilar!\n\n👉 https://uynest.vercel.app`);
   };
   return(<div><div className="mb-6"><h2 className="text-2xl font-extrabold">Tasdiqlash</h2><p className="text-gray-500 text-sm">{unverified.length} ta tasdiqlanmagan • {verified.length} ta tasdiqlangan</p></div>
-    <h3 className="font-bold mb-4 text-amber-700">⏳ Tasdiqlanmagan ({unverified.length})</h3>
+    <h3 className="font-bold mb-4 text-amber-700 flex items-center gap-2"><i className="ri-time-line"/>Tasdiqlanmagan ({unverified.length})</h3>
     {unverified.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm mb-6"><i className="ri-checkbox-circle-line text-4xl text-gray-200 block mb-3"/><p className="font-bold">Barchasi tasdiqlangan</p></div>:
     <div className="space-y-3 mb-8">{unverified.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''} • {p.owner}</div></div><button onClick={()=>verify(p)} className="flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white text-sm font-bold rounded-xl shadow active:scale-95 transition"><i className="ri-check-line"/>Tasdiq</button></div>)}</div>}
-    <h3 className="font-bold mb-4 text-emerald-700">✅ Tasdiqlangan ({verified.length})</h3>
+    <h3 className="font-bold mb-4 text-emerald-700 flex items-center gap-2"><i className="ri-checkbox-circle-fill"/>Tasdiqlangan ({verified.length})</h3>
     <div className="space-y-3">{verified.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 opacity-75"><div className="w-14 h-14 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="flex items-center gap-2 text-xs text-gray-400"><i className="ri-verified-badge-fill text-emerald-500"/>Tasdiqlangan • {p.district}</div></div></div>)}</div>
   </div>);
 }
@@ -2518,12 +2563,12 @@ function AdminPremium(){
     dispatch({type:'SET_APPROVED',payload:state.approved.map(x=>x.id===p.id?{...x,isPremium:false,premiumType:undefined,premiumUntil:undefined}:x)});
     toast('Premium olib tashlandi','warn');
   };
-  const pts=[{t:'top' as const,l:'TOP',p:50000,d:7,desc:'Qidiruvda eng tepada'},{t:'featured' as const,l:'FEATURED',p:100000,d:7,desc:'Asosiy sahifada katta kartochka'},{t:'urgent' as const,l:'URGENT',p:30000,d:3,desc:'🔥 Shoshilinch qizil badge'}];
+  const pts=[{t:'top' as const,l:'TOP',p:50000,d:7,desc:'Qidiruvda eng tepada'},{t:'featured' as const,l:'FEATURED',p:100000,d:7,desc:'Asosiy sahifada katta kartochka'},{t:'urgent' as const,l:'URGENT',p:30000,d:3,desc:'Shoshilinch qizil badge'}];
   return(<div><div className="mb-6"><h2 className="text-2xl font-extrabold">Premium E'lonlar</h2><p className="text-gray-500 text-sm">{premium.length} ta premium e'lon faol</p></div>
     <div className="grid md:grid-cols-3 gap-4 mb-8">{pts.map(pt=><div key={pt.t} className="bg-white rounded-2xl p-5 shadow-sm border-2 border-amber-100"><div className="font-extrabold text-amber-600 mb-1">{pt.l}</div><div className="text-2xl font-extrabold mb-1">{pt.p.toLocaleString()} so'm</div><div className="text-xs text-gray-500 mb-2">{pt.d} kun • {pt.desc}</div></div>)}</div>
-    {premium.length>0&&<div className="bg-amber-50 rounded-2xl p-5 mb-6 border border-amber-200"><h3 className="font-bold text-amber-800 mb-3">⭐ Faol premium e'lonlar ({premium.length})</h3><div className="space-y-2">{premium.map(p=><div key={p.id} className="bg-white rounded-xl p-3 flex items-center gap-3"><div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-emerald-50">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><span className="text-xs text-amber-600 font-bold">{p.premiumType?.toUpperCase()} — {p.premiumUntil?new Date(p.premiumUntil).toLocaleDateString('uz-Latn'):''}</span></div><button onClick={()=>removePremium(p)} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition active:scale-95 shrink-0"><i className="ri-close-circle-line mr-1"/>Olib tashlash</button></div>)}</div></div>}
+    {premium.length>0&&<div className="bg-amber-50 rounded-2xl p-5 mb-6 border border-amber-200"><h3 className="font-bold text-amber-800 mb-3 flex items-center gap-2"><i className="ri-star-fill"/>Faol premium e'lonlar ({premium.length})</h3><div className="space-y-2">{premium.map(p=><div key={p.id} className="bg-white rounded-xl p-3 flex items-center gap-3"><div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-emerald-50">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><span className="text-xs text-amber-600 font-bold">{p.premiumType?.toUpperCase()} — {p.premiumUntil?new Date(p.premiumUntil).toLocaleDateString('uz-Latn'):''}</span></div><button onClick={()=>removePremium(p)} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition active:scale-95 shrink-0"><i className="ri-close-circle-line mr-1"/>Olib tashlash</button></div>)}</div></div>}
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden"><div className="p-5 border-b flex items-center justify-between"><h3 className="font-bold">Barcha e'lonlar — premium qo'yish</h3><span className="text-xs text-gray-400">{state.approved.length} ta e'lon</span></div>
-      <div className="divide-y">{state.approved.map(p=><div key={p.id} className={`p-4 flex items-center gap-4 ${p.isPremium?'bg-amber-50/40':''}`}><div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-emerald-50">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div>{p.isPremium&&<span className="text-xs text-amber-600 font-bold">✨ {p.premiumType?.toUpperCase()} aktiv</span>}</div><div className="flex gap-1 flex-wrap">{p.isPremium?<button onClick={()=>removePremium(p)} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition"><i className="ri-close-line"/>Olib tashlash</button>:pts.map(pt=><button key={pt.t} onClick={()=>setPremium(p,pt.t,pt.d)} className="px-2.5 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition">{pt.l}</button>)}</div></div>)}</div></div>
+      <div className="divide-y">{state.approved.map(p=><div key={p.id} className={`p-4 flex items-center gap-4 ${p.isPremium?'bg-amber-50/40':''}`}><div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-emerald-50">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div>{p.isPremium&&<span className="text-xs text-amber-600 font-bold flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()} aktiv</span>}</div><div className="flex gap-1 flex-wrap">{p.isPremium?<button onClick={()=>removePremium(p)} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition"><i className="ri-close-line"/>Olib tashlash</button>:pts.map(pt=><button key={pt.t} onClick={()=>setPremium(p,pt.t,pt.d)} className="px-2.5 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition">{pt.l}</button>)}</div></div>)}</div></div>
   </div>);
 }
 
@@ -2568,8 +2613,8 @@ function RecommendationsSection(){
   if(state.approved.length===0) return null;
   return(<div className="pb-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
     {recent.length>0&&<div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1">🕐 Yaqinda ko'rganlar</h2><p className="text-gray-500 text-sm">So'nggi ko'rilgan e'lonlar</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{recent.slice(0,4).map(p=><Card key={p.id} p={p}/>)}</div></div>}
-    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1">🔥 Eng ko'p ko'rilgan</h2><p className="text-gray-500 text-sm">Bu hafta eng mashhur e'lonlar</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{popular.map(p=><Card key={p.id} p={p}/>)}</div></div>
-    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1">⭐ Yuqori reytingli</h2><p className="text-gray-500 text-sm">Tasdiqlangan + ko'p ko'rilgan</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{top.map(p=><Card key={p.id} p={p}/>)}</div></div>
+    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-fire-fill text-red-500"/>Eng ko'p ko'rilgan</h2><p className="text-gray-500 text-sm">Bu hafta eng mashhur e'lonlar</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{popular.map(p=><Card key={p.id} p={p}/>)}</div></div>
+    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-star-fill text-amber-500"/>Yuqori reytingli</h2><p className="text-gray-500 text-sm">Tasdiqlangan + ko'p ko'rilgan</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{top.map(p=><Card key={p.id} p={p}/>)}</div></div>
   </div></div>);
 }
 
@@ -2769,7 +2814,7 @@ ${JSON.stringify(target)}`;
         </div>
         <div className={`rounded-xl p-3 text-center font-extrabold text-sm ${diff<-10?'bg-emerald-100 text-emerald-700':diff>10?'bg-red-100 text-red-600':'bg-amber-100 text-amber-700'}`}>
           <div>{diff>0?'+':''}{diff}%</div>
-          <div className="text-[10px] font-normal mt-0.5">{diff<-10?'Arzon 👍':diff>10?'Qimmat ⚠️':'O\'rtacha'}</div>
+          <div className="text-[10px] font-normal mt-0.5">{diff<-10?'Arzon':diff>10?'Qimmat':'O\'rtacha'}</div>
         </div>
       </div>
       {/* Per m² */}
@@ -2792,7 +2837,7 @@ ${JSON.stringify(target)}`;
       {result&&(
         <div className="bg-white rounded-xl p-3 mb-3 border border-blue-100 space-y-2">
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-semibold">📍 Joylashuv: {result.location_adjustment}</span>
+            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-semibold flex items-center gap-1"><i className="ri-map-pin-2-fill"/>Joylashuv: {result.location_adjustment}</span>
             <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-lg font-semibold">🔧 Holat: {result.condition_adjustment}</span>
             <span className={`px-2 py-1 rounded-lg font-semibold ${confBadge}`}>{confLabel}</span>
           </div>
@@ -2889,12 +2934,12 @@ function NewBuildingsSection(){
   return(
     <section className="pb-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-end mb-8 flex-wrap gap-4">
-        <div><h2 className="text-2xl font-extrabold mb-1">🏗️ Yangi qurilishlar</h2><p className="text-gray-500 text-sm">LCD va yangi binolar — bevosita qurilish kompaniyasidan</p></div>
+        <div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-building-4-fill text-emerald-600"/>Yangi qurilishlar</h2><p className="text-gray-500 text-sm">LCD va yangi binolar — bevosita qurilish kompaniyasidan</p></div>
         <button onClick={()=>{dispatch({type:'SALE_FILTER',payload:{district:'',rooms:'',max:''}});dispatch({type:'NAV',payload:'sale'});window.scrollTo({top:0});}} className="flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-900 text-sm transition">Barchasini ko'rish <i className="ri-arrow-right-line"/></button>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{newBuilds.map(p=>(
         <div key={p.id} onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
-          <div className="relative aspect-[4/3] bg-emerald-50 overflow-hidden">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>}<div className="absolute top-3 left-3"><span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">🏗️ YANGI BINO</span></div></div>
+          <div className="relative aspect-[4/3] bg-emerald-50 overflow-hidden">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>}<div className="absolute top-3 left-3"><span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-building-4-line"/>YANGI BINO</span></div></div>
           <div className="p-4"><h3 className="font-bold text-sm mb-1 line-clamp-2">{p.title}</h3><p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><i className="ri-map-pin-2-fill text-emerald-500"/>{p.district}</p><div className="font-extrabold text-emerald-700">${(p.price||0).toLocaleString()}</div></div>
         </div>
       ))}</div>
@@ -2940,7 +2985,7 @@ Ijaraga beruvchi: _____________ / ${listing?.owner||''}
 Ijarachi: _____________ / ${tenantName||''}`;
 
   const print=()=>{const w=window.open('','_blank');if(w){const blob=new Blob([`<pre style="font-family:monospace;padding:40px;font-size:13px">${contract}</pre>`],{type:'text/html'});const url=URL.createObjectURL(blob);w.location.href=url;setTimeout(()=>{w.print();URL.revokeObjectURL(url);},400);}};
-  const copy=()=>{navigator.clipboard.writeText(contract);toast('Shartnoma nusxalandi ✅');};
+  const copy=()=>{navigator.clipboard.writeText(contract);toast('Shartnoma nusxalandi');};;
 
   return(
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -2995,7 +3040,7 @@ function PaymentModal({purpose,onSuccess,onClose}:{purpose:PaymentPurpose;onSucc
   const prices:Record<PaymentPurpose,{label:string;amount:number;desc:string}>={
     premium_top:{label:'TOP Premium',amount:50000,desc:'7 kun — qidiruvda eng tepada'},
     premium_featured:{label:'FEATURED Premium',amount:100000,desc:'7 kun — asosiy sahifada katta kartochka'},
-    premium_urgent:{label:'URGENT (Shoshilinch)',amount:30000,desc:'3 kun — 🔥 qizil badge'},
+    premium_urgent:{label:'URGENT (Shoshilinch)',amount:30000,desc:'3 kun — qizil badge'},
     find_house:{label:"Uy topib berish xizmati",amount:150000,desc:'24 soat ichida topib beramiz'},
   };
   const info=prices[purpose];
@@ -3066,7 +3111,7 @@ function PaymentModal({purpose,onSuccess,onClose}:{purpose:PaymentPurpose;onSucc
         )}
         {step==='success'&&(
           <div className="p-12 text-center">
-            <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-4xl mx-auto mb-4">✅</div>
+            <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-4xl mx-auto mb-4"><i className="ri-checkbox-circle-fill text-4xl text-emerald-600"/></div>
             <div className="text-xl font-extrabold text-gray-900 mb-2">To'lov muvaffaqiyatli!</div>
             <div className="text-sm text-gray-500 mb-6">{info.label} faollashtirildi</div>
             <button onClick={()=>{onSuccess();onClose();}} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl active:scale-95 transition">Davom etish</button>
@@ -3230,7 +3275,7 @@ interface AiMsg { role:'user'|'assistant'; text:string; listings?:Listing[]; }
 
 function AiChatModal({onClose}:{onClose:()=>void}){
   const{state,dispatch}=useApp();
-  const[msgs,setMsgs]=useState<AiMsg[]>([{role:'assistant',text:'Salom! Men UyNest AI yordamchisiman 🏠\n\nYozib yoki mikrofondan gaplab so\'rang:\n"Yunusobodda 2 xonali $500 gacha ijara topib ber"'}]);
+  const[msgs,setMsgs]=useState<AiMsg[]>([{role:'assistant',text:'Salom! Men UyNest AI yordamchisiman\n\nYozib yoki mikrofondan gaplab so\'rang:\n"Yunusobodda 2 xonali $500 gacha ijara topib ber"'}]);
   const[input,setInput]=useState('');
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
@@ -3470,7 +3515,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
     }catch(e:any){
       const msg=String(e?.message||e);
       const errMsg=msg.includes('429')
-        ?'⏳ Kvota tugadi. 1 daqiqa kuting va qaytadan urinib ko\'ring.'
+        ?'Kvota tugadi. 1 daqiqa kuting va qaytadan urinib ko\'ring.'
         :msg.includes('404')
         ?'Model topilmadi: '+msg
         :'Xato yuz berdi: '+msg;
@@ -3538,7 +3583,7 @@ function AppRouter(){
   const{state}=useApp();
   const hideFooter=['admin','auth','login','map','chat'].includes(state.page);
   const pages:Record<string,React.ReactElement>={home:<HomePage/>,rent:<RentPage/>,sale:<SalePage/>,saved:<SavedPage/>,map:<MapPage/>,detail:<DetailPage/>,request:<RequestPage/>,submit:<SubmitPage/>,auth:<AuthPage/>,login:<AuthPage/>,admin:<AdminPage/>,chat:<ChatPage/>,review:<ReviewPage/>,profile:<FullProfilePage/>,compare:<ComparePage/>,statistics:<StatisticsPage/>,agent:<AgentProfilePage/>};
-  return(<div className="min-h-screen flex flex-col bg-[#F4F9F5]" style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"}}><Navbar/><main className="flex-1">{pages[state.page]||<HomePage/>}</main>{!hideFooter&&<Footer/>}<ContactModal/><AuthReqModal/><GoogleModal/></div>);
+  return(<div className="min-h-screen flex flex-col bg-[#F4F9F5]" style={{fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"}}><Navbar/><main className="flex-1 pb-14 md:pb-0">{pages[state.page]||<HomePage/>}</main>{!hideFooter&&<Footer/>}<BottomNav/><ContactModal/><AuthReqModal/><GoogleModal/></div>);
 }
 
 // ─── APP ─────────────────────────────────────────────────────

@@ -8,3 +8,9 @@
   from { transform: translateY(-8px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
+@keyframes mePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37,99,235,.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+}
+.me-marker-dot { animation: mePulse 1.8s ease-out infinite; }
