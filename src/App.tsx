@@ -3252,9 +3252,32 @@ function PaymentModal({purpose,onSuccess,onClose}:{purpose:PaymentPurpose;onSucc
   );
 }
 
-// ─── AI MASLAHATCHI (Jarvis-style, Gemini function calling) ──
-// Groq — bepul, 30 RPM, 14,400 RPD (Gemini'dan 2x ko'p)
+// ─── AI MASLAHATCHI ──────────────────────────────────────────
+// Groq — bepul, 30 RPM, 14,400 RPD
 const GROQ_KEY = ((import.meta as any).env?.VITE_GROQ_API_KEY as string)||'';
+
+// Hardcoded Uzbekistan city coords — prevents Nominatim from returning
+// streets named after cities (e.g. "Termez ko'chasi" in Tashkent)
+const UZBEK_CITY_COORDS:Record<string,[number,number]>={
+  'termiz':[37.2244,67.2783],'termez':[37.2244,67.2783],
+  'samarqand':[39.6542,66.9597],'самарканд':[39.6542,66.9597],
+  'buxoro':[39.7747,64.4286],'бухара':[39.7747,64.4286],
+  'navoiy':[40.0840,65.3791],
+  'qarshi':[38.8600,65.7900],'shahrisabz':[39.0619,66.8292],
+  'nukus':[42.4600,59.6200],
+  'urgench':[41.5500,60.6333],'xiva':[41.3786,60.3622],
+  'namangan':[41.0011,71.6725],
+  'andijon':[40.7821,72.3442],
+  "farg'ona":[40.3842,71.7843],'fargona':[40.3842,71.7843],'fergana':[40.3842,71.7843],
+  "marg'ilon":[40.4736,71.7220],'margilan':[40.4736,71.7220],
+  "qo'qon":[40.5280,70.9420],'kokand':[40.5280,70.9420],
+  'jizzax':[40.1219,67.8428],
+  'guliston':[40.4897,68.7750],
+  'chirchiq':[41.4686,69.5820],'angren':[41.0168,70.1415],
+  'zarafshon':[41.5700,64.2000],
+  'denov':[38.2747,67.8884],'muborak':[38.9853,65.2264],
+  'toshkent':[41.2995,69.2401],'tashkent':[41.2995,69.2401],
+};
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile'; // aniqroq, ko'p tilli, 30 RPM bepul
 
@@ -3327,20 +3350,23 @@ const _AI_TOOLS = [{
   ]
 }];
 
-const AI_SYSTEM = `Sen UyNest — O'zbekiston ko'chmas mulk platformasining aqlli AI yordamchisi. FAQAT O'zbek tilida javob ber.
+const AI_SYSTEM = `Sen UyNest — O'zbekiston ko'chmas mulk platformasining AI yordamchisi.
+MUHIM: Doimo va faqat O'ZBEK TILIDA javob ber. Hech qachon rus yoki ingliz tilida yozma.
 
-Foydalanuvchi xabarini tahlil qilib, quyidagi JSON formatlardan FAQAT birini qaytargin (hech qanday qo'shimcha matn yozma):
+Foydalanuvchi xabarini tahlil qilib, quyidagi JSON formatlardan FAQAT birini qaytargin:
 
-Uy/kvartira qidirish: {"action":"search","type":"ijara|sotuv|null","district":"tuman nomi|null","maxPrice":son|null,"minPrice":son|null,"rooms":son|null}
-Narx statistikasi so'rash: {"action":"stats","district":"tuman nomi"}
-Oddiy savol yoki salomlashish: {"action":"chat","reply":"O'zbek tilida aniq va foydali javob"}
+Uy qidirish: {"action":"search","type":"ijara|sotuv|null","district":"joy nomi yoki null","maxPrice":son|null,"minPrice":son|null,"rooms":son|null}
+Narx statistika: {"action":"stats","district":"tuman nomi"}
+Oddiy savol: {"action":"chat","reply":"O'zbek tilidagi javob matni"}
 
-Muhim ma'lumotlar:
-- Toshkent asosiy tumanlari: Yunusobod, Chilonzor, Mirzo Ulug'bek, Mirobod, Yakkasaroy, Shayxontohur, Uchtepa, Sergeli, Bektemir, Olmazor
-- Ijara narx taxminlari: 1 xona $150-350/oy, 2 xona $250-600/oy, 3 xona $400-900/oy
-- Sotuv narx taxminlari: 1 xona $25,000-70,000, 2 xona $50,000-120,000, 3 xona $80,000-200,000+
-- Foydalanuvchi "Toshkent" desa, district=null (butun Toshkent demak)
+Joylar ro'yxati:
+- Toshkent tumanlari: Yunusobod, Chilonzor, Mirzo Ulug'bek, Mirobod, Yakkasaroy, Shayxontohur, Uchtepa, Sergeli, Bektemir, Olmazor
+- Viloyat markazlari: Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Guliston, Termiz, Chirchiq
+- Foydalanuvchi "Termiz/Termez" desa → district="termiz"
+- Foydalanuvchi "Toshkent" desa → district=null (butun shahar)
+- Viloyat nomi (masalan "Samarqand viloyati") → district="samarqand"
 
+Narx taxminlari (USD): ijara 1x $150-350/oy, 2x $300-700/oy; sotuv 2x $40k-120k, 3x $80k-200k+
 Faqat JSON qaytargin, boshqa hech narsa yozma.`;
 
 // ─── LOCAL NLP — Gemini API shart emas ──────────────────────
@@ -3409,9 +3435,12 @@ function AiChatModal({onClose}:{onClose:()=>void}){
   const[input,setInput]=useState('');
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
+  const[transcribing,setTranscribing]=useState(false);
   const[voiceOn,setVoiceOn]=useState(true);
   const endRef=useRef<HTMLDivElement>(null);
   const recogRef=useRef<any>(null);
+  const mediaRecorderRef=useRef<MediaRecorder|null>(null);
+  const audioChunksRef=useRef<BlobPart[]>([]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
 
   // Text-to-speech: Google Translate TTS — O'zbek tilida yaxshi, bepul, kalit shart emas
@@ -3469,24 +3498,69 @@ function AiChatModal({onClose}:{onClose:()=>void}){
     synth.speak(utt);
   };
 
-  // Mikrofon: ovozni matnga aylantirish
-  const startListening=()=>{
+  // Mikrofon: Groq Whisper — O'zbek tilini yaxshi taniydi, bepul
+  const startListening=async()=>{
+    // Stop if already recording
+    if(listening){
+      mediaRecorderRef.current?.stop();
+      recogRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    // Try MediaRecorder + Groq Whisper first
+    if(navigator.mediaDevices?.getUserMedia&&GROQ_KEY){
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        const mimeType=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':
+                        MediaRecorder.isTypeSupported('audio/ogg')?'audio/ogg':'audio/mp4';
+        const mr=new MediaRecorder(stream,{mimeType});
+        audioChunksRef.current=[];
+        mr.ondataavailable=(e:BlobEvent)=>{if(e.data.size>0)audioChunksRef.current.push(e.data);};
+        mr.onstop=async()=>{
+          stream.getTracks().forEach(t=>t.stop());
+          setListening(false);
+          const blob=new Blob(audioChunksRef.current,{type:mimeType});
+          if(blob.size<2000){return;}// too short
+          setTranscribing(true);
+          try{
+            const fd=new FormData();
+            const ext=mimeType.split('/')[1].split(';')[0];
+            fd.append('file',blob,'voice.'+ext);
+            fd.append('model','whisper-large-v3');
+            fd.append('language','uz');
+            fd.append('response_format','text');
+            const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{
+              method:'POST',
+              headers:{'Authorization':'Bearer '+GROQ_KEY},
+              body:fd
+            });
+            if(!r.ok)throw new Error('Whisper '+r.status);
+            const t=(await r.text()).trim();
+            if(t){
+              setInput(t);
+              setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},200);
+            }
+          }catch{toast("Ovoz aniqlanmadi, qayta urinib ko'ring",'warn');}
+          finally{setTranscribing(false);}
+        };
+        mediaRecorderRef.current=mr;
+        mr.start();
+        setListening(true);
+        return;
+      }catch{/* fall through to Web Speech API */}
+    }
+    // Fallback: Web Speech API (iOS Safari, older browsers)
     const SpeechRecognition=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
-    if(!SpeechRecognition){toast('Brauzeringiz mikrofon qo\'llab-quvvatlamaydi','warn');return;}
-    if(listening){recogRef.current?.stop();setListening(false);return;}
+    if(!SpeechRecognition){toast("Mikrofon qo'llab-quvvatlanmaydi",'warn');return;}
     const recog=new SpeechRecognition();
     recog.lang='uz-UZ';recog.continuous=false;recog.interimResults=false;
     recog.onstart=()=>setListening(true);
     recog.onend=()=>setListening(false);
     recog.onerror=()=>setListening(false);
     recog.onresult=(e:any)=>{
-      const transcript=e.results[0][0].transcript;
-      setInput(transcript);
-      // Avtomatik yuborish
-      setTimeout(()=>{
-        const btn=document.getElementById('ai-send-btn');
-        if(btn)(btn as HTMLButtonElement).click();
-      },300);
+      const t=e.results[0][0].transcript;
+      setInput(t);
+      setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},300);
     };
     recogRef.current=recog;
     recog.start();
@@ -3525,15 +3599,16 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         items=districtFilter(typeFilter(all));
       }
 
-      // 4. Tuman filtri tushiriladi, barcha e'lonlardan ko'rsatiladi
+      // 4. If a specific district was given and nothing found, do NOT fall back to
+      //    unrelated cities — return empty so the geo block can try nearby search
       let note='';
       if(items.length===0&&args.district){
-        items=typeFilter(all);
-        note=`"${args.district}" tumanda hozir e'lon yo'q. Boshqa tumanlardan ko'rsatildi:`;
+        // Keep items empty; the caller will try geo-based search
+        note='';
       }
 
-      // 5. Hamma narsa tushiriladi
-      if(items.length===0) items=all.slice(0,5);
+      // 5. Only fall back to all listings when NO district was specified
+      if(items.length===0&&!args.district) items=all.slice(0,5);
 
       // Premium TOP e'lonlar yuqorida
       items=[...items.filter(p=>p.isPremium&&p.premiumType==='top'),...items.filter(p=>!(p.isPremium&&p.premiumType==='top'))].slice(0,5);
@@ -3587,37 +3662,42 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         let note:string=typeof result==='object'&&'note' in result?(result as any).note||'':'';
         let geoName='';
 
-        // 2. Topilmasa YOKI noma'lum joy bo'lsa → Nominatim geocoding + radius
+        // 2. Geo search — first try hardcoded Uzbek city coords, then Nominatim
         if((found.length===0||parsed.useGeo)&&parsed.district){
           try{
-            const geoR=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(parsed.district+", O'zbekiston")}&format=json&limit=1`);
-            const geo=await geoR.json();
-            if(geo.length>0){
-              const la=parseFloat(geo[0].lat),lo=parseFloat(geo[0].lon);
-              geoName=geo[0].display_name.split(',')[0];
-              // 50km radius — viloyat markazi uchun keng
-              const radius=parsed.useGeo?0.5:0.15;
+            const dNorm=parsed.district.toLowerCase().trim();
+            // Check hardcoded map first to avoid Nominatim returning wrong results
+            // (e.g. "Termez ko'chasi" in Tashkent instead of the actual city)
+            let la:number|null=null,lo:number|null=null,resolvedName=parsed.district;
+            const hardcoded=UZBEK_CITY_COORDS[dNorm]||UZBEK_CITY_COORDS[dNorm.replace(/ tumani| shahri| viloyati/g,'').trim()];
+            if(hardcoded){
+              [la,lo]=hardcoded;
+              resolvedName=parsed.district;
+            }else{
+              // Fallback to Nominatim for unknown places
+              const geoR=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(parsed.district+", O'zbekiston")}&format=json&limit=5&addressdetails=1`);
+              const geo=await geoR.json();
+              // Prefer city/town/village results over streets (place_rank < 20 means city-level)
+              const best=geo.find((r:any)=>r.class==='place')||geo.find((r:any)=>r.place_rank&&r.place_rank<20)||geo[0];
+              if(best){la=parseFloat(best.lat);lo=parseFloat(best.lon);resolvedName=best.display_name.split(',')[0];}
+            }
+            if(la!=null&&lo!=null){
+              geoName=resolvedName;
+              const radius=0.5; // ~50km — covers a city and surrounding areas
               let nearby=state.approved.filter(p=>{
                 if(!p.lat||!p.lng)return false;
-                const dx=p.lat-la,dy=p.lng-lo;
+                const dx=p.lat-la!,dy=p.lng-lo!;
                 return Math.sqrt(dx*dx+dy*dy)<radius;
               });
-              // Type filtr qo'llash
               if(parsed.type)nearby=nearby.filter(p=>p.type===(parsed.type==='ijara'?'rent':'sale'));
               if(parsed.rooms)nearby=nearby.filter(p=>p.rooms>=parsed.rooms);
               if(parsed.maxPrice)nearby=nearby.filter(p=>p.price<=parsed.maxPrice);
               if(nearby.length>0){
                 found=nearby.slice(0,5);
                 note=`"${geoName}" atrofida ${nearby.length} ta e'lon:`;
-              }else if(found.length===0){
-                // Eng yaqin e'lonlarni ko'rsat
-                const withCoords=state.approved.filter(p=>p.lat&&p.lng);
-                const sorted=withCoords.sort((a,b)=>{
-                  const da=Math.sqrt((a.lat!-la)**2+(a.lng!-lo)**2);
-                  const db=Math.sqrt((b.lat!-la)**2+(b.lng!-lo)**2);
-                  return da-db;
-                });void sorted;
-                note=`"${geoName}" topildi, lekin atrofda e'lon yo'q. Quyida boshqa e'lonlar:`;
+              }else{
+                note=`"${geoName}" hududida hozircha e'lon mavjud emas.`;
+                found=[];
               }
             }
           }catch{/* geocoding xato */}
@@ -3625,7 +3705,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
 
         let reply='';
         if(found.length===0){
-          reply=`"${parsed.district||'Bu joy'}" bo'yicha e'lon topilmadi.\nBoshqa joy nomi yoki keng filtr bilan urinib ko'ring.`;
+          reply=note||`"${parsed.district||'Bu joy'}" bo'yicha hozircha e'lon yo'q.\nBoshqa joy nomi yoki keng filtr bilan urinib ko'ring.`;
         }else{
           const distLabel=geoName||parsed.district
             ?(geoName||parsed.district).charAt(0).toUpperCase()+(geoName||parsed.district).slice(1)
@@ -3660,7 +3740,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-700 to-emerald-500 sm:rounded-t-3xl rounded-t-3xl">
           <div className={`w-10 h-10 rounded-xl overflow-hidden ${listening?'animate-pulse ring-2 ring-white':''}`}><img src="/ai-robot.png" alt="AI" className="w-full h-full object-cover"/></div>
-          <div className="flex-1"><div className="font-bold text-white">UyNest AI</div><div className="text-emerald-100 text-xs">{listening?'🎙️ Eshitmoqda...':'Llama 3.3 70B • Yozing yoki gapiring'}</div></div>
+          <div className="flex-1"><div className="font-bold text-white">UyNest AI</div><div className="text-emerald-100 text-xs">{listening?'🎙️ Gapiring... (to\'xtatish uchun bosing)':transcribing?'⏳ Ovoz tanilmoqda...':'Llama 3.3 70B • Yozing yoki gapiring'}</div></div>
           <button onClick={()=>{window.speechSynthesis?.cancel();setVoiceOn(v=>!v);}} title={voiceOn?'Ovozni o\'chirish':'Ovozni yoqish'} className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition ${voiceOn?'bg-white/30 text-white':'bg-white/10 text-white/40'}`}><i className={voiceOn?'ri-volume-up-line':'ri-volume-mute-line'}/></button>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30">✕</button>
         </div>
@@ -3693,15 +3773,15 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         <div className="p-4 border-t border-gray-100">
           <div className="flex gap-2">
             {/* Mic button */}
-            <button onClick={startListening} title="Mikrofon bilan gapiring" className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition active:scale-95 shrink-0 ${listening?'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40':'bg-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'}`}>
-              <i className={listening?'ri-mic-fill':'ri-mic-line'}/>
+            <button onClick={startListening} title={listening?"To'xtatish":"Mikrofon bilan gapiring"} disabled={transcribing} className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition active:scale-95 shrink-0 ${listening?'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40':transcribing?'bg-amber-100 text-amber-500':'bg-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'}`}>
+              <i className={transcribing?'ri-loader-4-line animate-spin':listening?'ri-stop-circle-line':'ri-mic-line'}/>
             </button>
-            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder={listening?'🎙️ Gapiring...':'Yozing yoki mikrofondan gapiring...'} className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
-            <button id="ai-send-btn" onClick={send} disabled={loading||!input.trim()} className="w-11 h-11 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-xl flex items-center justify-center shadow active:scale-95 transition disabled:opacity-40 shrink-0">
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder={listening?'🎙️ Gapiring... (tugash uchun bosing)':transcribing?'⏳ Ovoz tanilmoqda...':'Yozing yoki mikrofondan gapiring...'} disabled={transcribing} className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition disabled:opacity-60"/>
+            <button id="ai-send-btn" onClick={send} disabled={loading||transcribing||!input.trim()} className="w-11 h-11 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-xl flex items-center justify-center shadow active:scale-95 transition disabled:opacity-40 shrink-0">
               {loading?<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>:<i className="ri-send-plane-fill"/>}
             </button>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1.5 text-center">Chrome/Edge da mikrofon ishlaydi • Javob ovoz bilan o'qiladi</div>
+          <div className="text-[10px] text-gray-400 mt-1.5 text-center">Groq Whisper • O'zbek tilini yaxshi taniydi • Ovoz bilan javob beradi</div>
         </div>
       </div>
     </div>
