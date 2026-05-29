@@ -438,7 +438,7 @@ function SalePage(){
 }
 
 // ─── MAP SEARCH (Module 19) ─────────────────────────────────
-function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(t:string)=>void}){
+function MapSearchBox({onResult,filterType,setFilterType,legendSlot}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(t:string)=>void;legendSlot?:React.ReactNode}){
   const[q,setQ]=useState('');
   const[results,setResults]=useState<any[]>([]);
   const[loading,setLoading]=useState(false);
@@ -460,8 +460,9 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
         </div>
         <button onClick={search} className="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0 flex items-center justify-center gap-1.5"><i className="ri-search-line text-base"/><span className="hidden md:inline">Qidiruv</span></button>
       </div>
-      <div className="flex gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-1">
         {['','rent','sale'].map((t,i)=><button key={t} onClick={()=>setFilterType(t)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===t?(t==='rent'?'bg-blue-500 text-white':t==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?'Hammasi':t==='rent'?'Ijara':'Sotuv'}</button>)}
+        {legendSlot}
       </div>
       {results.length>0&&(
         <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[200] mt-1">
@@ -658,12 +659,13 @@ function MapPage(){
     const scale=isSel?'transform:scale(1.25);z-index:9999;':'';
     const hlRing=isHL&&!isSel?`outline:2px solid #fbbf24;outline-offset:2px;`:'';
     return L.divIcon({
-      html:`<div style="background:${bg};color:#fff;border:${border};border-radius:22px;padding:5px 10px 7px;text-align:center;font-family:Inter,-apple-system,sans-serif;position:relative;cursor:pointer;white-space:nowrap;${scale}${hlRing}">
-        <span style="font-size:9px;font-weight:700;opacity:.85;letter-spacing:.3px;margin-right:3px;vertical-align:middle">${lbl}</span><span style="font-size:13px;font-weight:800;vertical-align:middle">${px}</span>
+      html:`<div style="background:${bg};color:#fff;border:${border};border-radius:22px;padding:3px 10px 5px;text-align:center;font-family:Inter,-apple-system,sans-serif;min-width:54px;position:relative;cursor:pointer;${scale}${hlRing}">
+        <div style="font-size:9.5px;font-weight:700;opacity:.9;letter-spacing:.3px;line-height:1.3">${lbl}</div>
+        <div style="font-size:13px;font-weight:800;line-height:1.2;white-space:nowrap">${px}</div>
         <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid ${bg}"></div>
       </div>`,
       className:'',
-      iconAnchor:[30,46],
+      iconAnchor:[37,50],
     });
   };
 
@@ -679,30 +681,32 @@ function MapPage(){
   return(
     <div className="flex flex-col lg:flex-row h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)]">
       <div className="flex-1 relative overflow-hidden">
-        {/* Search bar */}
-        <div className="absolute top-3 left-14 z-[100] w-56 md:w-72 max-w-[55%]">
-          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}/>
+        {/* Search bar + filter chips + price legend in one bar */}
+        <div className="absolute top-3 left-14 z-[100] w-[calc(100%-72px)] md:w-72">
+          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}
+            legendSlot={
+              <details className="ml-auto bg-white/95 backdrop-blur-sm rounded-xl shadow border border-gray-100 overflow-hidden group shrink-0" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
+                <summary className="list-none select-none cursor-pointer px-2 py-1.5" style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'2px'}}>
+                    <div className="w-2 h-2 rounded-full bg-green-600 shrink-0"/>
+                    <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0"/>
+                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0"/>
+                  </div>
+                  <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider leading-none">Narx</span>
+                  <i className="ri-arrow-down-s-line text-gray-400 text-xs group-open:rotate-180 transition-transform leading-none"/>
+                </summary>
+                <div className="px-2.5 pb-2 space-y-1 min-w-[120px]">
+                  {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
+                    <div key={x.l} className="flex items-center gap-1.5">
+                      <div style={{background:x.c}} className="w-2.5 h-2.5 rounded-full shrink-0"/>
+                      <span className="text-[10px] font-semibold text-gray-600 whitespace-nowrap">{x.l}</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            }
+          />
         </div>
-        {/* Price legend — collapsed on mobile, expanded on desktop */}
-        <details className="absolute top-[90px] md:top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden group" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
-          <summary className="list-none select-none cursor-pointer px-3 py-2" style={{display:'flex',alignItems:'center',gap:'6px'}}>
-            <div style={{display:'flex',alignItems:'center',gap:'3px'}}>
-              <div className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0"/>
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"/>
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"/>
-            </div>
-            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider leading-none">Narx</span>
-            <i className="ri-arrow-down-s-line text-gray-400 text-sm group-open:rotate-180 transition-transform leading-none"/>
-          </summary>
-          <div className="px-3 pb-2.5 space-y-1">
-            {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
-              <div key={x.l} className="flex items-center gap-1.5">
-                <div style={{background:x.c}} className="w-3 h-3 rounded-full shrink-0"/>
-                <span className="text-[10.5px] font-semibold text-gray-600">{x.l}</span>
-              </div>
-            ))}
-          </div>
-        </details>
         {/* "My location" button — always shows crosshair; spinner while GPS is acquiring */}
         <button onClick={()=>{if(userPos){setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}else if(!locating)startLocationWatch();}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center transition active:scale-95 hover:bg-blue-50" title="Mening joylashuvim">
           {locating
