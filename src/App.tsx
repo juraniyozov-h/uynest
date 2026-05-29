@@ -211,7 +211,7 @@ function Navbar(){
             {/* E'lon qo'shish — always visible on mobile in the header */}
             <button onClick={()=>nav('submit')} className="md:hidden flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow active:scale-95 transition shrink-0"><i className="ri-add-line text-sm"/>E'lon</button>
             {state.auth&&u?(
-              <div className="relative">
+              <div className="relative hidden md:block">
                 <button onClick={()=>setUm(!um)} className="flex items-center gap-2 pl-1.5 pr-2 md:pr-3 py-1 bg-white border border-gray-200 rounded-full hover:border-emerald-300 transition shadow-sm active:scale-95">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
                     {u.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover"/>:initials(u.name||u.email||'')}
@@ -458,7 +458,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
           <input value={q} onChange={e=>{setQ(e.target.value);if(!e.target.value)setResults([]);}} onKeyDown={e=>e.key==='Enter'&&search()} placeholder="Ko'cha, mahalla, metro, shahar..." className="flex-1 text-sm outline-none min-w-0"/>
           {loading&&<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0"/>}
         </div>
-        <button onClick={search} className="px-3 md:px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0"><i className="ri-search-line md:hidden"/><span className="hidden md:inline">Qidiruv</span></button>
+        <button onClick={search} className="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0 flex items-center justify-center gap-1.5"><i className="ri-search-line text-base"/><span className="hidden md:inline">Qidiruv</span></button>
       </div>
       <div className="flex gap-2 mb-1">
         {['','rent','sale'].map((t,i)=><button key={t} onClick={()=>setFilterType(t)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===t?(t==='rent'?'bg-blue-500 text-white':t==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?'Hammasi':t==='rent'?'Ijara':'Sotuv'}</button>)}
@@ -587,6 +587,7 @@ function MapPage(){
   const[highlightIds,setHighlightIds]=useState<number[]>([]);
   const[aiMode,setAiMode]=useState(true);
   const[userPos,setUserPos]=useState<[number,number]|null>(_cachedPos);
+  const[locating,setLocating]=useState(false);
   const filtered=allItems.filter(p=>!filterType||p.type===filterType);
 
   // Subscribe to module-level position listener; restore cached position on remount
@@ -600,6 +601,7 @@ function MapPage(){
   // Start location watch only when user explicitly clicks the button — avoids permission prompt on every visit
   const startLocationWatch=()=>{
     if(!navigator.geolocation) return;
+    setLocating(true);
     if(_geoWatchId===null){
       _geoWatchId=navigator.geolocation.watchPosition(
         pos=>{
@@ -607,13 +609,15 @@ function MapPage(){
           // Validate within Uzbekistan bounds (±3° buffer) to reject stale/wrong-country positions
           if(la<34||la>48||lo<53||lo>76){
             toast('GPS noto\'g\'ri joylashuv qaytardi, qaytadan urining','warn');
+            setLocating(false);
             return;
           }
           const p:[number,number]=[la,lo];
           _cachedPos=p;
           _posListeners.forEach(fn=>fn(p));
+          setLocating(false);
         },
-        ()=>{toast('Joylashuvni aniqlashda xatolik','warn');},
+        ()=>{toast('Joylashuvni aniqlashda xatolik','warn');setLocating(false);},
         {enableHighAccuracy:true,timeout:15000,maximumAge:10000}
       );
     }
@@ -681,7 +685,7 @@ function MapPage(){
           <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}/>
         </div>
         {/* Price legend — collapsed on mobile, expanded on desktop */}
-        <details className="absolute top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden group" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
+        <details className="absolute top-[90px] md:top-3 right-3 z-[100] bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden group" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
           <summary className="list-none select-none cursor-pointer px-3 py-2" style={{display:'flex',alignItems:'center',gap:'6px'}}>
             <div style={{display:'flex',alignItems:'center',gap:'3px'}}>
               <div className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0"/>
@@ -700,9 +704,11 @@ function MapPage(){
             ))}
           </div>
         </details>
-        {/* "My location" button — always visible; first click asks permission, subsequent clicks center map */}
-        <button onClick={()=>{if(userPos){setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}else startLocationWatch();}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition active:scale-95" title="Mening joylashuvim">
-          <i className={userPos?"ri-focus-3-line text-xl":"ri-map-pin-user-line text-xl"}/>
+        {/* "My location" button — always shows crosshair; spinner while GPS is acquiring */}
+        <button onClick={()=>{if(userPos){setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}else if(!locating)startLocationWatch();}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center transition active:scale-95 hover:bg-blue-50" title="Mening joylashuvim">
+          {locating
+            ?<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"/>
+            :<i className={`ri-focus-3-line text-xl ${userPos?'text-blue-600':'text-gray-400'}`}/>}
         </button>
         <MapContainer key={mapKey} center={mapCenter} zoom={mapZoom} className="w-full h-full z-0" scrollWheelZoom>
           <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
@@ -990,7 +996,18 @@ function ChatPage(){
   },[partnerId,u.id,dispatch]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'});},[msgs.length]);
 
-  const send=async()=>{if(!text.trim()||!partnerId)return;await ChatAPI.send(u.id,partnerId,text.trim());setText('');await loadMsgs();};
+  const send=async()=>{
+    if(!text.trim()||!partnerId)return;
+    const msg=text.trim();
+    await ChatAPI.send(u.id,partnerId,msg);
+    // Telegram notification to the recipient
+    if(!isAdmin(u)&&partnerId===adminId){
+      notifyAdmin(`💬 <b>Yangi xabar</b>\n👤 ${u.name||u.email||'Foydalanuvchi'}: ${msg.slice(0,200)}`);
+    } else if(isAdmin(u)){
+      notifyUser(partnerId,`💬 <b>Admin xabari</b>\n${msg.slice(0,200)}\n\n👉 https://uynest.vercel.app`);
+    }
+    setText('');await loadMsgs();
+  };
 
   const sendHouse=async(p:Listing)=>{if(!partnerId) return;try{const msg=`Uy topdim: ${p.title} (id:${p.id})\nNarx: $${p.price}${p.type==='rent'?'/oy':''}\nManzil: ${p.address||p.district}\nXonalar: ${p.rooms}\nMaydon: ${p.area} m²\n${p.img}`;setShowHouseModal(false);setText('');await ChatAPI.send(u.id,partnerId,msg);await loadMsgs();toast('Uy yuborildi!');}catch(e){toast('Xatolik yuz berdi','error');console.error('Send house error:',e);}};
 
@@ -2487,6 +2504,7 @@ function FullProfilePage(){
           <button onClick={()=>setTab('premium')} className={`w-full py-2 rounded-xl text-xs font-bold transition active:scale-95 ${tab==='premium'?'bg-amber-500 text-white':'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>Premium tanlash →</button>
         </div>}
         <nav className="bg-white rounded-2xl p-2 shadow-sm">{tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition ${tab===t.id?'bg-emerald-50 text-emerald-800 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><i className={`${t.icon} text-base`}/>{t.l}</button>)}</nav>
+        <button onClick={async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();CompareAPI.clear();dispatch({type:'LOGOUT'});toast('Chiqildi');dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="mt-3 w-full flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-2xl shadow-sm text-sm text-red-500 hover:bg-red-50 transition"><i className="ri-logout-circle-r-line"/>Chiqish</button>
       </aside>
 
       <div className="flex-1 min-w-0">
@@ -3523,7 +3541,10 @@ function AiChatModal({onClose}:{onClose:()=>void}){
     recog.onend=()=>setListening(false);
     recog.onerror=()=>setListening(false);
     recog.onresult=(e:any)=>{
-      const t=e.results[0][0].transcript;
+      let t=e.results[0][0].transcript;
+      const tLow=t.toLowerCase();
+      const FIX:Record<string,string>={'hermes':'termiz','hermès':'termiz','termas':'termiz','ermas':'termiz','термез':'termiz','термес':'termiz','хошкент':'toshkent','ташкент':'toshkent','хашкент':'toshkent','самарканд':'samarqand','бухара':'buxoro','наманган':'namangan','андижан':'andijon'};
+      for(const[w,r]of Object.entries(FIX)){if(tLow.includes(w))t=tLow.replace(new RegExp(w,'gi'),r);}
       setInput(t);
       setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},300);
     };
