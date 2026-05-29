@@ -73,21 +73,15 @@ const isAdmin=(u:User|null)=>!!(u&&u.role==='admin');
 const initials=(s:string)=>(s||'?').split(/[\s@]/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('');
 
 // ─── TELEGRAM NOTIFICATION UTILITY ──────────────────────────
-// Bot token: set VITE_TELEGRAM_BOT_TOKEN in your .env file
-// Set VITE_TELEGRAM_BOT_TOKEN in your .env file
-const TG_TOKEN = ((import.meta as any).env?.VITE_TELEGRAM_BOT_TOKEN as string)||'';
-const ADMIN_TG_ID = '7258242669'; // Admin Telegram chat ID
+const ADMIN_TG_ID = '7258242669';
 
 async function sendTg(chatId:string|number, html:string){
-  if(!TG_TOKEN){console.warn('TG: VITE_TELEGRAM_BOT_TOKEN not set');return;}
-  if(!chatId){console.warn('TG: chatId is empty');return;}
+  if(!chatId){console.warn('TG: chatId empty');return;}
   try{
-    const res=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
+    await fetch('/api/tg',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:chatId,text:html,parse_mode:'HTML'})
+      body:JSON.stringify({chat_id:chatId,text:html})
     });
-    const data=await res.json();
-    if(!data.ok) console.warn('TG error:',data.description,'chat_id:',chatId);
   }catch(e){console.warn('TG send failed:',e);}
 }
 const notifyAdmin=(html:string)=>sendTg(ADMIN_TG_ID,html);
