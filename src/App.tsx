@@ -79,12 +79,15 @@ const TG_TOKEN = ((import.meta as any).env?.VITE_TELEGRAM_BOT_TOKEN as string)||
 const ADMIN_TG_ID = '7258242669'; // Admin Telegram chat ID
 
 async function sendTg(chatId:string|number, html:string){
-  if(!TG_TOKEN||!chatId) return;
+  if(!TG_TOKEN){console.warn('TG: VITE_TELEGRAM_BOT_TOKEN not set');return;}
+  if(!chatId){console.warn('TG: chatId is empty');return;}
   try{
-    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
+    const res=await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({chat_id:chatId,text:html,parse_mode:'HTML'})
     });
+    const data=await res.json();
+    if(!data.ok) console.warn('TG error:',data.description,'chat_id:',chatId);
   }catch(e){console.warn('TG send failed:',e);}
 }
 const notifyAdmin=(html:string)=>sendTg(ADMIN_TG_ID,html);
@@ -1554,6 +1557,7 @@ function SubmitPage(){
       await ListingAPI.addPending(listing);
       toast("E'lon yuborildi! Admin tasdiqlaydi");
       notifyAdmin(`📬 <b>Yangi e'lon tasdiqlash kutmoqda</b>\n\n🏠 ${listing.title}\n📍 ${listing.district}${listing.city?', '+listing.city:''}\n💰 $${listing.price}${listing.type==='rent'?'/oy':''}\n🛏 ${listing.rooms} xona • ${listing.area} m²\n👤 Egasi: ${listing.owner||'—'} | ${listing.phone||listing.contact||'—'}\n\n👉 Admin panelda tasdiqlang`);
+      if(listing.ownerId) notifyUser(listing.ownerId,`✅ <b>E'loningiz qabul qilindi!</b>\n\n🏠 "${listing.title}"\n📍 ${listing.district}${listing.city?', '+listing.city:''}\n💰 $${listing.price}${listing.type==='rent'?'/oy':''}\n\nAdmin ko'rib chiqqandan so'ng faollashtiriladi.\n👉 https://uynest.vercel.app`);
       (e.target as HTMLFormElement).reset();setAmens([]);setFileObjects([]);setTimeout(()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});},1400);
     }catch(err:any){
       console.error('Submit error:',err);
