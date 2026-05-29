@@ -438,10 +438,11 @@ function SalePage(){
 }
 
 // ─── MAP SEARCH (Module 19) ─────────────────────────────────
-function MapSearchBox({onResult,filterType,setFilterType,legendSlot}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(t:string)=>void;legendSlot?:React.ReactNode}){
+function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(t:string)=>void}){
   const[q,setQ]=useState('');
   const[results,setResults]=useState<any[]>([]);
   const[loading,setLoading]=useState(false);
+  const[showLegend,setShowLegend]=useState(false);
   const search=async()=>{
     if(!q.trim())return;setLoading(true);
     try{
@@ -462,7 +463,21 @@ function MapSearchBox({onResult,filterType,setFilterType,legendSlot}:{onResult:(
       </div>
       <div className="flex items-center gap-2 mb-1">
         {['','rent','sale'].map((t,i)=><button key={t} onClick={()=>setFilterType(t)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===t?(t==='rent'?'bg-blue-500 text-white':t==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?'Hammasi':t==='rent'?'Ijara':'Sotuv'}</button>)}
-        {legendSlot}
+        <div className="relative ml-auto shrink-0">
+          <button onClick={()=>setShowLegend(v=>!v)} className="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-xs font-bold text-gray-500 hover:border-emerald-300 transition active:scale-95">
+            <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-green-600 inline-block"/><span className="w-2 h-2 rounded-full bg-amber-500 inline-block"/><span className="w-2 h-2 rounded-full bg-red-500 inline-block"/></span>
+            <span className="uppercase tracking-wider text-[9px]">Narx</span>
+            <i className={`ri-arrow-down-s-line text-gray-400 text-xs transition-transform ${showLegend?'rotate-180':''}`}/>
+          </button>
+          {showLegend&&<>
+            <div className="fixed inset-0 z-[150]" onClick={()=>setShowLegend(false)}/>
+            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl p-2.5 z-[160] min-w-[140px] space-y-1.5">
+              {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
+                <div key={x.l} className="flex items-center gap-2"><div style={{background:x.c}} className="w-3 h-3 rounded-full shrink-0"/><span className="text-[11px] font-semibold text-gray-600 whitespace-nowrap">{x.l}</span></div>
+              ))}
+            </div>
+          </>}
+        </div>
       </div>
       {results.length>0&&(
         <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[200] mt-1">
@@ -681,31 +696,9 @@ function MapPage(){
   return(
     <div className="flex flex-col lg:flex-row h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)]">
       <div className="flex-1 relative overflow-hidden">
-        {/* Search bar + filter chips + price legend in one bar */}
-        <div className="absolute top-3 left-14 z-[100] w-[calc(100%-72px)] md:w-72">
-          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}
-            legendSlot={
-              <details className="ml-auto bg-white/95 backdrop-blur-sm rounded-xl shadow border border-gray-100 overflow-hidden group shrink-0" open={typeof window!=='undefined'&&window.innerWidth>=768||undefined}>
-                <summary className="list-none select-none cursor-pointer px-2 py-1.5" style={{display:'flex',alignItems:'center',gap:'4px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:'2px'}}>
-                    <div className="w-2 h-2 rounded-full bg-green-600 shrink-0"/>
-                    <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0"/>
-                    <div className="w-2 h-2 rounded-full bg-red-500 shrink-0"/>
-                  </div>
-                  <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider leading-none">Narx</span>
-                  <i className="ri-arrow-down-s-line text-gray-400 text-xs group-open:rotate-180 transition-transform leading-none"/>
-                </summary>
-                <div className="px-2.5 pb-2 space-y-1 min-w-[120px]">
-                  {[{c:'#16a34a',l:'Arzon (−10%)'},{c:'#d97706',l:"O'rtacha"},{c:'#dc2626',l:'Qimmat (+10%)'}].map(x=>(
-                    <div key={x.l} className="flex items-center gap-1.5">
-                      <div style={{background:x.c}} className="w-2.5 h-2.5 rounded-full shrink-0"/>
-                      <span className="text-[10px] font-semibold text-gray-600 whitespace-nowrap">{x.l}</span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            }
-          />
+        {/* Search bar + filter chips + price legend */}
+        <div className="absolute top-3 left-14 z-[100] w-[calc(100%-72px)] md:w-80">
+          <MapSearchBox filterType={filterType} setFilterType={setFilterType} onResult={(lat,lng,name)=>{setMapCenter([lat,lng]);setMapZoom(16);setMapKey(k=>k+1);toast(name.split(',')[0]);}}/>
         </div>
         {/* "My location" button — always shows crosshair; spinner while GPS is acquiring */}
         <button onClick={()=>{if(userPos){setMapCenter(userPos);setMapZoom(16);setMapKey(k=>k+1);}else if(!locating)startLocationWatch();}} className="absolute bottom-[200px] md:bottom-24 left-3 z-[100] w-10 h-10 bg-white rounded-xl shadow-lg border border-gray-200 flex items-center justify-center transition active:scale-95 hover:bg-blue-50" title="Mening joylashuvim">
