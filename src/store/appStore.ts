@@ -450,13 +450,9 @@ export const ChatAPI = {
 // ─── Listing API ────────────────────────────────────────────
 export const ListingAPI = {
   async addPending(listing:Listing){
-    try{
-      const cleanData = Object.entries({...listing, createdAt: listing.createdAt || new Date().toISOString()})
-        .reduce((acc, [k, v]) => { if(v !== undefined) acc[k] = v; return acc; }, {} as any);
-      await addDoc(pendingListingsCollection, cleanData);
-    }catch(err){
-      console.error('Error saving pending listing:', err);
-    }
+    const cleanData = Object.entries({...listing, createdAt: listing.createdAt || new Date().toISOString()})
+      .reduce((acc, [k, v]) => { if(v !== undefined) acc[k] = v; return acc; }, {} as any);
+    await addDoc(pendingListingsCollection, cleanData);
   },
   async approveListing(listing:Listing){
     try{

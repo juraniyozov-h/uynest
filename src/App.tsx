@@ -1456,6 +1456,7 @@ function SubmitPage(){
   const[gpsLocked,setGpsLocked]=useState(false);
   const[gpsAccuracy,setGpsAccuracy]=useState<number|null>(null);
   const[loading,setLoading]=useState(false);
+  const submittingRef=useRef(false);
   const[selectedRegion,setSelectedRegion]=useState('Toshkent shahri');
   const[selectedPropType,setSelectedPropType]=useState('Kvartira');
   const[submitRooms,setSubmitRooms]=useState(2);
@@ -1513,9 +1514,12 @@ function SubmitPage(){
   useEffect(()=>{detectLocation();},[]);
 
   const submit=async(e:React.FormEvent<HTMLFormElement>)=>{
-    e.preventDefault();const fd=new FormData(e.currentTarget);
+    e.preventDefault();
+    if(submittingRef.current)return;
+    const fd=new FormData(e.currentTarget);
     if(fileObjects.length===0){toast('Kamida bitta rasm yuklang','error');return;}
     if(!gpsLocked){toast("Joylashuvni aniqlash shart. GPS tugmasini bosing.",'error');return;}
+    submittingRef.current=true;
     setLoading(true);
     try{
       const listingPhone = state.currentUser?.phone || '';
@@ -1556,11 +1560,12 @@ function SubmitPage(){
       toast("E'lon yuborildi! Admin tasdiqlaydi");
       notifyAdmin(`📬 <b>Yangi e'lon tasdiqlash kutmoqda</b>\n\n🏠 ${listing.title}\n📍 ${listing.district}${listing.city?', '+listing.city:''}\n💰 $${listing.price}${listing.type==='rent'?'/oy':''}\n🛏 ${listing.rooms} xona • ${listing.area} m²\n👤 Egasi: ${listing.owner||'—'} | ${listing.phone||listing.contact||'—'}\n\n👉 Admin panelda tasdiqlang`);
       (e.target as HTMLFormElement).reset();setAmens([]);setFileObjects([]);setTimeout(()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});},1400);
-    }catch(err){
-      console.error(err);
-      toast('Xatolik yuz berdi','error');
+    }catch(err:any){
+      console.error('Submit error:',err);
+      toast(err?.message?`Xato: ${err.message}`:'Xatolik yuz berdi. Qayta urining','error');
     }finally{
       setLoading(false);
+      submittingRef.current=false;
     }
   };
   return(
