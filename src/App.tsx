@@ -2107,58 +2107,28 @@ function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
 function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phone:string)=>void}){
   const{state,dispatch}=useApp();
   const[phone,setPhone]=useState('');
-  const[otp,setOtp]=useState('');
-  const[step,setStep]=useState<'phone'|'otp'>('phone');
   const[loading,setLoading]=useState(false);
-  const[confirmResult,setConfirmResult]=useState<any>(null);
 
-  const sendOtp=async()=>{
+  const save=async()=>{
     const p=phone.trim().replace(/\s/g,'');
     if(!p.match(/^\+998\d{9}$/)){toast("To'g'ri raqam kiriting: +998XXXXXXXXX",'error');return;}
     setLoading(true);
-    const res=await AuthAPI.sendPhoneVerification(p);
-    setLoading(false);
-    if(!res.ok){toast(res.error,'error');return;}
-    setConfirmResult(res.confirmationResult);
-    setStep('otp');
-    toast('SMS kod yuborildi');
-  };
-
-  const verify=async()=>{
-    const code=otp.trim();
-    if(code.length!==6){toast('6 xonali kodni kiriting','error');return;}
-    setLoading(true);
     try{
-      await confirmResult.confirm(code);
-      const p=phone.trim().replace(/\s/g,'');
       const uid=state.currentUser?.id;
       if(uid){await updateDoc(doc(db,'users',uid),{phone:p});}
       dispatch({type:'UPDATE_USER',payload:{phone:p}});
-      toast('Telefon raqam tasdiqlandi va ulandi');
+      toast('Telefon raqam saqlandi');
       onSuccess(p);
-    }catch(err:any){
-      toast(err?.code==='auth/invalid-verification-code'?'Noto\'g\'ri kod. Qayta urining.':'Xatolik yuz berdi','error');
-    }
+    }catch{toast('Xatolik yuz berdi','error');}
     setLoading(false);
   };
 
-  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}>
-    <div id="recaptcha-container"/>
-    <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
-      <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
-      {step==='phone'?(<>
-        <p className="text-sm text-gray-500 mb-4">SMS orqali tasdiqlash kodi yuboriladi.</p>
-        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendOtp()} placeholder="+998901234567" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
-        <button onClick={sendOtp} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'SMS kod yuborish'}</button>
-      </>):(<>
-        <p className="text-sm text-gray-500 mb-1">{phone} raqamiga yuborilgan</p>
-        <p className="text-xs text-gray-400 mb-4">6 xonali kodni kiriting</p>
-        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Tasdiqlash kodi</label><div className="relative"><i className="ri-shield-keyhole-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6))} onKeyDown={e=>e.key==='Enter'&&verify()} placeholder="123456" maxLength={6} className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition tracking-widest font-bold"/></div></div>
-        <button onClick={verify} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Tekshirilmoqda...':'Tasdiqlash'}</button>
-        <button onClick={()=>{setStep('phone');setOtp('');setConfirmResult(null);}} className="w-full mt-2 py-2.5 text-sm text-gray-500 hover:text-gray-700">← Raqamni o'zgartirish</button>
-      </>)}
-    </div>
-  </div>);
+  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
+    <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
+    <p className="text-sm text-gray-500 mb-4">Telefon raqamingizni kiriting.</p>
+    <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()} placeholder="+998901234567" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
+    <button onClick={save} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Saqlanmoqda...':'Saqlash'}</button>
+  </div></div>);
 }
 
 // ─── VIEWING REQUEST MODAL (Module 7) ───────────────────────
@@ -2510,7 +2480,7 @@ function FullProfilePage(){
 
       <div className="flex-1 min-w-0">
         {/* ── INFO ── */}
-        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="space-y-2"><div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600 shrink-0"/><span className="flex-1 truncate">{u.phone}</span><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div><button onClick={async()=>{const uid=state.currentUser?.id;if(!uid)return;try{await updateDoc(doc(db,'users',uid),{phone:null});dispatch({type:'UPDATE_USER',payload:{phone:''}});toast('Telefon raqam uzildi');}catch{toast('Xatolik yuz berdi','error');}}} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 text-xs font-semibold rounded-lg transition"><i className="ri-link-unlink-m"/>Raqamni uzish</button></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div><div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 mb-2"><i className="ri-phone-fill text-emerald-600 shrink-0"/><span className="flex-1 truncate">{u.phone}</span><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div><button onClick={async()=>{if(!window.confirm("Telefon raqamni uzmoqchimisiz?"))return;const uid=state.currentUser?.id;if(!uid)return;try{await updateDoc(doc(db,'users',uid),{phone:null});dispatch({type:'UPDATE_USER',payload:{phone:''}});toast('Telefon raqam uzildi');}catch{toast('Xatolik yuz berdi','error');}}} className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-sm font-semibold rounded-xl transition active:scale-95"><i className="ri-link-unlink-m text-base"/>Raqamni uzish</button></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
         {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
