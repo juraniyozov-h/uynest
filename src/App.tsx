@@ -720,11 +720,11 @@ function MapPage(){
 
         {/* ── Floating listing detail card ── */}
         {sel&&(
-          <div className="absolute bottom-[72px] md:bottom-4 left-1/2 z-[200] w-[calc(100%-32px)] max-w-sm"
+          <div className="absolute bottom-2 md:bottom-4 left-1/2 z-[200] w-[calc(100%-24px)] max-w-xs md:max-w-sm"
                style={{transform:'translateX(-50%)',animation:'slideUp .22s ease'}}>
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
               {/* Image */}
-              <div className="relative" style={{aspectRatio:'16/6'}}>
+              <div className="relative" style={{aspectRatio:'16/5'}}>
                 {sel.img?<img src={sel.img} alt="" className="w-full h-full object-cover"/>:<div className="w-full h-full bg-emerald-50 flex items-center justify-center"><i className="ri-home-4-line text-4xl text-emerald-300"/></div>}
                 <button onClick={()=>setSel(null)} className="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center text-base hover:bg-black/70 transition active:scale-90">✕</button>
                 <div className="absolute bottom-2 left-2 flex gap-1.5">
@@ -735,34 +735,29 @@ function MapPage(){
                   {sel.isPremium&&<span className="bg-amber-400/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-star-fill"/>Premium</span>}
                 </div>
               </div>
-              <div className="p-4">
+              <div className="p-3">
                 {/* Title + price */}
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-extrabold text-base leading-tight line-clamp-2 flex-1">{sel.title}</h3>
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <h3 className="font-extrabold text-sm leading-tight line-clamp-1 flex-1">{sel.title}</h3>
                   <div className="text-right shrink-0">
-                    <div className="font-extrabold text-emerald-700 text-lg leading-tight">${sel.price}{sel.type==='rent'&&<span className="text-xs font-normal text-gray-400">/oy</span>}</div>
-                    {selDiff!==null&&<div className={`text-[10px] font-bold ${selDiff<-10?'text-emerald-600':selDiff>10?'text-red-500':'text-amber-600'}`}>{selDiff>0?'+':''}{selDiff}% bozorga nisbatan</div>}
+                    <div className="font-extrabold text-emerald-700 text-base leading-tight">${sel.price}{sel.type==='rent'&&<span className="text-xs font-normal text-gray-400">/oy</span>}</div>
+                    {selDiff!==null&&<div className={`text-[10px] font-bold ${selDiff<-10?'text-emerald-600':selDiff>10?'text-red-500':'text-amber-600'}`}>{selDiff>0?'+':''}{selDiff}%</div>}
                   </div>
                 </div>
                 {/* Details chips */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {[
                     {i:'ri-map-pin-2-fill',v:sel.district,c:'text-emerald-500'},
                     {i:'ri-hotel-bed-line',v:`${sel.rooms} xona`,c:'text-gray-400'},
                     {i:'ri-ruler-2-line',v:`${sel.area} m²`,c:'text-gray-400'},
-                    ...(sel.floor?[{i:'ri-building-2-line',v:`${sel.floor}-qavat`,c:'text-gray-400'}]:[]),
                   ].map(x=><span key={x.v} className={`flex items-center gap-1 text-xs text-gray-600`}><i className={`${x.i} ${x.c}`}/>{x.v}</span>)}
                 </div>
-                {/* Amenities */}
-                {selAmenities.length>0&&<div className="flex flex-wrap gap-1.5 mb-3">
-                  {selAmenities.map(a=><span key={a.id} className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-semibold rounded-lg"><i className={a.icon}/>{a.label}</span>)}
-                </div>}
                 {/* Buttons */}
                 <div className="flex gap-2">
                   {(sel.phone||sel.contact)
-                    ?<a href={`tel:${sel.phone||sel.contact}`} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition shadow"><i className="ri-phone-fill"/>Qo'ng'iroq</a>
-                    :<button onClick={()=>{dispatch({type:'CONTACT',payload:true});}} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition shadow"><i className="ri-phone-fill"/>Qo'ng'iroq</button>}
-                  <button onClick={()=>dispatch({type:'DETAIL',payload:sel.id})} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gray-100 text-gray-800 font-bold rounded-xl text-sm hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 transition"><i className="ri-eye-line"/>Batafsil</button>
+                    ?<a href={`tel:${sel.phone||sel.contact}`} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition shadow"><i className="ri-phone-fill"/>Qo'ng'iroq</a>
+                    :<button onClick={()=>{dispatch({type:'CONTACT',payload:true});}} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm active:scale-95 transition shadow"><i className="ri-phone-fill"/>Qo'ng'iroq</button>}
+                  <button onClick={()=>dispatch({type:'DETAIL',payload:sel.id})} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 text-gray-800 font-bold rounded-xl text-sm hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 transition"><i className="ri-eye-line"/>Batafsil</button>
                 </div>
               </div>
             </div>
@@ -2112,28 +2107,58 @@ function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
 function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phone:string)=>void}){
   const{state,dispatch}=useApp();
   const[phone,setPhone]=useState('');
+  const[otp,setOtp]=useState('');
+  const[step,setStep]=useState<'phone'|'otp'>('phone');
   const[loading,setLoading]=useState(false);
+  const[confirmResult,setConfirmResult]=useState<any>(null);
 
-  const save=async()=>{
+  const sendOtp=async()=>{
     const p=phone.trim().replace(/\s/g,'');
     if(!p.match(/^\+998\d{9}$/)){toast("To'g'ri raqam kiriting: +998XXXXXXXXX",'error');return;}
     setLoading(true);
+    const res=await AuthAPI.sendPhoneVerification(p);
+    setLoading(false);
+    if(!res.ok){toast(res.error,'error');return;}
+    setConfirmResult(res.confirmationResult);
+    setStep('otp');
+    toast('SMS kod yuborildi');
+  };
+
+  const verify=async()=>{
+    const code=otp.trim();
+    if(code.length!==6){toast('6 xonali kodni kiriting','error');return;}
+    setLoading(true);
     try{
+      await confirmResult.confirm(code);
+      const p=phone.trim().replace(/\s/g,'');
       const uid=state.currentUser?.id;
       if(uid){await updateDoc(doc(db,'users',uid),{phone:p});}
       dispatch({type:'UPDATE_USER',payload:{phone:p}});
-      toast('Telefon raqam saqlandi');
+      toast('Telefon raqam tasdiqlandi va ulandi');
       onSuccess(p);
-    }catch{toast('Xatolik yuz berdi','error');}
+    }catch(err:any){
+      toast(err?.code==='auth/invalid-verification-code'?'Noto\'g\'ri kod. Qayta urining.':'Xatolik yuz berdi','error');
+    }
     setLoading(false);
   };
 
-  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
-    <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
-    <p className="text-sm text-gray-500 mb-4">Telefon raqamingizni kiriting (O'zbek format).</p>
-    <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()} placeholder="+998901234567" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
-    <button onClick={save} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Saqlanmoqda...':'Saqlash'}</button>
-  </div></div>);
+  return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}>
+    <div id="recaptcha-container"/>
+    <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
+      <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
+      {step==='phone'?(<>
+        <p className="text-sm text-gray-500 mb-4">SMS orqali tasdiqlash kodi yuboriladi.</p>
+        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendOtp()} placeholder="+998901234567" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
+        <button onClick={sendOtp} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'SMS kod yuborish'}</button>
+      </>):(<>
+        <p className="text-sm text-gray-500 mb-1">{phone} raqamiga yuborilgan</p>
+        <p className="text-xs text-gray-400 mb-4">6 xonali kodni kiriting</p>
+        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Tasdiqlash kodi</label><div className="relative"><i className="ri-shield-keyhole-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6))} onKeyDown={e=>e.key==='Enter'&&verify()} placeholder="123456" maxLength={6} className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition tracking-widest font-bold"/></div></div>
+        <button onClick={verify} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Tekshirilmoqda...':'Tasdiqlash'}</button>
+        <button onClick={()=>{setStep('phone');setOtp('');setConfirmResult(null);}} className="w-full mt-2 py-2.5 text-sm text-gray-500 hover:text-gray-700">← Raqamni o'zgartirish</button>
+      </>)}
+    </div>
+  </div>);
 }
 
 // ─── VIEWING REQUEST MODAL (Module 7) ───────────────────────
@@ -2485,7 +2510,7 @@ function FullProfilePage(){
 
       <div className="flex-1 min-w-0">
         {/* ── INFO ── */}
-        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="flex items-center gap-3"><div className="flex-1 flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600"/>{u.phone}</div><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div className="space-y-2"><div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900"><i className="ri-phone-fill text-emerald-600 shrink-0"/><span className="flex-1 truncate">{u.phone}</span><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div><button onClick={async()=>{const uid=state.currentUser?.id;if(!uid)return;try{await updateDoc(doc(db,'users',uid),{phone:null});dispatch({type:'UPDATE_USER',payload:{phone:''}});toast('Telefon raqam uzildi');}catch{toast('Xatolik yuz berdi','error');}}} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-500 text-xs font-semibold rounded-lg transition"><i className="ri-link-unlink-m"/>Raqamni uzish</button></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
         {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
