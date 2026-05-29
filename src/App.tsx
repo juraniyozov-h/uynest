@@ -658,13 +658,12 @@ function MapPage(){
     const scale=isSel?'transform:scale(1.25);z-index:9999;':'';
     const hlRing=isHL&&!isSel?`outline:2px solid #fbbf24;outline-offset:2px;`:'';
     return L.divIcon({
-      html:`<div style="background:${bg};color:#fff;border:${border};border-radius:22px;padding:3px 10px 5px;text-align:center;font-family:Inter,-apple-system,sans-serif;min-width:54px;position:relative;cursor:pointer;${scale}${hlRing}">
-        <div style="font-size:9.5px;font-weight:700;opacity:.9;letter-spacing:.3px;line-height:1.3">${lbl}</div>
-        <div style="font-size:13px;font-weight:800;line-height:1.2;white-space:nowrap">${px}</div>
+      html:`<div style="background:${bg};color:#fff;border:${border};border-radius:22px;padding:5px 10px 7px;text-align:center;font-family:Inter,-apple-system,sans-serif;position:relative;cursor:pointer;white-space:nowrap;${scale}${hlRing}">
+        <span style="font-size:9px;font-weight:700;opacity:.85;letter-spacing:.3px;margin-right:3px;vertical-align:middle">${lbl}</span><span style="font-size:13px;font-weight:800;vertical-align:middle">${px}</span>
         <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid ${bg}"></div>
       </div>`,
       className:'',
-      iconAnchor:[37,50],
+      iconAnchor:[30,46],
     });
   };
 
@@ -2111,52 +2110,27 @@ function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
 function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phone:string)=>void}){
   const{state,dispatch}=useApp();
   const[phone,setPhone]=useState('');
-  const[otp,setOtp]=useState('');
-  const[confirmResult,setConfirmResult]=useState<any>(null);
   const[loading,setLoading]=useState(false);
 
-  const sendOtp=async()=>{
-    const p=phone.trim();
-    if(!p){toast('Telefon raqam kiriting','error');return;}
-    setLoading(true);
-    const r=await AuthAPI.sendPhoneVerification(p);
-    setLoading(false);
-    if(r.ok){setConfirmResult(r.confirmationResult);toast('SMS kod yuborildi');}
-    else toast(r.error||'SMS yuborishda xato','error');
-  };
-
-  const verify=async()=>{
-    if(!otp.trim()||!confirmResult){toast('Kodni kiriting','error');return;}
+  const save=async()=>{
+    const p=phone.trim().replace(/\s/g,'');
+    if(!p.match(/^\+998\d{9}$/)){toast("To'g'ri raqam kiriting: +998XXXXXXXXX",'error');return;}
     setLoading(true);
     try{
-      await confirmResult.confirm(otp.trim());
       const uid=state.currentUser?.id;
-      if(uid){await updateDoc(doc(db,'users',uid),{phone:phone.trim()});}
-      dispatch({type:'UPDATE_USER',payload:{phone:phone.trim()}});
-      toast('Telefon raqam ulandi');
-      onSuccess(phone.trim());
-    }catch{toast('Kod noto\'g\'ri','error');}
+      if(uid){await updateDoc(doc(db,'users',uid),{phone:p});}
+      dispatch({type:'UPDATE_USER',payload:{phone:p}});
+      toast('Telefon raqam saqlandi');
+      onSuccess(p);
+    }catch{toast('Xatolik yuz berdi','error');}
     setLoading(false);
   };
 
   return(<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl" onClick={e=>e.stopPropagation()}>
     <div className="flex justify-between items-center mb-5"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-phone-line text-emerald-600"/>Telefon ulash</h3><button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200">✕</button></div>
-    {!confirmResult?(
-      <>
-        <p className="text-sm text-gray-500 mb-4">Telefon raqamingizni tasdiqlash uchun SMS kod yuboriladi.</p>
-        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+998 90 123 45 67" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
-        <button onClick={sendOtp} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Yuborilmoqda...':'SMS kod yuborish'}</button>
-      </>
-    ):(
-      <>
-        <p className="text-sm text-gray-500 mb-4"><b>{phone}</b> raqamiga yuborilgan 6 raqamli kodni kiriting.</p>
-        <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">SMS kod</label><input value={otp} onChange={e=>setOtp(e.target.value)} placeholder="123456" maxLength={6} className="w-full px-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition text-center text-xl font-bold tracking-widest"/></div>
-        <div className="flex gap-3">
-          <button onClick={()=>setConfirmResult(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl active:scale-95 transition">Orqaga</button>
-          <button onClick={verify} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Tekshirilmoqda...':'Tasdiqlash'}</button>
-        </div>
-      </>
-    )}
+    <p className="text-sm text-gray-500 mb-4">Telefon raqamingizni kiriting (O'zbek format).</p>
+    <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Telefon raqam</label><div className="relative"><i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={phone} onChange={e=>setPhone(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()} placeholder="+998901234567" className="w-full pl-10 pr-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition"/></div></div>
+    <button onClick={save} disabled={loading} className="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50">{loading?'Saqlanmoqda...':'Saqlash'}</button>
   </div></div>);
 }
 
@@ -3462,6 +3436,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
   const[transcribing,setTranscribing]=useState(false);
+  const[whisperFailed,setWhisperFailed]=useState(false);
   const endRef=useRef<HTMLDivElement>(null);
   const recogRef=useRef<any>(null);
   const mediaRecorderRef=useRef<MediaRecorder|null>(null);
@@ -3478,8 +3453,8 @@ function AiChatModal({onClose}:{onClose:()=>void}){
       setListening(false);
       return;
     }
-    // Try MediaRecorder + Groq Whisper first
-    if(navigator.mediaDevices?.getUserMedia&&GROQ_KEY){
+    // Try MediaRecorder + Groq Whisper first (skip if Whisper already failed this session)
+    if(navigator.mediaDevices?.getUserMedia&&GROQ_KEY&&!whisperFailed){
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
         const mimeType=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':
@@ -3523,7 +3498,11 @@ function AiChatModal({onClose}:{onClose:()=>void}){
               setInput(t);
               setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},200);
             }
-          }catch{toast("Ovoz aniqlanmadi, qayta urinib ko'ring",'warn');}
+          }catch(e){
+            console.warn('Whisper failed:',e);
+            setWhisperFailed(true);
+            toast("Ovoz API xatosi — brauzer ovozi ishlatilmoqda, qayta bosing",'warn');
+          }
           finally{setTranscribing(false);}
         };
         mediaRecorderRef.current=mr;
