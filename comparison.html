@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Uynest vs Uybor.uz vs Joyme.uz</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#f0fdf4;color:#1a1a1a;padding:32px 16px}
+  h1{text-align:center;font-size:1.8rem;font-weight:800;margin-bottom:6px;color:#14532d}
+  .subtitle{text-align:center;color:#6b7280;margin-bottom:40px;font-size:.95rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1100px;margin:0 auto}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 4px 20px #0001}
+  .card h2{font-size:1.1rem;font-weight:700;margin-bottom:18px;color:#14532d;border-bottom:2px solid #d1fae5;padding-bottom:10px}
+  .full{grid-column:1/-1}
+
+  /* Feature table */
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  thead tr{background:#f0fdf4}
+  th{padding:10px 12px;text-align:center;font-weight:700;color:#166534;white-space:nowrap}
+  th:first-child{text-align:left}
+  td{padding:9px 12px;border-bottom:1px solid #f3f4f6;text-align:center;vertical-align:middle}
+  td:first-child{text-align:left;font-weight:600;color:#374151}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafff8}
+  .yes{color:#16a34a;font-size:1.1rem}
+  .no{color:#d1d5db;font-size:1.1rem}
+  .partial{color:#f59e0b;font-size:1rem;font-weight:700}
+
+  /* Score bars */
+  .score-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .score-label{width:170px;font-size:.85rem;font-weight:600;color:#374151;flex-shrink:0}
+  .bar-bg{flex:1;height:14px;background:#e5e7eb;border-radius:99px;overflow:hidden}
+  .bar{height:100%;border-radius:99px;transition:width .6s ease}
+  .score-val{width:36px;text-align:right;font-weight:700;font-size:.85rem;flex-shrink:0}
+  .c-uynest{background:linear-gradient(90deg,#16a34a,#4ade80)}
+  .c-uybor{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+  .c-joyme{background:linear-gradient(90deg,#9333ea,#c084fc)}
+
+  /* Legend */
+  .legend{display:flex;gap:18px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+  .leg{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600}
+  .dot{width:14px;height:14px;border-radius:4px}
+
+  /* SWOT */
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .swot-box{border-radius:14px;padding:16px}
+  .swot-box h3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .swot-box ul{padding-left:16px;font-size:.83rem;line-height:1.7}
+  .s{background:#dcfce7;border:1px solid #bbf7d0}.s h3{color:#15803d}
+  .w{background:#fee2e2;border:1px solid #fecaca}.w h3{color:#dc2626}
+  .o{background:#dbeafe;border:1px solid #bfdbfe}.o h3{color:#1d4ed8}
+  .t{background:#fef9c3;border:1px solid #fde68a}.t h3{color:#92400e}
+
+  /* Todo list */
+  .todo-list{list-style:none;counter-reset:todo}
+  .todo-list li{counter-increment:todo;display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;font-size:.88rem}
+  .todo-list li:last-child{border-bottom:none}
+  .todo-num{min-width:26px;height:26px;background:#16a34a;color:#fff;border-radius:8px;font-weight:700;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .todo-pri{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:auto;flex-shrink:0;align-self:center}
+  .pri-high{background:#fee2e2;color:#dc2626}
+  .pri-mid{background:#fef9c3;color:#92400e}
+  .pri-low{background:#dcfce7;color:#15803d}
+  .tag{font-size:.7rem;font-weight:700;padding:1px 6px;border-radius:5px;background:#e0f2fe;color:#0369a1;margin-left:4px}
+</style>
+</head>
+<body>
+
+<h1>🏠 Uynest vs Uybor.uz vs Joyme.uz</h1>
+<p class="subtitle">Raqobatchilar tahlili — afzalliklar, kamchiliklar va keyingi qadamlar</p>
+
+<div class="legend">
+  <div class="leg"><div class="dot" style="background:#16a34a"></div>Uynest</div>
+  <div class="leg"><div class="dot" style="background:#2563eb"></div>Uybor.uz</div>
+  <div class="leg"><div class="dot" style="background:#9333ea"></div>Joyme.uz</div>
+</div>
+
+<div class="grid">
+
+  <!-- RADAR CHART -->
+  <div class="card">
+    <h2>📊 Radar tahlili</h2>
+    <canvas id="radar" height="260"></canvas>
+  </div>
+
+  <!-- BAR SCORES -->
+  <div class="card">
+    <h2>📈 Kategoriya bo'yicha ball (10 dan)</h2>
+    <div style="margin-bottom:20px">
+      <div style="font-size:.78rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Xususiyatlar soni</div>
+      <div class="score-row"><div class="score-label">Uynest</div><div class="bar-bg"><div class="bar c-uynest" style="width:62%"></div></div><div class="score-val" style="color:#16a34a">6.2</div></div>
+      <div class="score-row"><div class="score-label">Uybor.uz</div><div class="bar-bg"><div class="bar c-uybor" style="width:75%"></div></div><div class="score-val" style="color:#2563eb">7.5</div></div>
+      <div class="score-row"><div class="score-label">Joyme.uz</div><div class="bar-bg"><div class="bar c-joyme" style="width:45%"></div></div><div class="score-val" style="color:#9333ea">4.5</div></div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:.78rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Texnologiya / AI</div>
+      <div class="score-row"><div class="score-label">Uynest</div><div class="bar-bg"><div class="bar c-uynest" style="width:85%"></div></div><div class="score-val" style="color:#16a34a">8.5</div></div>
+      <div class="score-row"><div class="score-label">Uybor.uz</div><div class="bar-bg"><div class="bar c-uybor" style="width:30%"></div></div><div class="score-val" style="color:#2563eb">3.0</div></div>
+      <div class="score-row"><div class="score-label">Joyme.uz</div><div class="bar-bg"><div class="bar c-joyme" style="width:35%"></div></div><div class="score-val" style="color:#9333ea">3.5</div></div>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:.78rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Foydalanuvchi tajribasi (UX)</div>
+      <div class="score-row"><div class="score-label">Uynest</div><div class="bar-bg"><div class="bar c-uynest" style="width:80%"></div></div><div class="score-val" style="color:#16a34a">8.0</div></div>
+      <div class="score-row"><div class="score-label">Uybor.uz</div><div class="bar-bg"><div class="bar c-uybor" style="width:70%"></div></div><div class="score-val" style="color:#2563eb">7.0</div></div>
+      <div class="score-row"><div class="score-label">Joyme.uz</div><div class="bar-bg"><div class="bar c-joyme" style="width:60%"></div></div><div class="score-val" style="color:#9333ea">6.0</div></div>
+    </div>
+    <div>
+      <div style="font-size:.78rem;font-weight:700;color:#6b7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Mobil ilova</div>
+      <div class="score-row"><div class="score-label">Uynest</div><div class="bar-bg"><div class="bar c-uynest" style="width:0%"></div></div><div class="score-val" style="color:#16a34a">0</div></div>
+      <div class="score-row"><div class="score-label">Uybor.uz</div><div class="bar-bg"><div class="bar c-uybor" style="width:90%"></div></div><div class="score-val" style="color:#2563eb">9.0</div></div>
+      <div class="score-row"><div class="score-label">Joyme.uz</div><div class="bar-bg"><div class="bar c-joyme" style="width:50%"></div></div><div class="score-val" style="color:#9333ea">5.0</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURE TABLE -->
+  <div class="card full">
+    <h2>✅ Xususiyatlar jadval taqqoslash</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Xususiyat</th>
+          <th>🟢 Uynest</th>
+          <th>🔵 Uybor.uz</th>
+          <th>🟣 Joyme.uz</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Ijara e'lonlari</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>Sotuv e'lonlari</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Xarita bilan qidirish</td><td class="yes">✓</td><td class="partial">~</td><td class="no">—</td></tr>
+        <tr><td>AI yordamchi (chat)</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>AI xarita paneli</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Real-vaqt chat</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Telegram bildirishnomalar</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Saqlangan qidiruvlar</td><td class="yes">✓</td><td class="partial">~</td><td class="no">—</td></tr>
+        <tr><td>E'lonlarni taqqoslash</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Ipoteka kalkulyatori</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Ko'rik so'rovi</td><td class="yes">✓</td><td class="no">—</td><td class="partial">~</td></tr>
+        <tr><td>Shikoyat tizimi</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Admin panel</td><td class="yes">✓</td><td class="yes">✓</td><td class="partial">~</td></tr>
+        <tr><td>Google bilan kirish</td><td class="yes">✓</td><td class="partial">~</td><td class="partial">~</td></tr>
+        <tr><td>Reyting / izohlar</td><td class="yes">✓</td><td class="partial">~</td><td class="partial">~</td></tr>
+        <tr><td>Infratuzilma xaritasi</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Narx statistikasi</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Mobil ilova</td><td class="no">—</td><td class="yes">✓</td><td class="partial">~</td></tr>
+        <tr><td>Ko'p shahar</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Ko'p til (RU/EN/UZ)</td><td class="no">—</td><td class="yes">✓</td><td class="partial">~</td></tr>
+        <tr><td>Agentlik profili</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Yangi qurilish (JK)</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Tijorat ko'chmas mulk</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
+        <tr><td>Premium / to'lov</td><td class="no">—</td><td class="yes">✓</td><td class="partial">~</td></tr>
+        <tr><td>Onlayn bron qilish</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;font-size:.78rem;color:#9ca3af">
+      <span class="yes">✓</span> Bor &nbsp;|&nbsp;
+      <span class="partial">~</span> Qisman &nbsp;|&nbsp;
+      <span class="no">—</span> Yo'q
+    </div>
+  </div>
+
+  <!-- SWOT -->
+  <div class="card full">
+    <h2>🔍 Uynest SWOT tahlili</h2>
+    <div class="swot">
+      <div class="swot-box s">
+        <h3>💪 Kuchli tomonlar</h3>
+        <ul>
+          <li>AI yordamchi (Groq) — raqobatchilarda yo'q</li>
+          <li>AI xarita paneli — tabiiy til bilan qidirish</li>
+          <li>Real-vaqt ichki chat tizimi</li>
+          <li>Telegram bot bildirishnomalari</li>
+          <li>Ipoteka kalkulyatori</li>
+          <li>Infratuzilma xaritasi (maktab, do'kon)</li>
+          <li>E'lonlarni yon-yoniga taqqoslash</li>
+          <li>Narx statistikasi (tuman bo'yicha)</li>
+          <li>Zamonaviy UI/UX (mobil-friendly)</li>
+          <li>Ko'rik so'rovi va shikoyat tizimi</li>
+          <li>Admin moderatsiya paneli</li>
+        </ul>
+      </div>
+      <div class="swot-box w">
+        <h3>⚠️ Zaif tomonlar</h3>
+        <ul>
+          <li>Mobil ilova yo'q (faqat web)</li>
+          <li>Faqat Toshkent shahri</li>
+          <li>Faqat o'zbek tili</li>
+          <li>Tijorat ko'chmas mulk yo'q</li>
+          <li>Yangi qurilish (JK) bo'limi yo'q</li>
+          <li>Agentlik / broker profili yo'q</li>
+          <li>Premium e'lon tizimi yo'q (daromad yo'q)</li>
+          <li>Kam foydalanuvchi bazasi (yangi platforma)</li>
+          <li>Bo'lib to'lash filtri yo'q</li>
+        </ul>
+      </div>
+      <div class="swot-box o">
+        <h3>🚀 Imkoniyatlar</h3>
+        <ul>
+          <li>AI funksiyalarini kengaytirish (narx bashorat)</li>
+          <li>React Native bilan mobil ilova</li>
+          <li>Ko'p shaharga kengayish</li>
+          <li>Rus va ingliz tillarini qo'shish</li>
+          <li>Onlayn bron qilish (Joyme'dan ustun)</li>
+          <li>Premium e'lon modeli (daromad)</li>
+          <li>Virtual tur / 360° foto</li>
+          <li>Rivojlanayotgan bozor — raqobat kam</li>
+        </ul>
+      </div>
+      <div class="swot-box t">
+        <h3>🛑 Tahdidlar</h3>
+        <ul>
+          <li>Uybor.uz — 10 yillik tajriba va brend</li>
+          <li>OLX.uz ham ko'chmas mulkda kuchli</li>
+          <li>Yirik kompaniyalar AI qo'shishi mumkin</li>
+          <li>Firebase narxi o'sib ketishi mumkin</li>
+          <li>Foydalanuvchi ishonchi (yangi platforma)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODO LIST -->
+  <div class="card full">
+    <h2>📋 Keyingi qadamlar (prioritet bo'yicha)</h2>
+    <ul class="todo-list">
+      <li>
+        <div class="todo-num">1</div>
+        <div><strong>Mobil ilova</strong> — React Native yoki PWA orqali iOS/Android ilova. Uybor.uz bilan asosiy farq shu.<span class="tag">UX</span></div>
+        <div class="todo-pri pri-high">YUQORI</div>
+      </li>
+      <li>
+        <div class="todo-num">2</div>
+        <div><strong>Premium e'lon tizimi</strong> — "VIP", "TOP" e'lonlar uchun to'lov. Daromad modeli.<span class="tag">Biznes</span></div>
+        <div class="todo-pri pri-high">YUQORI</div>
+      </li>
+      <li>
+        <div class="todo-num">3</div>
+        <div><strong>Ko'p til</strong> — Rus va ingliz tillarini qo'shish. Ko'p auditoriya.<span class="tag">Til</span></div>
+        <div class="todo-pri pri-high">YUQORI</div>
+      </li>
+      <li>
+        <div class="todo-num">4</div>
+        <div><strong>Yangi qurilish (JK) bo'limi</strong> — Toshkentdagi yangi uylar, застройщик profillari.<span class="tag">Kontent</span></div>
+        <div class="todo-pri pri-high">YUQORI</div>
+      </li>
+      <li>
+        <div class="todo-num">5</div>
+        <div><strong>Agentlik profili</strong> — Rieltorlar va agentliklar uchun alohida sahifa va dashboard.<span class="tag">Foydalanuvchi</span></div>
+        <div class="todo-pri pri-mid">O'RTA</div>
+      </li>
+      <li>
+        <div class="todo-num">6</div>
+        <div><strong>AI narx bashorati</strong> — Xona, maydoni, tumaniga qarab narx taklif qiluvchi model.<span class="tag">AI</span></div>
+        <div class="todo-pri pri-mid">O'RTA</div>
+      </li>
+      <li>
+        <div class="todo-num">7</div>
+        <div><strong>Virtual tur / 360° foto</strong> — Kuula.co yoki Pannellum integratsiyasi.<span class="tag">UX</span></div>
+        <div class="todo-pri pri-mid">O'RTA</div>
+      </li>
+      <li>
+        <div class="todo-num">8</div>
+        <div><strong>Ko'p shahar</strong> — Samarqand, Andijon, Namangan uchun e'lonlar.<span class="tag">Geografiya</span></div>
+        <div class="todo-pri pri-mid">O'RTA</div>
+      </li>
+      <li>
+        <div class="todo-num">9</div>
+        <div><strong>Tijorat ko'chmas mulk</strong> — Ofis, do'kon, ombor e'lonlari.<span class="tag">Kontent</span></div>
+        <div class="todo-pri pri-mid">O'RTA</div>
+      </li>
+      <li>
+        <div class="todo-num">10</div>
+        <div><strong>Onlayn bron qilish</strong> — To'lov integratsiyasi (Payme/Click) bilan ko'rik band qilish.<span class="tag">To'lov</span></div>
+        <div class="todo-pri pri-low">PAST</div>
+      </li>
+      <li>
+        <div class="todo-num">11</div>
+        <div><strong>SEO optimallashtirish</strong> — Server-side rendering (Next.js) yoki meta teglari.<span class="tag">Marketing</span></div>
+        <div class="todo-pri pri-low">PAST</div>
+      </li>
+      <li>
+        <div class="todo-num">12</div>
+        <div><strong>Bo'lib to'lash filtri</strong> — Ipoteka va muddatli to'lov imkoniyatlarini filter qilish.<span class="tag">Qidirish</span></div>
+        <div class="todo-pri pri-low">PAST</div>
+      </li>
+    </ul>
+  </div>
+
+</div><!-- /grid -->
+
+<script>
+const ctx = document.getElementById('radar').getContext('2d');
+new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: ['Xususiyatlar', 'Texnologiya/AI', 'UX/Dizayn', 'Mobil', 'Geografiya', 'Til qo\'llabi', 'Daromad modeli'],
+    datasets: [
+      {
+        label: 'Uynest',
+        data: [6.2, 8.5, 8.0, 0, 3, 2, 1],
+        backgroundColor: 'rgba(22,163,74,0.15)',
+        borderColor: '#16a34a',
+        pointBackgroundColor: '#16a34a',
+        borderWidth: 2.5,
+        pointRadius: 5
+      },
+      {
+        label: 'Uybor.uz',
+        data: [7.5, 3.0, 7.0, 9, 9, 9, 8],
+        backgroundColor: 'rgba(37,99,235,0.12)',
+        borderColor: '#2563eb',
+        pointBackgroundColor: '#2563eb',
+        borderWidth: 2.5,
+        pointRadius: 5
+      },
+      {
+        label: 'Joyme.uz',
+        data: [4.5, 3.5, 6.0, 5, 3, 5, 4],
+        backgroundColor: 'rgba(147,51,234,0.1)',
+        borderColor: '#9333ea',
+        pointBackgroundColor: '#9333ea',
+        borderWidth: 2,
+        pointRadius: 4
+      }
+    ]
+  },
+  options: {
+    scales: {
+      r: {
+        min: 0, max: 10,
+        ticks: { stepSize: 2, font: { size: 10 } },
+        pointLabels: { font: { size: 11, weight: 'bold' }, color: '#374151' },
+        grid: { color: '#e5e7eb' }
+      }
+    },
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } }
+    }
+  }
+});
+</script>
+</body>
+</html>

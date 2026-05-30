@@ -1,4 +1,6 @@
 ﻿import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from './i18n';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import {
@@ -155,7 +157,7 @@ function Card({p,compareIds,onCompareChange}:{p:Listing;compareIds?:number[];onC
       </div>
       <div className="p-5 flex flex-col flex-1">
         <h3 className="font-bold text-[15px] text-gray-900 mb-1 leading-snug line-clamp-2">{p.title}</h3>
-        <p className="text-gray-500 text-[13px] flex items-center gap-1.5 mb-2"><i className="ri-map-pin-2-fill text-emerald-600"/>{p.address||p.district}</p>
+        <p className="text-gray-500 text-[13px] flex items-center gap-1.5 mb-2"><i className="ri-map-pin-2-fill text-emerald-600"/>{p.city&&p.city!=='Toshkent shahri'?`${p.city}, `:''}{ p.address||p.district}</p>
         {p.verified&&<div className="flex items-center gap-1 text-emerald-600 text-[11px] font-bold mb-2"><i className="ri-shield-check-fill text-emerald-500"/>Tasdiqlangan e'lon</div>}
         <div className="flex gap-3 text-gray-400 text-xs mb-3">
           <span className="flex items-center gap-1"><i className="ri-hotel-bed-line"/>{p.rooms} xona</span>
@@ -174,10 +176,19 @@ function Card({p,compareIds,onCompareChange}:{p:Listing;compareIds?:number[];onC
 // ─── Navbar ─────────────────────────────────────────────────
 function Navbar(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const[,setMob]=useState(false);
   const[um,setUm]=useState(false);
+  const[lang,setLang]=useState(i18n.language||'uz');
   const u=state.currentUser;
   const unread=u?ChatAPI.unreadCount(u.id):0;
+
+  const toggleLang=()=>{
+    const next=lang==='uz'?'ru':'uz';
+    i18n.changeLanguage(next);
+    localStorage.setItem('lang',next);
+    setLang(next);
+  };
 
   const nav=(p:string)=>{setMob(false);setUm(false);
     if(p==='admin'){if(!state.auth){dispatch({type:'AUTH_NEXT',payload:'admin'});dispatch({type:'NAV',payload:'auth'});return;}if(!isAdmin(u)){toast('Faqat admin kirishi mumkin','error');return;}}
@@ -187,7 +198,15 @@ function Navbar(){
 
   const logout=async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();CompareAPI.clear();dispatch({type:'LOGOUT'});toast('Chiqildi');nav('home');};
 
-  const links=[{id:'home',label:'Bosh sahifa',icon:'ri-home-4-line'},{id:'rent',label:'Ijara',icon:'ri-key-2-line'},{id:'sale',label:'Sotuv',icon:'ri-shopping-bag-3-line'},{id:'saved',label:'Sevimlilar',icon:'ri-heart-line'},{id:'map',label:'Xarita',icon:'ri-map-2-line'},{id:'chat',label:'Xabarlar',icon:'ri-chat-3-line'},{id:'submit',label:'E\'lon berish',icon:'ri-add-circle-line'}];
+  const links=[
+    {id:'home',label:t('home'),icon:'ri-home-4-line'},
+    {id:'rent',label:t('rent'),icon:'ri-key-2-line'},
+    {id:'sale',label:t('sale'),icon:'ri-shopping-bag-3-line'},
+    {id:'saved',label:t('saved'),icon:'ri-heart-line'},
+    {id:'map',label:t('map'),icon:'ri-map-2-line'},
+    {id:'chat',label:t('chat'),icon:'ri-chat-3-line'},
+    {id:'submit',label:t('post'),icon:'ri-add-circle-line'},
+  ];
 
   return(
     <nav className="sticky top-0 z-50 bg-white/92 backdrop-blur-xl border-b border-emerald-100/60" style={{backdropFilter:'saturate(180%) blur(16px)'}}>
@@ -205,8 +224,11 @@ function Navbar(){
             ))}
           </div>
           <div className="flex items-center gap-2 md:gap-3 relative">
+            <button onClick={toggleLang} className="hidden md:flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold border border-gray-200 rounded-xl hover:border-emerald-300 transition text-gray-600" title="Til / Язык">
+              {lang==='uz'?'🇺🇿 UZ':'🇷🇺 RU'}
+            </button>
             {/* E'lon qo'shish — always visible on mobile in the header */}
-            <button onClick={()=>nav('submit')} className="md:hidden flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow active:scale-95 transition shrink-0"><i className="ri-add-line text-sm"/>E'lon</button>
+            <button onClick={()=>nav('submit')} className="md:hidden flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow active:scale-95 transition shrink-0"><i className="ri-add-line text-sm"/>{t('post').split(' ')[0]}</button>
             {state.auth&&u?(
               <div className="relative hidden md:block">
                 <button onClick={()=>setUm(!um)} className="flex items-center gap-2 pl-1.5 pr-2 md:pr-3 py-1 bg-white border border-gray-200 rounded-full hover:border-emerald-300 transition shadow-sm active:scale-95">
@@ -376,10 +398,11 @@ function ListingFilterBar({type,filterKey}:{type:'rent'|'sale';filterKey:'RENT_F
   const cell="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-2.5";
   const lbl="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5";
   const upd=(payload:Record<string,string>)=>dispatch({type:filterKey,payload});
-  const reset=()=>{setLocalRegion('');upd(type==='rent'?{region:'',district:'',rooms:'',minPrice:'',maxPrice:''}:{region:'',district:'',rooms:'',max:''});};
+  const reset=()=>{setLocalRegion('');upd(type==='rent'?{region:'',district:'',rooms:'',minPrice:'',maxPrice:'',propType:''}:{region:'',district:'',rooms:'',max:'',propType:''});};
   return(
     <div className="bg-white rounded-2xl p-5 shadow-sm mb-7">
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
+        <div><label className={lbl}>Mulk turi</label><div className={cell}><i className="ri-home-4-line text-emerald-600 shrink-0"/><select className={ic} value={f.propType} onChange={e=>upd({propType:e.target.value})}><option value="">Barcha turlar</option>{PROPERTY_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div></div>
         <div><label className={lbl}>Viloyat</label><div className={cell}><i className="ri-map-2-line text-emerald-600 shrink-0"/><select className={ic} value={localRegion} onChange={e=>{setLocalRegion(e.target.value);upd({region:e.target.value,district:''});}}><option value="">Barcha viloyatlar</option>{Object.keys(REGIONS_MAP).map(r=><option key={r}>{r}</option>)}</select></div></div>
         <div><label className={lbl}>Tuman / Shahar</label><div className={cell}><i className="ri-map-pin-2-fill text-emerald-600 shrink-0"/><select className={ic} value={f.district} onChange={e=>upd({district:e.target.value})}><option value="">Barcha tumanlar</option>{districts.map(d=><option key={d}>{d}</option>)}</select></div></div>
         <div><label className={lbl}>Xonalar</label><div className={cell}><i className="ri-door-open-line text-emerald-600 shrink-0"/><select className={ic} value={f.rooms} onChange={e=>upd({rooms:e.target.value})}><option value="">Istagan</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}+ xona</option>)}</select></div></div>
@@ -399,6 +422,7 @@ function RentPage(){
   const[compareIds,setCompareIds]=useState<number[]>(CompareAPI.get());
   const f=state.filters.rent;
   let items=state.approved.filter(p=>p.type==='rent');
+  if(f.propType)items=items.filter(p=>p.propertyCategory===f.propType||p.propType===f.propType);
   if(f.region){const rd=REGIONS_MAP[f.region]||[];items=items.filter(p=>rd.includes(p.district)||p.city===f.region);}
   if(f.district)items=items.filter(p=>p.district===f.district);
   if(f.rooms)items=items.filter(p=>p.rooms>=parseInt(f.rooms));
@@ -420,6 +444,7 @@ function SalePage(){
   const f=state.filters.sale;
   const nav=(pg:string)=>{dispatch({type:'NAV',payload:pg});window.scrollTo({top:0});};
   let items=state.approved.filter(p=>p.type==='sale');
+  if(f.propType)items=items.filter(p=>p.propertyCategory===f.propType||p.propType===f.propType);
   if(f.region){const rd=REGIONS_MAP[f.region]||[];items=items.filter(p=>rd.includes(p.district)||p.city===f.region);}
   if(f.district)items=items.filter(p=>p.district===f.district);
   if(f.rooms)items=items.filter(p=>p.rooms>=parseInt(f.rooms));
@@ -3791,6 +3816,23 @@ export default function App(){
   },[state.auth,state.currentUser?.id]);
 
   const[showAiChat,setShowAiChat]=useState(false);
+
+  // PWA install prompt
+  const[installPrompt,setInstallPrompt]=useState<any>(null);
+  const[showInstallBanner,setShowInstallBanner]=useState(false);
+  useEffect(()=>{
+    const handler=(e:any)=>{e.preventDefault();setInstallPrompt(e);setShowInstallBanner(true);};
+    window.addEventListener('beforeinstallprompt',handler);
+    return()=>window.removeEventListener('beforeinstallprompt',handler);
+  },[]);
+  const handleInstall=async()=>{
+    if(!installPrompt)return;
+    installPrompt.prompt();
+    const{outcome}=await installPrompt.userChoice;
+    if(outcome==='accepted')setShowInstallBanner(false);
+    setInstallPrompt(null);
+  };
+
   return(
     <AppCtx.Provider value={{state,dispatch}}>
       <div id="tw" style={{position:'fixed',top:18,right:18,zIndex:500,display:'flex',flexDirection:'column',gap:9,pointerEvents:'none'}}/>
@@ -3801,6 +3843,17 @@ export default function App(){
         </button>
       )}
       {showAiChat&&<AiChatModal onClose={()=>setShowAiChat(false)}/>}
+      {showInstallBanner&&(
+        <div className="fixed bottom-20 md:bottom-6 left-4 z-[400] flex items-center gap-3 bg-white border border-emerald-200 rounded-2xl px-4 py-3 shadow-xl shadow-emerald-500/10 max-w-xs">
+          <img src="/pwa-64x64.png" className="w-10 h-10 rounded-xl" alt="UyNest"/>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-sm text-gray-900">UyNest ilovasini o'rnatish</div>
+            <div className="text-xs text-gray-500">Tez ishlaydi, oflayn ham</div>
+          </div>
+          <button onClick={handleInstall} className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl shrink-0">O'rnatish</button>
+          <button onClick={()=>setShowInstallBanner(false)} className="text-gray-300 hover:text-gray-500 shrink-0 text-lg leading-none">✕</button>
+        </div>
+      )}
       <style>{`
         @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
         .tst{background:#fff;border-radius:14px;padding:12px 18px;box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;align-items:center;gap:10px;border-left:4px solid #1FAE6F;min-width:260px;max-width:360px;pointer-events:auto;transition:all .4s;animation:toastIn .3s ease;font-size:.88rem}

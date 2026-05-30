@@ -776,7 +776,7 @@ export interface AppState {
   adminTab:string; contactModal:boolean; authRequiredModal:boolean;
   authReqAction:string; googleDemoModal:boolean;
   chatTarget:string|null;
-  filters:{rent:{region:string;district:string;rooms:string;minPrice:string;maxPrice:string};sale:{region:string;district:string;rooms:string;max:string}};
+  filters:{rent:{region:string;district:string;rooms:string;minPrice:string;maxPrice:string;propType:string};sale:{region:string;district:string;rooms:string;max:string;propType:string}};
   favorites: string[];
   reviews: Review[];
 }
@@ -784,7 +784,7 @@ export interface AppState {
 export function buildInitialState():AppState{
   const token=localStorage.getItem(LS.token); const user=AuthAPI.validate(token);
   if(!user) localStorage.removeItem(LS.token);
-  return {page:"home",approved:[...SEED],pending:[],requests:[],auth:!!user,currentUser:user,token:user?token:null,chatSyncTick:0,loading:true,authTab:"login",authNext:null,currentDetail:null,adminTab:"overview",contactModal:false,authRequiredModal:false,authReqAction:"",googleDemoModal:false,chatTarget:null,filters:{rent:{region:"",district:"",rooms:"",minPrice:"",maxPrice:""},sale:{region:"",district:"",rooms:"",max:""}},favorites:[],reviews:[]};
+  return {page:"home",approved:[...SEED],pending:[],requests:[],auth:!!user,currentUser:user,token:user?token:null,chatSyncTick:0,loading:true,authTab:"login",authNext:null,currentDetail:null,adminTab:"overview",contactModal:false,authRequiredModal:false,authReqAction:"",googleDemoModal:false,chatTarget:null,filters:{rent:{region:"",district:"",rooms:"",minPrice:"",maxPrice:"",propType:""},sale:{region:"",district:"",rooms:"",max:"",propType:""}},favorites:[],reviews:[]};
 }
 
 export function saveToLS(state:AppState){
