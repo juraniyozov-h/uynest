@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, Map, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 

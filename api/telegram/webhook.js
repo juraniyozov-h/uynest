@@ -23,7 +23,7 @@ export default async function handler(req, res) {
         .get();
 
       if (snap.empty) {
-        await sendTelegramMessage(chatId, '❌ Kod noto\'g\'ri yoki muddati o\'tgan.\n\nTashkentHome profilingizdan yangi kod oling.');
+        await sendTelegramMessage(chatId, '❌ Kod noto\'g\'ri yoki muddati o\'tgan.\n\nUynest profilingizdan yangi kod oling.');
         return res.status(200).json({ ok: true });
       }
 
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
       if (Date.now() > expiresAt) {
         await codeDoc.ref.update({ used: true });
-        await sendTelegramMessage(chatId, '⏱ Kodning muddati o\'tgan (10 daqiqa).\n\nTashkentHome profilingizdan yangi kod oling.');
+        await sendTelegramMessage(chatId, '⏱ Kodning muddati o\'tgan (10 daqiqa).\n\nUynest profilingizdan yangi kod oling.');
         return res.status(200).json({ ok: true });
       }
 
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       await codeDoc.ref.update({ used: true });
 
       await sendTelegramMessage(chatId,
-        '✅ <b>Muvaffaqiyatli ulandi!</b>\n\nEndi TashkentHome bildirishnomalari Telegramga keladi:\n\n' +
+        '✅ <b>Muvaffaqiyatli ulandi!</b>\n\nEndi Uynest bildirishnomalari Telegramga keladi:\n\n' +
         '📬 Yangi xabar\n✅ E\'lon tasdiqlandi\n📅 Ko\'rik so\'rovi\n🔔 Mos e\'lon topildi\n⚠️ E\'lon muddati tugamoqda'
       );
 
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     }
   } else if (parts[0] === '/start') {
     await sendTelegramMessage(chatId,
-      '👋 <b>TashkentHome botiga xush kelibsiz!</b>\n\nTelegramni ulaish uchun:\n1. tashkenthome.netlify.app saytiga kiring\n2. Profil → Bildirishnomalar\n3. "Telegram ulash" tugmasini bosing\n4. Olingan kodni /start <KOD> formatida yuboring'
+      '👋 <b>Uynest botiga xush kelibsiz!</b>\n\nTelegramni ulaish uchun:\n1. uynest.vercel.app saytiga kiring\n2. Profil → Bildirishnomalar\n3. "Telegram ulash" tugmasini bosing\n4. Olingan kodni /start <KOD> formatida yuboring'
     );
   } else {
     await sendTelegramMessage(chatId,

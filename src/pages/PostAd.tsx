@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Camera, MapPin, ChevronRight, ChevronLeft, Check, Plus, Minus } from 'lucide-react';
 
 const PostAd = () => {

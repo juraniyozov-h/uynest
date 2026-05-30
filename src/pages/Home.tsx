@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, MapPin, DollarSign, Home as HomeIcon, ChevronRight, ShieldCheck, Layers, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';

@@ -6,7 +6,7 @@ import {
   ReviewsAPI, FavoritesAPI, RequestsAPI, ViewingRequestAPI, ReportsAPI,
   SavedSearchAPI, ListingViewAPI, ListingExtAPI, CompareAPI,
   ADMIN_EMAIL, SEED, DISTRICTS, AMENITIES, PROPERTY_CATEGORIES, TIME_SLOTS,
-  REGIONS_MAP, DISTRICT_COORDS, AMENITIES_FULL, FLOOR_CATEGORIES,
+  REGIONS_MAP, AMENITIES_FULL, FLOOR_CATEGORIES,
   Listing, AppRequest, User, ChatMessage, Review, ViewingRequest, Report, SavedSearch
 } from './store/appStore';
 import { updateDoc, doc, setDoc } from 'firebase/firestore';
@@ -174,7 +174,7 @@ function Card({p,compareIds,onCompareChange}:{p:Listing;compareIds?:number[];onC
 // ─── Navbar ─────────────────────────────────────────────────
 function Navbar(){
   const{state,dispatch}=useApp();
-  const[mob,setMob]=useState(false);
+  const[,setMob]=useState(false);
   const[um,setUm]=useState(false);
   const u=state.currentUser;
   const unread=u?ChatAPI.unreadCount(u.id):0;
@@ -686,7 +686,6 @@ function MapPage(){
     if(p.lat&&p.lng){setMapCenter([p.lat,p.lng]);setMapZoom(16);setMapKey(k=>k+1);}
   };
 
-  const selAmenities=sel?AMENITIES.filter(a=>sel.amenities?.includes(a.id)).slice(0,4):[];
   const selAvg=sel?districtAvgMap[`${sel.district}_${sel.type}`]||0:0;
   const selDiff=selAvg&&sel?Math.round(((sel.price-selAvg)/selAvg)*100):null;
 
@@ -2555,7 +2554,7 @@ function FullProfilePage(){
                   <div className="text-sm text-amber-800">
                     <b>Qanday ulash:</b><br/>
                     1. Quyidagi tugmani bosing — 6 raqamli kod yaratiladi<br/>
-                    2. Telegram'dagi <b>@TashkentHomeBot</b> ga yozing: <code className="bg-amber-100 px-1 rounded">/start KOD</code><br/>
+                    2. Telegram'dagi <b>@Uynestbot</b> ga yozing: <code className="bg-amber-100 px-1 rounded">/start KOD</code><br/>
                     3. Bot "Ulandi!" deb javob beradi
                   </div>
                 </div>
@@ -2567,7 +2566,7 @@ function FullProfilePage(){
                     <div className="font-bold text-blue-800 mb-2 flex items-center gap-2"><i className="ri-key-2-line"/>Sizning kodingiz (10 daqiqa amal qiladi):</div>
                     <div className="text-4xl font-extrabold text-blue-600 tracking-[0.3em] mb-3">{tgCode}</div>
                     <div className="text-sm text-blue-700">
-                      Telegram'ni oching → <b>@TashkentHomeBot</b> → yozing:
+                      Telegram'ni oching → <b>@Uynestbot</b> → yozing:
                       <div className="mt-1.5 bg-blue-100 px-3 py-2 rounded-lg font-mono font-bold text-blue-900">/start {tgCode}</div>
                     </div>
                   </div>
@@ -3314,36 +3313,6 @@ async function callGroq(systemPrompt:string, userMsg:string, history:{role:strin
   return data.choices?.[0]?.message?.content||'';
 }
 
-const _AI_TOOLS = [{
-  functionDeclarations:[
-    {
-      name:'search_listings',
-      description:'Foydalanuvchi talabiga mos uylarni qidiradi. Tuman, narx, xona, tur (ijara/sotuv) bo\'yicha filtrlaydi.',
-      parameters:{
-        type:'OBJECT',
-        properties:{
-          type:{type:'STRING',description:'ijara yoki sotuv'},
-          district:{type:'STRING',description:'Tuman nomi: Yunusobod, Chilonzor, Mirobod va h.k.'},
-          maxPrice:{type:'NUMBER',description:'Maksimal narx USD da'},
-          minPrice:{type:'NUMBER',description:'Minimal narx USD da'},
-          rooms:{type:'NUMBER',description:'Xona soni'},
-          minArea:{type:'NUMBER',description:'Minimal maydon m² da'},
-        },
-        required:[]
-      }
-    },
-    {
-      name:'get_price_stats',
-      description:'Biror tuman bo\'yicha o\'rtacha narx va e\'lonlar sonini qaytaradi.',
-      parameters:{type:'OBJECT',properties:{district:{type:'STRING',description:'Tuman nomi'}},required:['district']}
-    },
-    {
-      name:'get_listing_detail',
-      description:'Biror e\'lon haqida batafsil ma\'lumot oladi.',
-      parameters:{type:'OBJECT',properties:{listingId:{type:'NUMBER',description:'E\'lon ID'}},required:['listingId']}
-    }
-  ]
-}];
 
 const AI_SYSTEM = `Sen UyNest — O'zbekiston ko'chmas mulk platformasining AI yordamchisi.
 MUHIM: Doimo va faqat O'ZBEK TILIDA javob ber. Hech qachon rus yoki ingliz tilida yozma.

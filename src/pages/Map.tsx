@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search, SlidersHorizontal, MapPin, Heart, ChevronRight, BedDouble, Maximize } from 'lucide-react';
+import { Search, SlidersHorizontal, Heart, ChevronRight, BedDouble, Maximize } from 'lucide-react';
 
 const MapPage = () => {
   const pins = [

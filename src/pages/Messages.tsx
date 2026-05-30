@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, Send, Paperclip, MoreVertical, Phone, Smile } from 'lucide-react';
 
 const Messages = () => {

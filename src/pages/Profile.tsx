@@ -1,5 +1,4 @@
-import React from 'react';
-import { User, Mail, Phone, Calendar, Star, Edit3, Plus, Trash2, Eye, Heart, MessageSquare, Settings, List, ChevronRight, MapPin } from 'lucide-react';
+import { Star, Edit3, Plus, Trash2, Eye, Heart, MessageSquare, Settings, List, ChevronRight, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Profile = () => {

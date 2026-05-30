@@ -1,8 +1,7 @@
-import { useParams, Link } from 'react-router-dom';
-import { Heart, Share2, MapPin, BedDouble, Bath, Maximize, User, Phone, MessageSquare, ShieldCheck, ChevronRight, Layers } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Heart, Share2, MapPin, BedDouble, Maximize, Phone, MessageSquare, ShieldCheck, ChevronRight, Layers } from 'lucide-react';
 
 const ListingDetail = () => {
-  const { id } = useParams();
 
   // Mock data for a single listing
   const listing = {

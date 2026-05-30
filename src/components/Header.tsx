@@ -1,6 +1,4 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Globe, User, PlusCircle } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();

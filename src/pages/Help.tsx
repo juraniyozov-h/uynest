@@ -1,4 +1,3 @@
-import React from 'react';
 import { HelpCircle, Book, MessageCircle, Mail } from 'lucide-react';
 
 const Help = () => {
