@@ -302,6 +302,11 @@ function BottomNav(){
             </button>
           );
         })}
+        {/* Install PWA button — only when installable */}
+        {_pwaInstallPrompt&&<button onClick={()=>{if(!triggerPwaInstall())return;}} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all active:scale-90 text-emerald-500">
+          <i className="text-[22px] leading-none ri-install-line"/>
+          <span className="text-[9px] font-semibold">{t('install_btn')}</span>
+        </button>}
         {/* Profile / Login tab */}
         <button onClick={()=>u?nav('profile'):nav('auth')} className={`flex-1 flex flex-col items-center justify-center gap-0.5 relative transition-all active:scale-90 ${activePage==='profile'||activePage==='auth'?'text-emerald-600':'text-gray-400'}`}>
           {(activePage==='profile'||activePage==='auth')&&<span className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-b-full"/>}
@@ -486,10 +491,10 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
       <div className="flex gap-2 mb-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-md">
           <i className="ri-search-line text-gray-400 shrink-0"/>
-          <input value={q} onChange={e=>{setQ(e.target.value);if(!e.target.value)setResults([]);}} onKeyDown={e=>e.key==='Enter'&&search()} placeholder="Ko'cha, mahalla, metro, shahar..." className="flex-1 text-sm outline-none min-w-0"/>
+          <input value={q} onChange={e=>{setQ(e.target.value);if(!e.target.value)setResults([]);}} onKeyDown={e=>e.key==='Enter'&&search()} placeholder={t('map_search_placeholder')} className="flex-1 text-sm outline-none min-w-0"/>
           {loading&&<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin shrink-0"/>}
         </div>
-        <button onClick={search} className="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0 flex items-center justify-center gap-1.5"><i className="ri-search-line text-base"/><span className="hidden md:inline">Qidiruv</span></button>
+        <button onClick={search} className="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0 flex items-center justify-center gap-1.5"><i className="ri-search-line text-base"/><span className="hidden md:inline">{t('map_search_btn')}</span></button>
       </div>
       <div className="flex items-center gap-2 mb-1">
         {['','rent','sale'].map((ft,i)=><button key={ft} onClick={()=>setFilterType(ft)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===ft?(ft==='rent'?'bg-blue-500 text-white':ft==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?t('map_all'):ft==='rent'?t('rent'):t('sale')}</button>)}
@@ -530,7 +535,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
 function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onFocus:(lat:number,lng:number,zoom:number)=>void;onHighlight:(ids:number[])=>void}){
   const{t}=useTranslation();
   const[q,setQ]=useState('');const[loading,setLoading]=useState(false);
-  const[aiMsg,setAiMsg]=useState('Joy nomi yoki tuman yozing, men atrofdagi uylarni topaman');
+  const[aiMsg,setAiMsg]=useState('');
   const[aiListings,setAiListings]=useState<Listing[]>([]);
   const{dispatch}=useApp();
 
@@ -550,7 +555,7 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
           if(withCoords.length>0)onFocus(withCoords[0].lat!,withCoords[0].lng!,14);
           onHighlight(found.map(p=>p.id));
           setAiListings(found.slice(0,5));
-          setAiMsg(`"${district}" da ${found.length} ta e'lon topildi:`);
+          setAiMsg(`"${district}" — ${found.length} ${t('ai_search_found')}:`);
           setLoading(false);return;
         }
       }
@@ -570,13 +575,13 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
         onHighlight(nearby.map(p=>p.id));
         setAiListings(nearby.slice(0,5));
         setAiMsg(nearby.length>0
-          ?`"${display_name.split(',')[0]}" atrofida ${nearby.length} ta e'lon:`
-          :`"${display_name.split(',')[0]}" topildi, lekin bu atrofda e'lon yo'q.`);
+          ?`"${display_name.split(',')[0]}" — ${nearby.length} ${t('ai_search_found')}:`
+          :`"${display_name.split(',')[0]}" ${t('ai_nearby_found')}`);
       }else{
-        setAiMsg('Joy topilmadi. Boshqa nom bilan urinib ko\'ring.');
+        setAiMsg(t('ai_not_found'));
         setAiListings([]);onHighlight([]);
       }
-    }catch{setAiMsg('Qidiruvda xato. Internet aloqasini tekshiring.');}
+    }catch{setAiMsg(t('ai_search_error'));}
     setLoading(false);
   };
 
@@ -597,7 +602,7 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
       </div>
       {/* AI Response */}
       <div className="p-4 bg-emerald-50 border-b border-emerald-100">
-        <p className="text-xs text-emerald-800 font-medium">{aiMsg}</p>
+        <p className="text-xs text-emerald-800 font-medium">{aiMsg||t('map_ai_hint')}</p>
       </div>
       {/* Listings */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -615,6 +620,13 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
       </div>
     </div>
   );
+}
+
+// Module-level PWA install prompt — accessible from any component
+let _pwaInstallPrompt:any=null;
+export function triggerPwaInstall(){
+  if(_pwaInstallPrompt){_pwaInstallPrompt.prompt();_pwaInstallPrompt=null;return true;}
+  return false;
 }
 
 // Module-level geo state — persists across MapPage mounts so we don't re-ask permission
@@ -1609,47 +1621,48 @@ function SubmitPage(){
       <form onSubmit={submit} className="space-y-5">
         <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-file-list-3-line text-emerald-600"/>{t('submit_basic_title')}</h3>
           <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">{t('form_type')}</label><select name="type" required className={ic}><option value="rent">{t('form_rent')}</option><option value="sale">{t('form_sale')}</option></select></div><div><label className="text-sm font-semibold mb-1.5 block">{t('form_prop_type')} *</label><select name="propType" required className={ic} value={selectedPropType} onChange={e=>setSelectedPropType(e.target.value)}>{PROPERTY_CATEGORIES.map((c:string)=><option key={c}>{c}</option>)}</select></div></div>
-          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Narxi (USD)</label><input name="price" type="number" placeholder="500" required className={ic}/></div><div><label className="text-sm font-semibold mb-1.5 block">Viloyat *</label><select name="region" required className={ic} onChange={handleRegionChange}><option value="">Tanlang...</option>{Object.keys(REGIONS_MAP).map((r:string)=><option key={r}>{r}</option>)}</select></div></div>
-          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Tuman / Shahar *</label><select name="district" required onChange={handleDistrictChange} className={ic}><option value="">Viloyatni tanlang</option>{(REGIONS_MAP[selectedRegion]||[]).map((d:string)=><option key={d}>{d}</option>)}</select></div><div><label className="text-sm font-semibold mb-1.5 block">Telefon raqam *</label>{state.currentUser?.phone?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{state.currentUser.phone}</div>:<button type="button" onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon ulash</button>}<p className="text-xs text-gray-400 mt-1">Xaridor siz bilan bog'lanadi</p></div></div>
-          <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Manzil</label><input name="address" placeholder="Ko'cha, uy raqami" required className={ic}/></div>
-          <div><label className="text-sm font-semibold mb-1.5 block">Sarlavha</label><input name="title" placeholder="Masalan: Yunusobod markazida zamonaviy xonadon" required className={ic}/></div>
+          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">{t('submit_price_label')}</label><input name="price" type="number" placeholder="500" required className={ic}/></div><div><label className="text-sm font-semibold mb-1.5 block">{t('submit_region_label')}</label><select name="region" required className={ic} onChange={handleRegionChange}><option value="">{t('submit_select_region')}</option>{Object.keys(REGIONS_MAP).map((r:string)=><option key={r}>{r}</option>)}</select></div></div>
+          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">{t('submit_district_label')}</label><select name="district" required onChange={handleDistrictChange} className={ic}><option value="">{t('submit_select_district')}</option>{(REGIONS_MAP[selectedRegion]||[]).map((d:string)=><option key={d}>{d}</option>)}</select></div><div><label className="text-sm font-semibold mb-1.5 block">{t('profile_phone')} *</label>{state.currentUser?.phone?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{state.currentUser.phone}</div>:<button type="button" onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>{t('profile_phone_add')}</button>}<p className="text-xs text-gray-400 mt-1">{t('submit_contact_profile')}</p></div></div>
+          <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">{t('submit_address_label')}</label><input name="address" placeholder={t('submit_address_ph')} required className={ic}/></div>
+          <div><label className="text-sm font-semibold mb-1.5 block">{t('submit_title_label')}</label><input name="title" placeholder={t('submit_title_ph')} required className={ic}/></div>
         </div>
         <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-settings-3-line text-emerald-600"/>{t('submit_step2')}</h3>
           <div className={`grid gap-3 mb-4 ${showFloors?'grid-cols-4':'grid-cols-2'}`}>
-            {[{n:'rooms',l:'Xonalar',p:'2',sv:submitRooms,set:(v:number)=>setSubmitRooms(v)},{n:'area',l:'Maydon m²',p:'65',sv:submitArea,set:(v:number)=>setSubmitArea(v)}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic} value={f.sv||''} onChange={e=>f.set(Number(e.target.value))}/></div>)}
-            {showFloors&&[{n:'floor',l:'Qavat',p:'4'},{n:'floors',l:'Umumiy qavat',p:'9'}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic}/></div>)}
+            {[{n:'rooms',l:t('submit_rooms_label'),p:'2',sv:submitRooms,set:(v:number)=>setSubmitRooms(v)},{n:'area',l:t('submit_area_label'),p:'65',sv:submitArea,set:(v:number)=>setSubmitArea(v)}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic} value={f.sv||''} onChange={e=>f.set(Number(e.target.value))}/></div>)}
+            {showFloors&&[{n:'floor',l:t('submit_floor_label'),p:'4'},{n:'floors',l:t('submit_total_floor_label'),p:'9'}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic}/></div>)}
           </div>
-          <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Tavsif</label><textarea name="desc" id="submit-desc" placeholder="Mulk haqida..." required className={`${ic} min-h-[100px] resize-y`}/><div className="mt-2"><AiDescGenerator rooms={submitRooms} area={submitArea} district={selectedRegion} amenities={amens} onGenerate={(t)=>{const el=document.getElementById('submit-desc') as HTMLTextAreaElement;if(el){el.value=t;el.dispatchEvent(new Event('input',{bubbles:true}));}}}/></div></div>
+          <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">{t('submit_desc_label')}</label><textarea name="desc" id="submit-desc" placeholder={t('submit_desc_ph')} required className={`${ic} min-h-[100px] resize-y`}/><div className="mt-2"><AiDescGenerator rooms={submitRooms} area={submitArea} district={selectedRegion} amenities={amens} onGenerate={(t)=>{const el=document.getElementById('submit-desc') as HTMLTextAreaElement;if(el){el.value=t;el.dispatchEvent(new Event('input',{bubbles:true}));}}}/></div></div>
           <div>
-            <label className="text-sm font-semibold mb-3 block">Qulayliklar</label>
+            <label className="text-sm font-semibold mb-3 block">{t('form_amenities')}</label>
             {(['interior','security','transport','lifestyle','extra'] as const).map(grp=>{
               const items=AMENITIES_FULL.filter(a=>a.group===grp);
-              const label=items[0]?.gl||grp;
+              const grpMap:Record<string,string>={interior:t('amen_cat_interior'),security:t('amen_cat_security'),transport:t('amen_cat_transport'),lifestyle:t('amen_cat_lifestyle'),extra:t('amen_cat_extra')};
+              const label=grpMap[grp]||items[0]?.gl||grp;
               return(<div key={grp} className="mb-4"><div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</div><div className="flex flex-wrap gap-2">{items.map(a=><button key={a.id} type="button" onClick={()=>setAmens(p=>p.includes(a.id)?p.filter(x=>x!==a.id):[...p,a.id])} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition active:scale-95 ${amens.includes(a.id)?'bg-emerald-600 text-white border-transparent shadow':'bg-gray-50 text-gray-600 border-gray-200 hover:border-emerald-300'}`}><i className={a.icon}/>{a.label}</button>)}</div></div>);
             })}
           </div>
         </div>
         {/* VIDEO UPLOAD */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-video-line text-emerald-600"/>Video (ixtiyoriy)</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-video-line text-emerald-600"/>{t('submit_video_title')}</h3>
           {videoFile?<div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl"><i className="ri-video-fill text-emerald-600 text-xl"/><span className="flex-1 text-sm font-medium truncate">{videoFile.name}</span><button type="button" onClick={()=>setVideoFile(null)} className="w-7 h-7 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-sm"><i className="ri-close-line"/></button></div>:
-          <div className="border-2 border-dashed border-emerald-200 rounded-2xl p-6 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition" onClick={()=>videoRef.current?.click()}><i className="ri-upload-cloud-2-line text-3xl text-emerald-400 block mb-2"/><div className="text-sm font-semibold text-gray-700">Video yuklash (MP4)</div><div className="text-xs text-gray-400 mt-1">Maks 50MB</div></div>}
+          <div className="border-2 border-dashed border-emerald-200 rounded-2xl p-6 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition" onClick={()=>videoRef.current?.click()}><i className="ri-upload-cloud-2-line text-3xl text-emerald-400 block mb-2"/><div className="text-sm font-semibold text-gray-700">{t('submit_video_hint')}</div><div className="text-xs text-gray-400 mt-1">{t('submit_video_sub')}</div></div>}
           <input ref={videoRef} type="file" accept="video/*" className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f){if(f.size>50*1024*1024){toast('Video 50MB dan katta bo\'lmasin','error');return;}setVideoFile(f);}}}/>
           <p className="text-xs text-gray-400 mt-2">YouTube havolasi (ixtiyoriy):</p>
           <input name="videoUrl" placeholder="https://youtube.com/watch?v=..." className={`${ic} mt-1`}/>
         </div>
         {/* DOCUMENT UPLOAD FOR VERIFICATION */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-file-shield-2-line text-emerald-600"/>Hujjatlar (Tasdiqlash uchun)</h3>
-          <p className="text-sm text-gray-500 mb-4">Hujjat yuklasangiz, e'loningiz <span className="font-bold text-emerald-700 inline-flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>Tasdiqlangan mulk</span> belgisiga ega bo'ladi. Manba: <a href="https://my.gov.uz" target="_blank" className="text-emerald-700 underline">my.gov.uz</a></p>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-file-shield-2-line text-emerald-600"/>{t('submit_docs_title')}</h3>
+          <p className="text-sm text-gray-500 mb-4">{t('submit_docs_hint')} <span className="font-bold text-emerald-700 inline-flex items-center gap-1"><i className="ri-checkbox-circle-fill"/>{t('verified_label')}</span>. <a href="https://my.gov.uz" target="_blank" className="text-emerald-700 underline">my.gov.uz</a></p>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
-              {key:'kadastr',label:'Kadastr hujjati',icon:'ri-map-2-line',accept:'.pdf,image/*'},
-              {key:'passport',label:'Egasi pasporti',icon:'ri-id-card-line',accept:'image/*'},
-              {key:'selfie',label:'Selfie (pasport bilan)',icon:'ri-camera-line',accept:'image/*'},
+              {key:'kadastr',label:t('submit_doc_kadastr'),icon:'ri-map-2-line',accept:'.pdf,image/*'},
+              {key:'passport',label:t('submit_doc_passport'),icon:'ri-id-card-line',accept:'image/*'},
+              {key:'selfie',label:t('submit_doc_selfie'),icon:'ri-camera-line',accept:'image/*'},
             ].map(d=>(
               <label key={d.key} className={`flex flex-col items-center gap-2 p-4 border-2 border-dashed rounded-xl cursor-pointer transition ${docFiles[d.key as keyof typeof docFiles]?'border-emerald-400 bg-emerald-50':'border-gray-200 hover:border-emerald-300'}`}>
                 <i className={`${d.icon} text-2xl ${docFiles[d.key as keyof typeof docFiles]?'text-emerald-600':'text-gray-400'}`}/>
                 <span className="text-xs font-semibold text-center text-gray-700">{d.label}</span>
-                {docFiles[d.key as keyof typeof docFiles]?<span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5"><i className="ri-checkbox-circle-fill"/>Yuklandi</span>:<span className="text-[10px] text-gray-400">Bosing va yuklang</span>}
+                {docFiles[d.key as keyof typeof docFiles]?<span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5"><i className="ri-checkbox-circle-fill"/>{t('submit_doc_uploaded')}</span>:<span className="text-[10px] text-gray-400">{t('submit_doc_click')}</span>}
                 <input type="file" accept={d.accept} className="hidden" onChange={e=>{const f=e.target.files?.[0];if(f)setDocFiles(p=>({...p,[d.key]:f}));}}/>
               </label>
             ))}
@@ -1668,8 +1681,8 @@ function SubmitPage(){
         </div>
         {/* MAP — GPS locked, no manual override */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-map-pin-line text-emerald-600"/>Joylashuv</h3>
-          <p className="text-xs text-gray-500 mb-4 flex items-start gap-1.5"><i className="ri-information-line text-blue-500 text-base shrink-0 mt-0.5"/>Joylashuv faqat GPS orqali aniqlanadi. Soxta e'lonlarning oldini olish uchun qo'lda o'zgartirib bo'lmaydi.</p>
+          <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-map-pin-line text-emerald-600"/>{t('submit_gps_title')}</h3>
+          <p className="text-xs text-gray-500 mb-4 flex items-start gap-1.5"><i className="ri-information-line text-blue-500 text-base shrink-0 mt-0.5"/>{t('submit_gps_note')}</p>
           {locationMsg&&<div className={`flex items-center gap-2 text-sm mb-3 px-3 py-2 rounded-xl ${gpsLocked?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}`}><i className={gpsLocked?'ri-map-pin-2-fill':'ri-loader-4-line animate-spin'}/>{locationMsg||'Aniqlanmoqda...'}</div>}
           {gpsLocked?(
             <div className="flex items-center gap-3 mb-3 px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
@@ -1694,8 +1707,8 @@ function SubmitPage(){
         <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>{t('submit_step5')}</h3>
           {state.auth && state.currentUser ? (
             <>
-              <div className="mb-4 p-4 bg-emerald-50 rounded-xl"><div className="text-sm font-semibold text-emerald-900">Sizning profil:</div><div className="flex items-center gap-3 mt-2"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm">{state.currentUser.name?.[0]?.toUpperCase()}</div><div><div className="font-semibold text-sm">{state.currentUser.name||'Nomi yo\'q'}</div><div className="text-xs text-gray-600">{state.currentUser.phone||state.currentUser.email||'Kontakt mavjud emas'}</div></div></div></div>
-              <label className="text-sm font-semibold mb-1.5 block">Telegram (ixtiyoriy)</label><input name="telegram" placeholder="@username yoki +998..." className={ic}/>
+              <div className="mb-4 p-4 bg-emerald-50 rounded-xl"><div className="text-sm font-semibold text-emerald-900">{t('submit_contact_profile')}</div><div className="flex items-center gap-3 mt-2"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm">{state.currentUser.name?.[0]?.toUpperCase()}</div><div><div className="font-semibold text-sm">{state.currentUser.name||'Nomi yo\'q'}</div><div className="text-xs text-gray-600">{state.currentUser.phone||state.currentUser.email||'Kontakt mavjud emas'}</div></div></div></div>
+              <label className="text-sm font-semibold mb-1.5 block">{t('submit_telegram_label')}</label><input name="telegram" placeholder={t('submit_telegram_ph')} className={ic}/>
             </>
           ) : (
             <div className="p-4 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-center">
@@ -2076,6 +2089,7 @@ function TopReviews(){
 // ─── REVIEW PAGE ──────────────────────────────────────────────
 function ReviewPage(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const[stars,setStars]=useState(0);
   const[hover,setHover]=useState(0);
   const[text,setText]=useState('');
@@ -2084,8 +2098,8 @@ function ReviewPage(){
   const u=state.currentUser!;
   const submit=async(e:React.FormEvent)=>{
     e.preventDefault();
-    if(stars<1){toast('Yulduzcha tanlang','error');return;}
-    if(!text.trim()){toast('Sharh yozing','error');return;}
+    if(stars<1){toast(t('review_rate'),'error');return;}
+    if(!text.trim()){toast(t('review_text_label'),'error');return;}
     setSending(true);
     const review:Review={id:'r_'+Date.now().toString(36),userId:u.id,userName:u.name||u.email||'Foydalanuvchi',userAvatar:u.avatar,stars,text:text.trim(),createdAt:new Date().toISOString(),read:false};
     try {
@@ -2105,14 +2119,14 @@ function ReviewPage(){
   return(
     <div className="max-w-2xl mx-auto px-4 py-14">
       <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-gray-100">
-        <div className="text-center mb-8"><div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-300 text-white flex items-center justify-center text-3xl shadow-lg"><i className="ri-star-smile-line"/></div><h2 className="text-2xl font-extrabold mb-1">Sharh qoldiring</h2><p className="text-gray-500 text-sm">Xizmatimiz haqida fikringiz muhim</p></div>
+        <div className="text-center mb-8"><div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-300 text-white flex items-center justify-center text-3xl shadow-lg"><i className="ri-star-smile-line"/></div><h2 className="text-2xl font-extrabold mb-1">{t('review_page_title')}</h2><p className="text-gray-500 text-sm">{t('review_page_sub')}</p></div>
         <form onSubmit={submit} className="space-y-6">
-          <div className="text-center"><label className="text-sm font-semibold mb-3 block">Baholang</label>
+          <div className="text-center"><label className="text-sm font-semibold mb-3 block">{t('review_rate')}</label>
             <div className="flex justify-center gap-2">{[1,2,3,4,5].map(s=><button key={s} type="button" onClick={()=>setStars(s)} onMouseEnter={()=>setHover(s)} onMouseLeave={()=>setHover(0)} className="text-4xl transition-transform hover:scale-110 active:scale-95"><i className={`${s<=(hover||stars)?'ri-star-fill text-amber-400':'ri-star-line text-gray-300'}`}/></button>)}</div>
-            {stars>0&&<div className="text-sm text-amber-600 font-semibold mt-2">{['','Yomon','O\'rtacha','Yaxshi','Ajoyib','Zo\'r!'][stars]}</div>}
+            {stars>0&&<div className="text-sm text-amber-600 font-semibold mt-2">{[t('review_stars_1'),t('review_stars_2'),t('review_stars_3'),t('review_stars_4'),t('review_stars_5')][stars-1]}</div>}
           </div>
-          <div><label className="text-sm font-semibold mb-1.5 block">Sharh matni</label><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Xizmatimiz haqida fikringizni yozing..." className="w-full px-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition min-h-[120px] resize-y" required/></div>
-          <button type="submit" disabled={sending} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition disabled:opacity-50"><i className="ri-send-plane-fill"/>{sending?'Yuborilmoqda...':'Sharh yuborish'}</button>
+          <div><label className="text-sm font-semibold mb-1.5 block">{t('review_text_label')}</label><textarea value={text} onChange={e=>setText(e.target.value)} placeholder={t('review_placeholder')} className="w-full px-4 py-3 bg-emerald-50 border border-transparent focus:border-emerald-400 focus:bg-white rounded-xl text-sm outline-none transition min-h-[120px] resize-y" required/></div>
+          <button type="submit" disabled={sending} className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition disabled:opacity-50"><i className="ri-send-plane-fill"/>{sending?t('review_submitting'):t('review_submit_btn')}</button>
         </form>
       </div>
     </div>
@@ -2341,15 +2355,16 @@ function InfraMap({lat,lng}:{lat:number;lng:number}){
 // ─── COMPARE BAR (Module 6) ─────────────────────────────────
 function CompareBar({compareIds,onChange}:{compareIds:number[];onChange:(ids:number[])=>void}){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   if(compareIds.length===0) return null;
   const items=compareIds.map(id=>state.approved.find(p=>p.id===id)).filter(Boolean) as Listing[];
   return(<div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-[55] bg-white border-t border-gray-200 shadow-2xl px-4 py-3 flex items-center gap-3 flex-wrap">
     <i className="ri-scales-2-line text-emerald-600 shrink-0"/>
-    <span className="font-bold text-sm text-gray-700 shrink-0">Solishtirish ({compareIds.length}/3):</span>
+    <span className="font-bold text-sm text-gray-700 shrink-0">{t('compare_bar_label')} ({compareIds.length}/3):</span>
     {items.map(p=><div key={p.id} className="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-1.5"><span className="text-sm font-medium truncate max-w-[100px]">{p.title.split(',')[0]}</span><button onClick={()=>onChange(CompareAPI.remove(p.id))} className="text-gray-400 hover:text-red-500 ml-1">✕</button></div>)}
-    {compareIds.length<3&&<span className="text-sm text-gray-400">+ Qo'sh</span>}
-    <button onClick={()=>onChange([])} className="text-gray-400 hover:text-red-500 text-lg ml-1" title="Yopish"><i className="ri-close-line"/></button>
-    <button onClick={()=>{dispatch({type:'NAV',payload:'compare'});window.scrollTo({top:0});}} className="ml-auto flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold text-sm rounded-xl shadow active:scale-95 transition">Solishtirish →</button>
+    {compareIds.length<3&&<span className="text-sm text-gray-400">{t('compare_add')}</span>}
+    <button onClick={()=>onChange([])} className="text-gray-400 hover:text-red-500 text-lg ml-1" title={t('close_btn')}><i className="ri-close-line"/></button>
+    <button onClick={()=>{dispatch({type:'NAV',payload:'compare'});window.scrollTo({top:0});}} className="ml-auto flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold text-sm rounded-xl shadow active:scale-95 transition">{t('compare_go')}</button>
   </div>);
 }
 
@@ -2385,6 +2400,7 @@ function ComparePage(){
 // ─── SECURITY TAB ───────────────────────────────────────────
 function SecurityTab({u}:{u:User}){
   const{dispatch}=useApp();
+  const{t}=useTranslation();
   const[confirm,setConfirm]=useState(false);
   const[deleting,setDeleting]=useState(false);
   const handleDelete=async()=>{
@@ -2407,27 +2423,27 @@ function SecurityTab({u}:{u:User}){
   };
   return(
     <div className="bg-white rounded-2xl p-6 shadow-sm">
-      <h3 className="font-bold text-lg mb-5">Xavfsizlik</h3>
+      <h3 className="font-bold text-lg mb-5">{t('security_title')}</h3>
       <div className="p-5 bg-red-50 border border-red-100 rounded-2xl">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0"><i className="ri-delete-bin-6-line text-red-600 text-xl"/></div>
           <div>
-            <div className="font-bold text-red-700 mb-1">Hisobni o'chirish</div>
-            <p className="text-xs text-red-500 leading-relaxed">Bu amal qaytarib bo'lmaydi. Barcha e'lonlar, xabarlar va ma'lumotlar butunlay o'chib ketadi.</p>
+            <div className="font-bold text-red-700 mb-1">{t('security_delete_title')}</div>
+            <p className="text-xs text-red-500 leading-relaxed">{t('security_delete_desc')}</p>
           </div>
         </div>
         {!confirm?(
           <button onClick={()=>setConfirm(true)} className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl active:scale-95 transition shadow">
-            <i className="ri-delete-bin-6-line"/>Hisobni o'chirish
+            <i className="ri-delete-bin-6-line"/>{t('security_delete_btn')}
           </button>
         ):(
           <div className="bg-white border border-red-200 rounded-xl p-4">
-            <p className="text-sm font-semibold text-red-700 mb-3">Rostdan ham <b>{u.name||u.email}</b> hisobini o'chirmoqchimisiz?</p>
+            <p className="text-sm font-semibold text-red-700 mb-3">{t('security_delete_title')}? <b>{u.name||u.email}</b></p>
             <div className="flex gap-3">
               <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl disabled:opacity-60 active:scale-95 transition">
-                {deleting?<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>O'chirilmoqda...</>:<><i className="ri-check-line"/>Ha, o'chirish</>}
+                {deleting?<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t('loading')}</>:<><i className="ri-check-line"/>{t('security_confirm_btn')}</>}
               </button>
-              <button onClick={()=>setConfirm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 active:scale-95 transition">Bekor qilish</button>
+              <button onClick={()=>setConfirm(false)} className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 active:scale-95 transition">{t('security_cancel_btn')}</button>
             </div>
           </div>
         )}
@@ -2533,7 +2549,7 @@ function FullProfilePage(){
         {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
-        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">{t('profile_no_listings')}</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">{t('profile_add_listing')}</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600 flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">{t('profile_view')}</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100 flex items-center gap-1"><i className="ri-star-line"/>{t('profile_tab_premium')}</button></div></div>)}</div>)}
+        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">{t('profile_no_listings')}</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">{t('profile_add_listing')}</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} {t('stat_views')}</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} {t('stat_saved')}</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>{t('stat_verified')}</span>}{p.isPremium&&<span className="text-amber-600 flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">{t('profile_view')}</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100 flex items-center gap-1"><i className="ri-star-line"/>{t('profile_tab_premium')}</button></div></div>)}</div>)}
 
         {/* ── PREMIUM ── */}
         {tab==='premium'&&(<div>
@@ -2591,8 +2607,8 @@ function FullProfilePage(){
         {tab==='notifications'&&(<div className="space-y-5">
           {/* Telegram connect card */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-telegram-fill text-blue-500"/>Telegram Bildirishnomalar</h3>
-            <p className="text-sm text-gray-500 mb-4">Telegramni ulab, muhim voqealar haqida <b>darhol xabar oling</b> — hatto saytda bo'lmasangiz ham.</p>
+            <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><i className="ri-telegram-fill text-blue-500"/>{t('notif_tg_title')}</h3>
+            <p className="text-sm text-gray-500 mb-4">{t('notif_tg_sub')}</p>
             {tgLinked?(
               <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl shrink-0"><i className="ri-telegram-fill"/></div>
@@ -2629,19 +2645,19 @@ function FullProfilePage(){
 
           {/* Notification types explained */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-base mb-4 flex items-center gap-2"><i className="ri-notification-3-line text-emerald-600"/>Qachon va nima uchun bildirishnoma keladi?</h3>
+            <h3 className="font-bold text-base mb-4 flex items-center gap-2"><i className="ri-notification-3-line text-emerald-600"/>{t('notif_when_title')}</h3>
             <div className="space-y-3">
               {[
-                {icon:'ri-mail-send-line',title:'Yangi xabar keldi',when:'Kimdir e\'loningizga xabar yuborganda',why:'Tezda javob bersangiz, xaridor boshqasiga ketmaydi'},
-                {icon:'ri-checkbox-circle-line',title:'E\'lon tasdiqlandi',when:'Admin e\'loningizni tasdiqlagan paytda',why:'E\'lon endi barcha foydalanuvchilarga ko\'rinadi'},
-                {icon:'ri-close-circle-line',title:'E\'lon rad etildi',when:'Admin e\'loningizni rad etgan paytda',why:'Sababini bilish va qayta yuborish uchun'},
-                {icon:'ri-calendar-check-line',title:'Ko\'rik so\'rovi keldi',when:'Kimdir e\'loningizga ko\'rikka yozilganda',why:'Aniq sana va vaqtni ko\'rsatadi — tasdiqlash kerak'},
-                {icon:'ri-notification-3-line',title:'Mos e\'lon topildi',when:'Saqlagan qidiruvingizga yangi e\'lon tushganda',why:'Tez xabar beradi — eng yaxshi variantlarni birinchi bo\'lib ko\'rasiz'},
-                {icon:'ri-alert-line',title:'E\'lon eskirmoqda',when:"E'lon muddati tugashdan 3 kun oldin",why:'Yangilash uchun vaqt bo\'ladi — e\'lon o\'chib ketmaydi'},
+                {icon:'ri-mail-send-line',title:t('notif_1_title'),when:t('notif_1_when'),why:t('notif_1_why')},
+                {icon:'ri-checkbox-circle-line',title:t('notif_2_title'),when:t('notif_2_when'),why:t('notif_2_why')},
+                {icon:'ri-close-circle-line',title:t('notif_3_title'),when:t('notif_3_when'),why:t('notif_3_why')},
+                {icon:'ri-calendar-check-line',title:t('notif_4_title'),when:t('notif_4_when'),why:t('notif_4_why')},
+                {icon:'ri-notification-3-line',title:t('notif_5_title'),when:t('notif_5_when'),why:t('notif_5_why')},
+                {icon:'ri-alert-line',title:t('notif_6_title'),when:t('notif_6_when'),why:t('notif_6_why')},
               ].map(n=>(
                 <div key={n.title} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
                   <i className={`${n.icon} text-xl text-emerald-600 shrink-0 mt-0.5`}/>
-                  <div><div className="font-semibold text-sm">{n.title}</div><div className="text-xs text-gray-500 mt-0.5"><b>Qachon:</b> {n.when}</div><div className="text-xs text-emerald-700 mt-0.5"><b>Nima uchun muhim:</b> {n.why}</div></div>
+                  <div><div className="font-semibold text-sm">{n.title}</div><div className="text-xs text-gray-500 mt-0.5">{n.when}</div><div className="text-xs text-emerald-700 mt-0.5">{n.why}</div></div>
                 </div>
               ))}
             </div>
@@ -2656,10 +2672,10 @@ function FullProfilePage(){
         </div>)}
 
         {/* ── SEARCHES ── */}
-        {tab==='searches'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Saqlangan qidiruvlar</h3>{savedSearches.length===0?<div className="text-center py-8 text-gray-400"><i className="ri-search-line text-4xl text-gray-200 block mb-3"/>Saqlangan qidiruvlar yo'q<br/><span className="text-xs">Qidiruv sahifasida "Saqlash" tugmasini bosing</span></div>:<div className="space-y-3">{savedSearches.map(s=><div key={s.id} className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl"><div className="flex-1"><div className="font-semibold text-sm">{s.filters.type||'Hammasi'} • {s.filters.district||'Barcha tumanlar'}</div><div className="text-xs text-gray-400">{s.filters.minPrice&&`$${s.filters.minPrice} — `}{s.filters.maxPrice&&`$${s.filters.maxPrice}`}{s.filters.rooms&&` • ${s.filters.rooms} xona`}</div></div><button onClick={()=>SavedSearchAPI.remove(s.id).then(()=>setSavedSearches(p=>p.filter(x=>x.id!==s.id)))} className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100"><i className="ri-delete-bin-line text-sm"/></button></div>)}</div>}</div>)}
+        {tab==='searches'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">{t('searches_title')}</h3>{savedSearches.length===0?<div className="text-center py-8 text-gray-400"><i className="ri-search-line text-4xl text-gray-200 block mb-3"/>{t('searches_empty')}<br/><span className="text-xs">{t('searches_hint')}</span></div>:<div className="space-y-3">{savedSearches.map(s=><div key={s.id} className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl"><div className="flex-1"><div className="font-semibold text-sm">{s.filters.type||t('searches_all')} • {s.filters.district||t('all_districts')}</div><div className="text-xs text-gray-400">{s.filters.minPrice&&`$${s.filters.minPrice} — `}{s.filters.maxPrice&&`$${s.filters.maxPrice}`}{s.filters.rooms&&` • ${s.filters.rooms} ${t('rooms_unit')}`}</div></div><button onClick={()=>SavedSearchAPI.remove(s.id).then(()=>setSavedSearches(p=>p.filter(x=>x.id!==s.id)))} className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100"><i className="ri-delete-bin-line text-sm"/></button></div>)}</div>}</div>)}
 
         {/* ── SAVED ── */}
-        {tab==='saved'&&(<div>{savedItems.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-heart-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Sevimlilarga hech narsa qo'shilmagan</p></div>:<div className="grid sm:grid-cols-2 gap-4">{savedItems.map(p=><Card key={p.id} p={p}/>)}</div>}</div>)}
+        {tab==='saved'&&(<div>{savedItems.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-heart-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">{t('profile_saved_empty')}</p></div>:<div className="grid sm:grid-cols-2 gap-4">{savedItems.map(p=><Card key={p.id} p={p}/>)}</div>}</div>)}
 
         {/* ── SECURITY ── */}
         {tab==='security'&&<SecurityTab u={u}/>}
@@ -2788,6 +2804,7 @@ function AgentProfilePage(){
 // ─── ENHANCED HOME (Module 17 Recommendations) ──────────────
 function RecommendationsSection(){
   const{state,dispatch}=useApp();void dispatch;
+  const{t}=useTranslation();
   const lastViewed=ListingExtAPI.getLastViewed();
   const recent=lastViewed.map(id=>state.approved.find(p=>p.id===id)).filter(Boolean) as Listing[];
   const popular=[...state.approved].sort((a,b)=>(b.viewsCount||0)-(a.viewsCount||0)).slice(0,4);
@@ -2795,9 +2812,9 @@ function RecommendationsSection(){
   const top=[...state.approved].sort((a,b)=>score(b)-score(a)).slice(0,4);
   if(state.approved.length===0) return null;
   return(<div className="pb-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-    {recent.length>0&&<div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1">🕐 Yaqinda ko'rganlar</h2><p className="text-gray-500 text-sm">So'nggi ko'rilgan e'lonlar</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{recent.slice(0,4).map(p=><Card key={p.id} p={p}/>)}</div></div>}
-    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-fire-fill text-red-500"/>Eng ko'p ko'rilgan</h2><p className="text-gray-500 text-sm">Bu hafta eng mashhur e'lonlar</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{popular.map(p=><Card key={p.id} p={p}/>)}</div></div>
-    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-star-fill text-amber-500"/>Yuqori reytingli</h2><p className="text-gray-500 text-sm">Tasdiqlangan + ko'p ko'rilgan</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{top.map(p=><Card key={p.id} p={p}/>)}</div></div>
+    {recent.length>0&&<div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1">{t('rec_recent_title')}</h2><p className="text-gray-500 text-sm">{t('rec_recent_sub')}</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{recent.slice(0,4).map(p=><Card key={p.id} p={p}/>)}</div></div>}
+    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-fire-fill text-red-500"/>{t('rec_popular_title')}</h2><p className="text-gray-500 text-sm">{t('rec_popular_sub')}</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{popular.map(p=><Card key={p.id} p={p}/>)}</div></div>
+    <div><div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-star-fill text-amber-500"/>{t('rec_top_title')}</h2><p className="text-gray-500 text-sm">{t('rec_top_sub')}</p></div></div><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{top.map(p=><Card key={p.id} p={p}/>)}</div></div>
   </div></div>);
 }
 
@@ -3083,6 +3100,7 @@ function AiTranslator({text,title}:{text:string;title:string}){
 
 // ─── 4. AI TAVSIF GENERATOR (SubmitPage uchun) ──────────────
 function AiDescGenerator({rooms,area,district,amenities,onGenerate}:{rooms:number;area:number;district:string;amenities:string[];onGenerate:(text:string)=>void}){
+  const{t}=useTranslation();
   const[loading,setLoading]=useState(false);
   const generate=async()=>{
     setLoading(true);
@@ -3104,7 +3122,7 @@ Ko'rsatmalar: Uyning eng yaxshi tomonlarini ta'kidsla, konkret faktlar (${rooms}
   };
   return(
     <button type="button" onClick={generate} disabled={loading||!district} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-xl active:scale-95 transition disabled:opacity-50">
-      {loading?<><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"/>Yozilmoqda...</>:<><i className="ri-ai-generate"/>AI bilan tavsif yozish</>}
+      {loading?<><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t('ai_desc_writing')}</>:<><i className="ri-ai-generate"/>{t('ai_desc_btn')}</>}
     </button>
   );
 }
@@ -3715,17 +3733,20 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         // If still nothing found at all (no district, no approved listings), show empty
         if(found.length===0&&!parsed.district){
           const all=state.approved.slice(0,5);
-          found=all;note='Barcha e\'lonlar:';
+          found=all;note=isRu?'Все объявления:':'Barcha e\'lonlar:';
         }
+        const perMonth=isRu?'/мес':'/oy';
+        const roomsUnit=isRu?'комн.':'xona';
         let reply='';
         if(found.length===0){
-          reply=note||`"${parsed.district||'Bu joy'}" bo'yicha hozircha e'lon yo'q.`;
+          reply=note||(isRu?`По "${parsed.district||'этому месту'}" объявлений нет.`:`"${parsed.district||'Bu joy'}" bo'yicha hozircha e'lon yo'q.`);
         }else{
           const distLabel=geoName||parsed.district
             ?(geoName||parsed.district).charAt(0).toUpperCase()+(geoName||parsed.district).slice(1)
-            :'E\'lonlar';
-          const prefix=note?note+'\n':distLabel+' — '+found.length+' ta topildi:\n';
-          reply=prefix+found.slice(0,3).map((l:Listing,i:number)=>`${i+1}. ${l.title} — $${l.price}${l.type==='rent'?'/oy':''}, ${l.district}, ${l.rooms} xona`).join('\n');
+            :(isRu?'Объявления':'E\'lonlar');
+          const foundLabel=isRu?`${found.length} найдено`:`${found.length} ta topildi`;
+          const prefix=note?note+'\n':distLabel+' — '+foundLabel+':\n';
+          reply=prefix+found.slice(0,3).map((l:Listing,i:number)=>`${i+1}. ${l.title} — $${l.price}${l.type==='rent'?perMonth:''}, ${l.district}, ${l.rooms} ${roomsUnit}`).join('\n');
         }
         setMsgs(p=>[...p,{role:'assistant',text:reply,listings:found}]);
       }else if(parsed.action==='stats'){
@@ -3793,7 +3814,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
               {loading?<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>:<i className="ri-send-plane-fill"/>}
             </button>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1.5 text-center">Groq Whisper • O'zbek tilini yaxshi taniydi • Matn ko'rinishida javob beradi</div>
+          <div className="text-[10px] text-gray-400 mt-1.5 text-center">{t(isRu?'ai_footer_ru':'ai_footer')}</div>
         </div>
       </div>
     </div>
@@ -3878,7 +3899,7 @@ export default function App(){
   const isInStandaloneMode=('standalone' in window.navigator)&&(window.navigator as any).standalone;
   useEffect(()=>{
     // Android Chrome: show after beforeinstallprompt
-    const handler=(e:any)=>{e.preventDefault();setInstallPrompt(e);setShowInstallBanner(true);};
+    const handler=(e:any)=>{e.preventDefault();setInstallPrompt(e);_pwaInstallPrompt=e;setShowInstallBanner(true);};
     window.addEventListener('beforeinstallprompt',handler);
     // iOS Safari: show hint if not already installed
     if(isIOS&&!isInStandaloneMode&&!localStorage.getItem('pwa_ios_dismissed')){
