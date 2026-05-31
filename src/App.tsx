@@ -528,6 +528,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
 
 // ─── MAP AI ASSISTANT ────────────────────────────────────────
 function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onFocus:(lat:number,lng:number,zoom:number)=>void;onHighlight:(ids:number[])=>void}){
+  const{t}=useTranslation();
   const[q,setQ]=useState('');const[loading,setLoading]=useState(false);
   const[aiMsg,setAiMsg]=useState('Joy nomi yoki tuman yozing, men atrofdagi uylarni topaman');
   const[aiListings,setAiListings]=useState<Listing[]>([]);
@@ -585,7 +586,7 @@ function MapAiPanel({allListings,onFocus,onHighlight}:{allListings:Listing[];onF
       <div className="p-4 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white">
         <div className="flex items-center gap-2 mb-3">
           <img src="/ai-robot.png" alt="" className="w-8 h-8 rounded-lg object-cover"/>
-          <div><div className="font-bold text-sm">Xarita AI Yordamchisi</div><div className="text-emerald-200 text-xs">Joy nomi → atrofdagi uylar</div></div>
+          <div><div className="font-bold text-sm">{t('map_ai_title')}</div><div className="text-emerald-200 text-xs">{t('map_ai_subtitle')}</div></div>
         </div>
         <div className="flex gap-2">
           <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==='Enter'&&search()} placeholder="Yunusobod metro, Navoiy ko'chasi..." className="flex-1 px-3 py-2 bg-white/20 text-white placeholder-emerald-200 rounded-xl text-sm outline-none focus:bg-white/30 transition"/>
@@ -2042,17 +2043,18 @@ function AdminSettings(){const{dispatch}=useApp();return(<div><div className="mb
 // ─── TOP REVIEWS (homepage) ──────────────────────────────────
 function TopReviews(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const topRevs=state.reviews.filter(r=>r.featured || r.stars>=4).sort((a,b)=>{if(a.featured && !b.featured) return -1; if(!a.featured && b.featured) return 1; return b.stars-a.stars;}).slice(0,6);
   return (
     <section className="pb-20"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-end mb-8 flex-wrap gap-4"><div><h2 className="text-3xl font-extrabold mb-1">Foydalanuvchi sharhlari</h2><p className="text-gray-500">Bizning mijozlar fikri</p></div>
-        <button onClick={()=>{if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:'Sharh qoldirish'}});return;}dispatch({type:'NAV',payload:'review'});window.scrollTo({top:0});}} className="flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-900 transition active:scale-95">Sharh qoldirish <i className="ri-arrow-right-line"/></button>
+      <div className="flex justify-between items-end mb-8 flex-wrap gap-4"><div><h2 className="text-3xl font-extrabold mb-1">{t('reviews_title')}</h2><p className="text-gray-500">{t('reviews_sub')}</p></div>
+        <button onClick={()=>{if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:t('reviews_leave')}});return;}dispatch({type:'NAV',payload:'review'});window.scrollTo({top:0});}} className="flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-900 transition active:scale-95">{t('reviews_leave')} <i className="ri-arrow-right-line"/></button>
       </div>
       {topRevs.length===0?(
         <div className="bg-white rounded-3xl p-12 text-center border-2 border-dashed border-emerald-100">
           <i className="ri-star-smile-line text-4xl text-emerald-200 block mb-3"/>
-          <p className="text-gray-500 mb-4">Hozircha sharhlar yo'q. Birinchilardan bo'lib sharh qoldiring!</p>
-          <button onClick={()=>{if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:'Sharh qoldirish'}});return;}dispatch({type:'NAV',payload:'review'});}} className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl active:scale-95 transition">Sharh qoldirish</button>
+          <p className="text-gray-500 mb-4">{t('reviews_empty')}</p>
+          <button onClick={()=>{if(!state.auth){dispatch({type:'AUTH_REQ',payload:{open:true,action:t('reviews_leave')}});return;}dispatch({type:'NAV',payload:'review'});}} className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl active:scale-95 transition">{t('reviews_leave')}</button>
         </div>
       ):(
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2594,29 +2596,29 @@ function FullProfilePage(){
             {tgLinked?(
               <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl shrink-0"><i className="ri-telegram-fill"/></div>
-                <div className="flex-1"><div className="font-bold text-blue-900 flex items-center gap-1"><i className="ri-checkbox-circle-fill text-blue-500"/>Telegram ulangan</div><div className="text-sm text-blue-600 mt-0.5">Barcha bildirishnomalar Telegramga keladi</div></div>
-                <button onClick={unlinkTg} className="px-3 py-1.5 bg-red-50 text-red-500 text-xs font-bold rounded-lg hover:bg-red-100 transition">Uzish</button>
+                <div className="flex-1"><div className="font-bold text-blue-900 flex items-center gap-1"><i className="ri-checkbox-circle-fill text-blue-500"/>{t('tg_connected_title')}</div><div className="text-sm text-blue-600 mt-0.5">{t('notifications')}</div></div>
+                <button onClick={unlinkTg} className="px-3 py-1.5 bg-red-50 text-red-500 text-xs font-bold rounded-lg hover:bg-red-100 transition">{t('disconnect')}</button>
               </div>
             ):(
               <div>
                 <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200 mb-4">
                   <i className="ri-information-line text-amber-600 text-xl shrink-0 mt-0.5"/>
                   <div className="text-sm text-amber-800">
-                    <b>Qanday ulash:</b><br/>
-                    1. Quyidagi tugmani bosing — 6 raqamli kod yaratiladi<br/>
-                    2. Telegram'dagi <b>@Uynestbot</b> ga yozing: <code className="bg-amber-100 px-1 rounded">/start KOD</code><br/>
-                    3. Bot "Ulandi!" deb javob beradi
+                    <b>{t('tg_how_to_connect')}</b><br/>
+                    1. {t('tg_step1')}<br/>
+                    2. Telegram → <b>@Uynestbot</b> → <code className="bg-amber-100 px-1 rounded">/start KOD</code><br/>
+                    3. {t('tg_step3')}
                   </div>
                 </div>
                 <button onClick={genTgCode} className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white font-bold rounded-xl text-sm active:scale-95 transition hover:bg-blue-600">
-                  <i className="ri-telegram-fill"/>Telegram'ni ulash
+                  <i className="ri-telegram-fill"/>{t('tg_connect_btn')}
                 </button>
                 {tgCode&&(
                   <div className="mt-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl">
-                    <div className="font-bold text-blue-800 mb-2 flex items-center gap-2"><i className="ri-key-2-line"/>Sizning kodingiz (10 daqiqa amal qiladi):</div>
+                    <div className="font-bold text-blue-800 mb-2 flex items-center gap-2"><i className="ri-key-2-line"/>{t('tg_code_label')}</div>
                     <div className="text-4xl font-extrabold text-blue-600 tracking-[0.3em] mb-3">{tgCode}</div>
                     <div className="text-sm text-blue-700">
-                      Telegram'ni oching → <b>@Uynestbot</b> → yozing:
+                      Telegram → <b>@Uynestbot</b> → {t('tg_code_instruction')}
                       <div className="mt-1.5 bg-blue-100 px-3 py-2 rounded-lg font-mono font-bold text-blue-900">/start {tgCode}</div>
                     </div>
                   </div>
@@ -3110,17 +3112,18 @@ Ko'rsatmalar: Uyning eng yaxshi tomonlarini ta'kidsla, konkret faktlar (${rooms}
 // ─── 5. YANGI QURILISHLAR SECTION ────────────────────────────
 function NewBuildingsSection(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const newBuilds=state.approved.filter(p=>p.propertyCategory==='Yangi bino'||p.badge==='new').slice(0,4);
   if(newBuilds.length===0)return null;
   return(
     <section className="pb-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-end mb-8 flex-wrap gap-4">
-        <div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-building-4-fill text-emerald-600"/>Yangi qurilishlar</h2><p className="text-gray-500 text-sm">LCD va yangi binolar — bevosita qurilish kompaniyasidan</p></div>
-        <button onClick={()=>{dispatch({type:'SALE_FILTER',payload:{district:'',rooms:'',max:''}});dispatch({type:'NAV',payload:'sale'});window.scrollTo({top:0});}} className="flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-900 text-sm transition">Barchasini ko'rish <i className="ri-arrow-right-line"/></button>
+        <div><h2 className="text-2xl font-extrabold mb-1 flex items-center gap-2"><i className="ri-building-4-fill text-emerald-600"/>{t('newbuild_title')}</h2><p className="text-gray-500 text-sm">{t('newbuild_sub')}</p></div>
+        <button onClick={()=>{dispatch({type:'SALE_FILTER',payload:{district:'',rooms:'',max:'',propType:''}});dispatch({type:'NAV',payload:'sale'});window.scrollTo({top:0});}} className="flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-900 text-sm transition">{t('view_all_btn')} <i className="ri-arrow-right-line"/></button>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">{newBuilds.map(p=>(
         <div key={p.id} onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group">
-          <div className="relative aspect-[4/3] bg-emerald-50 overflow-hidden">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>}<div className="absolute top-3 left-3"><span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-building-4-line"/>YANGI BINO</span></div></div>
+          <div className="relative aspect-[4/3] bg-emerald-50 overflow-hidden">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>}<div className="absolute top-3 left-3"><span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"><i className="ri-building-4-line"/>{t('newbuild_badge')}</span></div></div>
           <div className="p-4"><h3 className="font-bold text-sm mb-1 line-clamp-2">{p.title}</h3><p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><i className="ri-map-pin-2-fill text-emerald-500"/>{p.district}</p><div className="font-extrabold text-emerald-700">${(p.price||0).toLocaleString()}</div></div>
         </div>
       ))}</div>

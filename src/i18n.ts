@@ -245,6 +245,53 @@ const uz = {
   cat_apartment: 'Kvartira', cat_house: 'Uy',
   cat_newbuild: 'Yangi bino', cat_commercial: 'Ofis/Tijorat',
   cat_land: 'Yer uchastkasi',
+
+  // ── Reviews ──
+  reviews_title: 'Foydalanuvchi sharhlari',
+  reviews_sub: 'Bizning mijozlar fikri',
+  reviews_leave: 'Sharh qoldirish',
+  reviews_empty: "Hozircha sharhlar yo'q. Birinchilardan bo'lib sharh qoldiring!",
+
+  // ── New buildings ──
+  newbuild_title: 'Yangi qurilishlar',
+  newbuild_sub: "LCD va yangi binolar — bevosita qurilish kompaniyasidan",
+  newbuild_badge: 'YANGI BINO',
+  view_all_btn: "Barchasini ko'rish",
+
+  // ── Recommendations ──
+  rec_title: "Sizga mos e'lonlar",
+  rec_sub: "Ko'rish tarixingiz asosida",
+
+  // ── Request ──
+  req_title: "Uy topib berish so'rovi",
+  req_sub: 'Parameterlarni kiriting, mutaxassislar toping',
+
+  // ── Detail extra ──
+  detail_map_title: 'Xaritada joylashuv',
+  detail_similar: "O'xshash e'lonlar",
+  detail_contract: 'Shartnoma yaratish',
+  detail_views: "Ko'rishlar",
+  detail_saved: 'Saqlagan',
+
+  // ── Telegram ──
+  tg_how_to_connect: 'Qanday ulash:',
+  tg_step1: 'Quyidagi tugmani bosing — 6 raqamli kod yaratiladi',
+  tg_step2: 'ga yozing',
+  tg_step3: 'Bot "Ulandi!" deb javob beradi',
+  tg_code_label: 'Sizning kodingiz (10 daqiqa amal qiladi):',
+  tg_code_instruction: 'ga yozing:',
+  tg_connected_title: 'Telegram ulangan',
+  tg_disconnect: "Telegram'ni uzish",
+  tg_connect_btn: "Telegram'ni ulash",
+
+  // ── Map AI ──
+  map_ai_title: 'Xarita AI Yordamchisi',
+  map_ai_subtitle: 'Joy nomi → atrofdagi uylar',
+
+  // ── General remaining ──
+  per_month_unit: '/oy',
+  not_found: "E'lon topilmadi",
+  select_region_placeholder: 'Tanlang...',
 };
 
 const ru: typeof uz = {
@@ -470,6 +517,45 @@ const ru: typeof uz = {
   cat_apartment: 'Квартира', cat_house: 'Дом',
   cat_newbuild: 'Новостройка', cat_commercial: 'Офис/Коммерческая',
   cat_land: 'Земельный участок',
+
+  reviews_title: 'Отзывы пользователей',
+  reviews_sub: 'Мнение наших клиентов',
+  reviews_leave: 'Оставить отзыв',
+  reviews_empty: 'Отзывов пока нет. Будьте первым!',
+
+  newbuild_title: 'Новостройки',
+  newbuild_sub: 'ЖК и новые дома — напрямую от застройщика',
+  newbuild_badge: 'НОВОСТРОЙКА',
+  view_all_btn: 'Посмотреть все',
+
+  rec_title: 'Подходящие для вас',
+  rec_sub: 'На основе истории просмотров',
+
+  req_title: 'Заявка на поиск жилья',
+  req_sub: 'Укажите параметры, специалисты найдут',
+
+  detail_map_title: 'Расположение на карте',
+  detail_similar: 'Похожие объявления',
+  detail_contract: 'Создать договор',
+  detail_views: 'Просмотры',
+  detail_saved: 'Сохранили',
+
+  tg_how_to_connect: 'Как подключить:',
+  tg_step1: 'Нажмите кнопку ниже — создастся 6-значный код',
+  tg_step2: 'напишите',
+  tg_step3: 'Бот ответит «Подключено!»',
+  tg_code_label: 'Ваш код (действует 10 минут):',
+  tg_code_instruction: 'напишите:',
+  tg_connected_title: 'Telegram подключён',
+  tg_disconnect: 'Отключить Telegram',
+  tg_connect_btn: 'Подключить Telegram',
+
+  map_ai_title: 'AI-помощник карты',
+  map_ai_subtitle: 'Название места → ближайшие объекты',
+
+  per_month_unit: '/мес',
+  not_found: 'Объявление не найдено',
+  select_region_placeholder: 'Выберите...',
 };
 
 i18n.use(initReactI18next).init({
