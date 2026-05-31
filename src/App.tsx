@@ -250,18 +250,18 @@ function Navbar(){
                       <div className="min-w-0"><div className="font-bold text-sm truncate">{isAdmin(u)?'Admin':(u.name||u.email)}</div><div className="text-[11px] text-gray-400 truncate">{u.email}</div></div>
                     </div>
                     {isAdmin(u)&&<button onClick={()=>nav('admin')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-dashboard-3-line"/>Admin Panel</button>}
-                    <button onClick={()=>nav('profile')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-user-line"/>Profil</button>
-                    <button onClick={()=>nav('submit')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-add-circle-line"/>E'lon qo'shish</button>
-                    <button onClick={()=>nav('chat')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-chat-3-line"/>Xabarlar{unread>0&&<span className="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{unread}</span>}</button>
-                    <button onClick={()=>nav('statistics')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-bar-chart-line"/>Statistika</button>
-                    <button onClick={()=>nav('compare')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-scales-2-line"/>Solishtirish</button>
+                    <button onClick={()=>nav('profile')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-user-line"/>{t('dropdown_profile')}</button>
+                    <button onClick={()=>nav('submit')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-add-circle-line"/>{t('dropdown_add_listing')}</button>
+                    <button onClick={()=>nav('chat')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-chat-3-line"/>{t('dropdown_messages')}{unread>0&&<span className="ml-auto bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{unread}</span>}</button>
+                    <button onClick={()=>nav('statistics')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-bar-chart-line"/>{t('dropdown_statistics')}</button>
+                    <button onClick={()=>nav('compare')} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"><i className="ri-scales-2-line"/>{t('dropdown_compare')}</button>
                     <div className="border-t border-gray-100 my-1"/>
-                    <button onClick={logout} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition"><i className="ri-logout-circle-r-line"/>Chiqish</button>
+                    <button onClick={logout} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl transition"><i className="ri-logout-circle-r-line"/>{t('dropdown_logout')}</button>
                   </div>
                 </>}
               </div>
             ):(
-              <button onClick={()=>{dispatch({type:'AUTH_TAB',payload:'login'});nav('auth');}} className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition"><i className="ri-login-circle-line"/><span className="hidden sm:inline">Kirish</span></button>
+              <button onClick={()=>{dispatch({type:'AUTH_TAB',payload:'login'});nav('auth');}} className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition"><i className="ri-login-circle-line"/><span className="hidden sm:inline">{t('login_btn')}</span></button>
             )}
           </div>
         </div>
@@ -467,7 +467,8 @@ function SalePage(){
 }
 
 // ─── MAP SEARCH (Module 19) ─────────────────────────────────
-function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(t:string)=>void}){
+function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,lng:number,name:string)=>void;filterType:string;setFilterType:(v:string)=>void}){
+  const{t}=useTranslation();
   const[q,setQ]=useState('');
   const[results,setResults]=useState<any[]>([]);
   const[loading,setLoading]=useState(false);
@@ -491,7 +492,7 @@ function MapSearchBox({onResult,filterType,setFilterType}:{onResult:(lat:number,
         <button onClick={search} className="w-10 h-10 md:w-auto md:h-auto md:px-4 md:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition active:scale-95 shadow-md shrink-0 flex items-center justify-center gap-1.5"><i className="ri-search-line text-base"/><span className="hidden md:inline">Qidiruv</span></button>
       </div>
       <div className="flex items-center gap-2 mb-1">
-        {['','rent','sale'].map((t,i)=><button key={t} onClick={()=>setFilterType(t)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===t?(t==='rent'?'bg-blue-500 text-white':t==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?'Hammasi':t==='rent'?'Ijara':'Sotuv'}</button>)}
+        {['','rent','sale'].map((ft,i)=><button key={ft} onClick={()=>setFilterType(ft)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm ${filterType===ft?(ft==='rent'?'bg-blue-500 text-white':ft==='sale'?'bg-emerald-600 text-white':'bg-gray-800 text-white'):'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'}`}>{i===0?t('map_all'):ft==='rent'?t('rent'):t('sale')}</button>)}
         <div className="relative ml-auto shrink-0">
           <button onClick={()=>setShowLegend(v=>!v)} className="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-xs font-bold text-gray-500 hover:border-emerald-300 transition active:scale-95">
             <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-green-600 inline-block"/><span className="w-2 h-2 rounded-full bg-amber-500 inline-block"/><span className="w-2 h-2 rounded-full bg-red-500 inline-block"/></span>
@@ -623,6 +624,7 @@ const _posListeners=new Set<(p:[number,number])=>void>();
 // ─── MAP PAGE (Real Leaflet + AI Assistant) ─────────────────
 function MapPage(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const allItems=state.approved.filter(p=>p.lat&&p.lng);
   const[sel,setSel]=useState<Listing|null>(null);
   const[mapCenter,setMapCenter]=useState<[number,number]>([41.3111,69.2797]);
@@ -796,8 +798,8 @@ function MapPage(){
       {/* Right panel — unchanged */}
       <div className="w-full lg:w-96 bg-white border-l border-gray-100 flex flex-col shrink-0 max-h-[50vh] lg:max-h-full">
         <div className="flex border-b border-gray-100">
-          <button onClick={()=>setAiMode(true)} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-1.5 transition ${aiMode?'text-emerald-700 border-b-2 border-emerald-600':'text-gray-400 hover:text-gray-600'}`}><img src="/ai-robot.png" alt="" className="w-5 h-5 rounded object-cover"/>AI Yordamchi</button>
-          <button onClick={()=>setAiMode(false)} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-1.5 transition ${!aiMode?'text-emerald-700 border-b-2 border-emerald-600':'text-gray-400 hover:text-gray-600'}`}><i className="ri-map-pin-2-line"/>Barcha ({filtered.length})</button>
+          <button onClick={()=>setAiMode(true)} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-1.5 transition ${aiMode?'text-emerald-700 border-b-2 border-emerald-600':'text-gray-400 hover:text-gray-600'}`}><img src="/ai-robot.png" alt="" className="w-5 h-5 rounded object-cover"/>{t('map_ai_tab')}</button>
+          <button onClick={()=>setAiMode(false)} className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-1.5 transition ${!aiMode?'text-emerald-700 border-b-2 border-emerald-600':'text-gray-400 hover:text-gray-600'}`}><i className="ri-map-pin-2-line"/>{t('map_all_tab')} ({filtered.length})</button>
         </div>
         {aiMode?(
           <MapAiPanel
@@ -969,6 +971,7 @@ function DetailPage(){
 // ─── CHAT PAGE ──────────────────────────────────────────────
 function ChatPage(){
   const{state}=useApp();
+  const{t}=useTranslation();
   if(!state.auth) return <AuthPage/>;
   const u=state.currentUser!;
   const partnerId=state.chatTarget;
@@ -1094,9 +1097,9 @@ function ChatPage(){
               {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}</div></div></div>)}
               <div ref={endRef}/>
             </div>
-            <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Javob yozing..." className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button></div>
+            <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder={t('chat_placeholder')} className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button></div>
           </>
-        ):(<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">Suhbatni tanlang</p><p className="text-sm">Chap tarafdan foydalanuvchini tanlang</p></div></div>)}
+        ):(<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">{t('chat_select_contact')}</p><p className="text-sm">{t('chat_select_sub')}</p></div></div>)}
       </div>
     );
     return(
@@ -1130,9 +1133,9 @@ function ChatPage(){
 
   const contactsList=(
     <div className={`${mobileView==='chat'?'hidden md:flex':'flex'} w-full md:w-80 border-r border-gray-100 flex-col shrink-0`}>
-      <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>Kontaktlar</h3></div>
+      <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>{t('chat_contacts')}</h3></div>
       <div className="flex-1 overflow-y-auto">
-        {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha suhbat yo'q. Uy sahifasidan xabar yuboring.</div>}
+        {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">{t('chat_no_msgs')}.</div>}
         {contacts.map(contact=>{const unr=ChatAPI.getAll().filter(m=>m.from===contact.id&&m.to===u.id&&!m.read).length;return(
           <button key={contact.id} onClick={()=>selectContact(contact.id)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===contact.id?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.role==='admin'?'Admin':contact.name)}</div>
@@ -1142,7 +1145,7 @@ function ChatPage(){
         );})}
       </div>
       <div className="p-4 border-t border-gray-100">
-        <button onClick={()=>selectContact(adminId!)} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold rounded-xl text-sm shadow active:scale-95 transition"><i className="ri-customer-service-2-line"/>Admin bilan bog'lanish</button>
+        <button onClick={()=>selectContact(adminId!)} className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-semibold rounded-xl text-sm shadow active:scale-95 transition"><i className="ri-customer-service-2-line"/>{t('chat_admin_btn')}</button>
       </div>
     </div>
   );
@@ -1473,6 +1476,7 @@ function SavedPage(){
 // ─── SUBMIT PAGE (with real image upload) ───────────────────
 function SubmitPage(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const[amens,setAmens]=useState<string[]>([]);
   const[fileObjects,setFileObjects]=useState<File[]>([]);
   const[videoFile,setVideoFile]=useState<File|null>(null);
@@ -1599,17 +1603,17 @@ function SubmitPage(){
   };
   return(
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <div className="text-center mb-6"><h2 className="text-3xl font-extrabold mb-1">Yangi e'lon qo'shish</h2><p className="text-gray-500">Mulkingizni ijaraga bering yoki soting.</p><p className="text-sm text-emerald-700 mt-2 flex items-center justify-center gap-1"><i className="ri-shield-check-fill"/>E'lon admin tasdig'idan o'tgach ko'rinadi</p></div>
-      <div className="flex items-center justify-center max-w-lg mx-auto mb-8">{['Asosiy','Tafsilotlar','Rasmlar','Xarita','Aloqa'].map((s,i,a)=><React.Fragment key={s}><div className="flex flex-col items-center"><div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shadow">{i+1}</div><div className="text-xs text-emerald-700 font-semibold mt-1">{s}</div></div>{i<a.length-1&&<div className="flex-1 h-0.5 bg-emerald-200 mx-2 mb-4"/>}</React.Fragment>)}</div>
+      <div className="text-center mb-6"><h2 className="text-3xl font-extrabold mb-1">{t('submit_title')}</h2><p className="text-gray-500">{t('submit_page_subtitle')}</p><p className="text-sm text-emerald-700 mt-2 flex items-center justify-center gap-1"><i className="ri-shield-check-fill"/>{t('submit_page_note')}</p></div>
+      <div className="flex items-center justify-center max-w-lg mx-auto mb-8">{[t('submit_step1'),t('submit_step2'),t('submit_step3'),t('submit_step4'),t('submit_step5')].map((s,i,a)=><React.Fragment key={s}><div className="flex flex-col items-center"><div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shadow">{i+1}</div><div className="text-xs text-emerald-700 font-semibold mt-1">{s}</div></div>{i<a.length-1&&<div className="flex-1 h-0.5 bg-emerald-200 mx-2 mb-4"/>}</React.Fragment>)}</div>
       <form onSubmit={submit} className="space-y-5">
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-file-list-3-line text-emerald-600"/>Asosiy ma'lumotlar</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">E'lon turi</label><select name="type" required className={ic}><option value="rent">Ijaraga</option><option value="sale">Sotish</option></select></div><div><label className="text-sm font-semibold mb-1.5 block">Mulk turi *</label><select name="propType" required className={ic} value={selectedPropType} onChange={e=>setSelectedPropType(e.target.value)}>{PROPERTY_CATEGORIES.map((c:string)=><option key={c}>{c}</option>)}</select></div></div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-file-list-3-line text-emerald-600"/>{t('submit_basic_title')}</h3>
+          <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">{t('form_type')}</label><select name="type" required className={ic}><option value="rent">{t('form_rent')}</option><option value="sale">{t('form_sale')}</option></select></div><div><label className="text-sm font-semibold mb-1.5 block">{t('form_prop_type')} *</label><select name="propType" required className={ic} value={selectedPropType} onChange={e=>setSelectedPropType(e.target.value)}>{PROPERTY_CATEGORIES.map((c:string)=><option key={c}>{c}</option>)}</select></div></div>
           <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Narxi (USD)</label><input name="price" type="number" placeholder="500" required className={ic}/></div><div><label className="text-sm font-semibold mb-1.5 block">Viloyat *</label><select name="region" required className={ic} onChange={handleRegionChange}><option value="">Tanlang...</option>{Object.keys(REGIONS_MAP).map((r:string)=><option key={r}>{r}</option>)}</select></div></div>
           <div className="grid grid-cols-2 gap-4 mb-4"><div><label className="text-sm font-semibold mb-1.5 block">Tuman / Shahar *</label><select name="district" required onChange={handleDistrictChange} className={ic}><option value="">Viloyatni tanlang</option>{(REGIONS_MAP[selectedRegion]||[]).map((d:string)=><option key={d}>{d}</option>)}</select></div><div><label className="text-sm font-semibold mb-1.5 block">Telefon raqam *</label>{state.currentUser?.phone?<div className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 flex items-center gap-2"><i className="ri-phone-fill text-emerald-600"/>{state.currentUser.phone}</div>:<button type="button" onClick={()=>setShowPhoneConnect(true)} className="w-full px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 flex items-center gap-2 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon ulash</button>}<p className="text-xs text-gray-400 mt-1">Xaridor siz bilan bog'lanadi</p></div></div>
           <div className="mb-4"><label className="text-sm font-semibold mb-1.5 block">Manzil</label><input name="address" placeholder="Ko'cha, uy raqami" required className={ic}/></div>
           <div><label className="text-sm font-semibold mb-1.5 block">Sarlavha</label><input name="title" placeholder="Masalan: Yunusobod markazida zamonaviy xonadon" required className={ic}/></div>
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-settings-3-line text-emerald-600"/>Tafsilotlar</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-settings-3-line text-emerald-600"/>{t('submit_step2')}</h3>
           <div className={`grid gap-3 mb-4 ${showFloors?'grid-cols-4':'grid-cols-2'}`}>
             {[{n:'rooms',l:'Xonalar',p:'2',sv:submitRooms,set:(v:number)=>setSubmitRooms(v)},{n:'area',l:'Maydon m²',p:'65',sv:submitArea,set:(v:number)=>setSubmitArea(v)}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic} value={f.sv||''} onChange={e=>f.set(Number(e.target.value))}/></div>)}
             {showFloors&&[{n:'floor',l:'Qavat',p:'4'},{n:'floors',l:'Umumiy qavat',p:'9'}].map(f=><div key={f.n}><label className="text-sm font-semibold mb-1.5 block">{f.l}</label><input name={f.n} type="number" placeholder={f.p} required className={ic}/></div>)}
@@ -1651,7 +1655,7 @@ function SubmitPage(){
           </div>
         </div>
         {/* IMAGES */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-image-2-line text-emerald-600"/>Rasmlar <span className="text-gray-400 text-sm font-normal">({fileObjects.length}/10)</span></h3>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-image-2-line text-emerald-600"/>{t('form_photos')} <span className="text-gray-400 text-sm font-normal">({fileObjects.length}/10)</span></h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-4">
             {fileObjects.map((file,i)=><div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group"><img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover"/><button type="button" onClick={()=>removeImg(i)} className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition active:scale-95"><i className="ri-close-line"/></button>{i===0&&<div className="absolute bottom-1 left-1 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded">Asosiy</div>}</div>)}
             {fileObjects.length<10&&<button type="button" onClick={()=>fileRef.current?.click()} className="aspect-square border-2 border-dashed border-emerald-200 rounded-xl flex flex-col items-center justify-center hover:border-emerald-400 hover:bg-emerald-50 transition cursor-pointer group active:scale-95"><i className="ri-add-line text-2xl text-emerald-400 group-hover:text-emerald-600"/><span className="text-[10px] text-gray-400 mt-1">Qo'shish</span></button>}
@@ -1686,7 +1690,7 @@ function SubmitPage(){
           </MapContainer>
         </div>
         {/* CONTACT */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>Aloqa</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5 flex items-center gap-2"><i className="ri-contacts-line text-emerald-600"/>{t('submit_step5')}</h3>
           {state.auth && state.currentUser ? (
             <>
               <div className="mb-4 p-4 bg-emerald-50 rounded-xl"><div className="text-sm font-semibold text-emerald-900">Sizning profil:</div><div className="flex items-center gap-3 mt-2"><div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm">{state.currentUser.name?.[0]?.toUpperCase()}</div><div><div className="font-semibold text-sm">{state.currentUser.name||'Nomi yo\'q'}</div><div className="text-xs text-gray-600">{state.currentUser.phone||state.currentUser.email||'Kontakt mavjud emas'}</div></div></div></div>
@@ -1701,8 +1705,8 @@ function SubmitPage(){
           )}
         </div>
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="px-7 py-3.5 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:border-gray-300 transition active:scale-95">Bekor qilish</button>
-          <button type="submit" disabled={loading} className="flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 disabled:opacity-50"><i className="ri-send-plane-fill"/>{loading?'Yuborilmoqda...':'E\'lonni yuborish'}</button>
+          <button type="button" onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="px-7 py-3.5 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:border-gray-300 transition active:scale-95">{t('cancel_btn')}</button>
+          <button type="submit" disabled={loading} className="flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 disabled:opacity-50"><i className="ri-send-plane-fill"/>{loading?t('form_submitting'):t('form_submit_btn')}</button>
         </div>
       </form>
       {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={()=>setShowPhoneConnect(false)}/>}
@@ -1770,8 +1774,9 @@ function AuthPage(){
 // ─── ADMIN PAGE ──────────────────────────────────────────────
 function AdminPage(){
   const{state,dispatch}=useApp();const u=state.currentUser;if(!state.auth||!isAdmin(u))return<AuthPage/>;const tab=state.adminTab;
+  const{t}=useTranslation();
   const logout=async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();dispatch({type:'LOGOUT'});toast('Chiqdingiz');dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});};
-  const links=[{id:'overview',icon:'ri-dashboard-3-line',l:'Overview'},{id:'listings',icon:'ri-list-check-2',l:"E'lonlar",c:state.approved.length},{id:'pending',icon:'ri-time-line',l:'Tekshiruv',c:state.pending.length,clr:'bg-amber-400'},{id:'verifications',icon:'ri-verified-badge-line',l:'Tasdiqlash',c:state.approved.filter(p=>!p.verified).length,clr:'bg-emerald-500'},{id:'premium',icon:'ri-vip-crown-line',l:'Premium',c:state.approved.filter(p=>p.isPremium).length,clr:'bg-amber-500'},{id:'requests',icon:'ri-mail-line',l:"So'rovlar",c:state.requests.length,clr:'bg-blue-500'},{id:'reviews',icon:'ri-star-line',l:'Sharhlar',c:state.reviews.length,clr:'bg-amber-500'},{id:'complaints',icon:'ri-flag-line',l:'Shikoyatlar',c:u?ChatAPI.unreadComplaints(u.id):0,clr:'bg-red-500'},{id:'reports',icon:'ri-alert-line',l:"Xabarlar",clr:'bg-red-400'},{id:'chat',icon:'ri-chat-3-line',l:'Xabarlar',c:ChatAPI.unreadCount(u!.id),clr:'bg-red-500'},{id:'users',icon:'ri-group-line',l:'Foydalanuvchilar'},{id:'settings',icon:'ri-settings-3-line',l:'Sozlamalar'}];
+  const links=[{id:'overview',icon:'ri-dashboard-3-line',l:t('admin_dashboard')},{id:'listings',icon:'ri-list-check-2',l:t('admin_listings_tab'),c:state.approved.length},{id:'pending',icon:'ri-time-line',l:t('admin_pending_tab'),c:state.pending.length,clr:'bg-amber-400'},{id:'verifications',icon:'ri-verified-badge-line',l:t('admin_verify_tab'),c:state.approved.filter(p=>!p.verified).length,clr:'bg-emerald-500'},{id:'premium',icon:'ri-vip-crown-line',l:t('admin_premium_tab'),c:state.approved.filter(p=>p.isPremium).length,clr:'bg-amber-500'},{id:'requests',icon:'ri-mail-line',l:t('admin_requests_tab'),c:state.requests.length,clr:'bg-blue-500'},{id:'reviews',icon:'ri-star-line',l:t('admin_reviews_tab'),c:state.reviews.length,clr:'bg-amber-500'},{id:'complaints',icon:'ri-flag-line',l:t('admin_complaints_tab'),c:u?ChatAPI.unreadComplaints(u.id):0,clr:'bg-red-500'},{id:'reports',icon:'ri-alert-line',l:t('admin_reports_tab'),clr:'bg-red-400'},{id:'chat',icon:'ri-chat-3-line',l:t('dropdown_messages'),c:ChatAPI.unreadCount(u!.id),clr:'bg-red-500'},{id:'users',icon:'ri-group-line',l:t('admin_users_tab')},{id:'settings',icon:'ri-settings-3-line',l:t('admin_settings_tab')}];
   return(<div className="flex min-h-[calc(100vh-68px)] bg-emerald-50">
     <aside className="w-60 shrink-0 bg-gradient-to-b from-emerald-50 to-emerald-100/50 border-r border-emerald-100 flex-col p-4 hidden md:flex">
       <button onClick={()=>{dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="flex items-center gap-2 font-extrabold text-emerald-800 mb-4 px-2 active:scale-95 transition-transform"><img src="/logo.svg" alt="UyNest" className="h-8 w-auto"/>UY<span className="text-emerald-500">NEST</span></button>
@@ -1782,7 +1787,7 @@ function AdminPage(){
           <button key={l.id} onClick={()=>{if(l.id==='chat'){dispatch({type:'NAV',payload:'chat'});}else dispatch({type:'ADMIN_TAB',payload:l.id});}} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition active:scale-95 ${tab===l.id&&l.id!=='chat'?'bg-white text-emerald-800 font-semibold shadow-sm':'text-gray-600 hover:bg-white/60'}`}><i className={`${l.icon} text-base`}/><span className="flex-1 text-left">{l.l}</span>{!!count&&count>0&&<span className={`${l.clr||'bg-emerald-500'} text-white text-[10px] font-bold px-2 py-0.5 rounded-full`}>{count}</span>}</button>
         );
       })}</nav>
-      <button onClick={logout} className="flex items-center gap-2 px-3 py-2.5 bg-white/50 hover:bg-white rounded-xl text-sm text-gray-600 hover:text-red-500 transition active:scale-95 mt-2"><i className="ri-logout-circle-r-line"/>Chiqish</button>
+      <button onClick={logout} className="flex items-center gap-2 px-3 py-2.5 bg-white/50 hover:bg-white rounded-xl text-sm text-gray-600 hover:text-red-500 transition active:scale-95 mt-2"><i className="ri-logout-circle-r-line"/>{t('admin_logout')}</button>
     </aside>
     <main className="flex-1 p-6 md:p-8 overflow-auto">
       {tab==='overview'&&<AdminOverview/>}
@@ -1799,7 +1804,11 @@ function AdminPage(){
     </main>
   </div>);
 }
-function AdminOverview(){const{state,dispatch}=useApp();return(<div><div className="flex flex-wrap justify-between items-start gap-4 mb-7"><div><h2 className="text-2xl font-extrabold">Dashboard</h2><p className="text-gray-500 text-sm">Tizim holati</p></div><button onClick={()=>dispatch({type:'ADMIN_TAB',payload:'pending'})} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm shadow"><i className="ri-time-line"/>Tekshiruvlar ({state.pending.length})</button></div><div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">{[{l:"Jami e'lonlar",v:state.approved.length,i:'ri-home-4-line',g:'from-emerald-500 to-emerald-400'},{l:'Ijara',v:state.approved.filter(p=>p.type==='rent').length,i:'ri-key-2-line',g:'from-blue-500 to-blue-400'},{l:'Sotuv',v:state.approved.filter(p=>p.type==='sale').length,i:'ri-shopping-bag-3-line',g:'from-purple-500 to-purple-400'},{l:'Kutuvda',v:state.pending.length,i:'ri-time-line',g:'from-amber-500 to-amber-400'}].map(s=><div key={s.l} className="bg-white rounded-2xl p-5 shadow-sm flex justify-between items-start hover:-translate-y-1 transition"><div><div className="text-gray-500 text-sm mb-1">{s.l}</div><div className="text-3xl font-extrabold">{s.v}</div></div><div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${s.g} flex items-center justify-center text-white text-lg shadow`}><i className={s.i}/></div></div>)}</div></div>);}
+function AdminOverview(){
+  const{state,dispatch}=useApp();
+  const{t}=useTranslation();
+  return(<div><div className="flex flex-wrap justify-between items-start gap-4 mb-7"><div><h2 className="text-2xl font-extrabold">{t('admin_dashboard')}</h2><p className="text-gray-500 text-sm">{t('admin_system_status')}</p></div><button onClick={()=>dispatch({type:'ADMIN_TAB',payload:'pending'})} className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl text-sm shadow"><i className="ri-time-line"/>{t('admin_checks_btn')} ({state.pending.length})</button></div><div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">{[{l:t('admin_total'),v:state.approved.length,i:'ri-home-4-line',g:'from-emerald-500 to-emerald-400'},{l:t('admin_rent'),v:state.approved.filter(p=>p.type==='rent').length,i:'ri-key-2-line',g:'from-blue-500 to-blue-400'},{l:t('admin_sale'),v:state.approved.filter(p=>p.type==='sale').length,i:'ri-shopping-bag-3-line',g:'from-purple-500 to-purple-400'},{l:t('admin_pending_label'),v:state.pending.length,i:'ri-time-line',g:'from-amber-500 to-amber-400'}].map(s=><div key={s.l} className="bg-white rounded-2xl p-5 shadow-sm flex justify-between items-start hover:-translate-y-1 transition"><div><div className="text-gray-500 text-sm mb-1">{s.l}</div><div className="text-3xl font-extrabold">{s.v}</div></div><div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${s.g} flex items-center justify-center text-white text-lg shadow`}><i className={s.i}/></div></div>)}</div></div>);
+}
 function AdminListings(){
   const{state,dispatch}=useApp();
   const[q,setQ]=useState('');
@@ -2344,22 +2353,23 @@ function CompareBar({compareIds,onChange}:{compareIds:number[];onChange:(ids:num
 
 function ComparePage(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const[ids,setIds]=useState<number[]>(CompareAPI.get());
   // Auto-clear compare list when leaving this page so CompareBar is clean on return
   useEffect(()=>()=>{CompareAPI.clear();},[]);
   const items=ids.map(id=>state.approved.find(p=>p.id===id)).filter(Boolean) as Listing[];
-  if(items.length===0) return(<div className="max-w-2xl mx-auto px-4 py-20 text-center"><i className="ri-scales-2-line text-6xl text-gray-200 block mb-4"/><h3 className="font-bold text-xl mb-2">Solishtirish ro'yxati bo'sh</h3><p className="text-gray-500 mb-6">E'lon sahifalaridan "Solishtirish" tugmasini bosing</p><button onClick={()=>{dispatch({type:'NAV',payload:'rent'});window.scrollTo({top:0});}} className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl">E'lonlarni ko'rish</button></div>);
-  const rows=[{l:"Narx",v:(p:Listing)=>p.type==='rent'?`$${p.price}/oy`:`$${(p.price||0).toLocaleString()}`},{l:"Maydon",v:(p:Listing)=>`${p.area} m²`},{l:"Xonalar",v:(p:Listing)=>`${p.rooms} xona`},{l:"Qavat",v:(p:Listing)=>p.floor?`${p.floor}/${p.floors}`:'—'},{l:"Tuman",v:(p:Listing)=>p.district},{l:"Tur",v:(p:Listing)=>p.type==='rent'?'Ijara':'Sotuv'},{l:"Tasdiqlangan",v:(p:Listing)=>p.verified?'✅ Ha':'❌ Yo\'q'},{l:"Ko'rishlar",v:(p:Listing)=>String(p.viewsCount||0)},{l:"Telegram",v:(p:Listing)=>p.telegram||'—'}];
+  if(items.length===0) return(<div className="max-w-2xl mx-auto px-4 py-20 text-center"><i className="ri-scales-2-line text-6xl text-gray-200 block mb-4"/><h3 className="font-bold text-xl mb-2">{t('compare_empty_title')}</h3><p className="text-gray-500 mb-6">{t('compare_empty_sub')}</p><button onClick={()=>{dispatch({type:'NAV',payload:'rent'});window.scrollTo({top:0});}} className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl">{t('compare_view_listings')}</button></div>);
+  const rows=[{l:t('compare_price'),v:(p:Listing)=>p.type==='rent'?`$${p.price}${t('per_month')}`:`$${(p.price||0).toLocaleString()}`},{l:t('compare_area'),v:(p:Listing)=>`${p.area} ${t('area_unit')}`},{l:t('compare_rooms'),v:(p:Listing)=>`${p.rooms} ${t('rooms_unit')}`},{l:t('compare_floor'),v:(p:Listing)=>p.floor?`${p.floor}/${p.floors}`:'—'},{l:t('compare_district'),v:(p:Listing)=>p.district},{l:t('compare_type'),v:(p:Listing)=>p.type==='rent'?t('compare_rent_type'):t('compare_sale_type')},{l:t('compare_verified'),v:(p:Listing)=>p.verified?`✅ ${t('compare_yes')}`:`❌ ${t('compare_no')}`},{l:t('compare_views'),v:(p:Listing)=>String(p.viewsCount||0)},{l:t('compare_telegram'),v:(p:Listing)=>p.telegram||'—'}];
   return(<div className="max-w-5xl mx-auto px-4 py-10">
-    <div className="mb-7 flex items-center gap-4"><h2 className="text-3xl font-extrabold flex items-center gap-2"><i className="ri-scales-2-line text-emerald-600"/>E'lonlarni solishtirish</h2><button onClick={()=>{CompareAPI.clear();setIds([]);}} className="text-sm text-red-500 hover:underline">Tozalash</button></div>
+    <div className="mb-7 flex items-center gap-4"><h2 className="text-3xl font-extrabold flex items-center gap-2"><i className="ri-scales-2-line text-emerald-600"/>{t('compare_title')}</h2><button onClick={()=>{CompareAPI.clear();setIds([]);}} className="text-sm text-red-500 hover:underline">{t('compare_clear')}</button></div>
     <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
       <div className="grid overflow-x-auto" style={{gridTemplateColumns:`180px repeat(${items.length},1fr)`}}>
         <div className="p-4 bg-gray-50 border-b border-gray-100"/>
         {items.map(p=><div key={p.id} className="p-4 bg-gray-50 border-b border-gray-100 border-l">
           <div className="aspect-video rounded-xl overflow-hidden mb-3 bg-emerald-50">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div>
           <div className="font-bold text-sm mb-1 line-clamp-2">{p.title}</div>
-          <button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="text-xs text-emerald-700 hover:underline">Batafsil →</button>
-          <button onClick={()=>setIds(CompareAPI.remove(p.id))} className="block text-xs text-red-500 hover:underline mt-1">Olib tashlash</button>
+          <button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="text-xs text-emerald-700 hover:underline">{t('compare_details')}</button>
+          <button onClick={()=>setIds(CompareAPI.remove(p.id))} className="block text-xs text-red-500 hover:underline mt-1">{t('compare_remove')}</button>
         </div>)}
         {rows.map((r,i)=><React.Fragment key={r.l}>
           <div className={`p-4 font-semibold text-sm text-gray-600 ${i%2===0?'bg-white':'bg-gray-50/50'} border-b border-gray-100`}>{r.l}</div>
@@ -2427,6 +2437,7 @@ function SecurityTab({u}:{u:User}){
 // ─── FULL PROFILE PAGE (Module 9) ───────────────────────────
 function FullProfilePage(){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   if(!state.auth||!state.currentUser) return <AuthPage/>;
   const u=state.currentUser;
   const[tab,setTab]=useState('info');
@@ -2491,7 +2502,7 @@ function FullProfilePage(){
     toast(`Premium faollashtirildi! ${days} kun`);
   };
 
-  const tabs=[{id:'info',icon:'ri-user-line',l:'Ma\'lumot'},{id:'listings',icon:'ri-home-4-line',l:'E\'lonlarim'},{id:'premium',icon:'ri-vip-crown-line',l:'Premium'},{id:'notifications',icon:'ri-notification-3-line',l:'Bildirishnomalar'},{id:'searches',icon:'ri-search-line',l:'Qidiruvlar'},{id:'saved',icon:'ri-heart-line',l:'Sevimlilar'},{id:'security',icon:'ri-shield-line',l:'Xavfsizlik'}];
+  const tabs=[{id:'info',icon:'ri-user-line',l:t('profile_tab_info')},{id:'listings',icon:'ri-home-4-line',l:t('profile_tab_listings')},{id:'premium',icon:'ri-vip-crown-line',l:t('profile_tab_premium')},{id:'notifications',icon:'ri-notification-3-line',l:t('profile_tab_notifications')},{id:'searches',icon:'ri-search-line',l:t('profile_tab_searches')},{id:'saved',icon:'ri-heart-line',l:t('profile_tab_saved')},{id:'security',icon:'ri-shield-line',l:t('profile_tab_security')}];
 
   return(<div className="max-w-5xl mx-auto px-4 py-10">
     <div className="flex flex-col md:flex-row gap-6">
@@ -2501,26 +2512,26 @@ function FullProfilePage(){
           <div className="font-bold truncate">{isAdmin(u)?'Admin':u.name||'—'}</div>
           <div className="text-xs text-gray-400 truncate">{u.email||u.phone}</div>
           {isAdmin(u)&&<span className="inline-block mt-2 bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">Admin</span>}
-          {tgLinked&&<div className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-600 font-semibold"><i className="ri-telegram-fill"/>Telegram ulangan</div>}
+          {tgLinked&&<div className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-600 font-semibold"><i className="ri-telegram-fill"/>{t('profile_telegram_linked')}</div>}
         </div>
         {/* ── PREMIUM CTA between sidebar sections ── */}
         {!isAdmin(u)&&<div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 mb-4 text-center">
           <div className="text-lg mb-1"><i className="ri-star-fill text-amber-500"/></div>
-          <div className="font-bold text-amber-800 text-sm mb-1">E'lonni premium qiling</div>
-          <div className="text-xs text-amber-600 mb-3">3x ko'proq xaridor</div>
+          <div className="font-bold text-amber-800 text-sm mb-1">{t('profile_tab_premium')}</div>
+          <div className="text-xs text-amber-600 mb-3">{t('profile_premium_sub')}</div>
           <button onClick={()=>setTab('premium')} className={`w-full py-2 rounded-xl text-xs font-bold transition active:scale-95 ${tab==='premium'?'bg-amber-500 text-white':'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>Premium tanlash →</button>
         </div>}
         <nav className="bg-white rounded-2xl p-2 shadow-sm">{tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition ${tab===t.id?'bg-emerald-50 text-emerald-800 font-semibold':'text-gray-600 hover:bg-gray-50'}`}><i className={`${t.icon} text-base`}/>{t.l}</button>)}</nav>
-        <button onClick={async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();CompareAPI.clear();dispatch({type:'LOGOUT'});toast('Chiqildi');dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="mt-3 w-full flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-2xl shadow-sm text-sm text-red-500 hover:bg-red-50 transition"><i className="ri-logout-circle-r-line"/>Chiqish</button>
+        <button onClick={async()=>{if(state.token)AuthAPI.revoke(state.token);await AuthAPI.signOut();CompareAPI.clear();dispatch({type:'LOGOUT'});toast('Chiqildi');dispatch({type:'NAV',payload:'home'});window.scrollTo({top:0});}} className="mt-3 w-full flex items-center gap-2.5 px-3 py-2.5 bg-white rounded-2xl shadow-sm text-sm text-red-500 hover:bg-red-50 transition"><i className="ri-logout-circle-r-line"/>{t('profile_logout')}</button>
       </aside>
 
       <div className="flex-1 min-w-0">
         {/* ── INFO ── */}
-        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">Asosiy ma'lumot</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">Ism</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">Telefon raqam</label>{u.phone?<div><div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 mb-2"><i className="ri-phone-fill text-emerald-600 shrink-0"/><span className="flex-1 truncate">{u.phone}</span><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"><i className="ri-checkbox-circle-fill"/>Ulangan</span></div><button onClick={async()=>{if(!window.confirm("Telefon raqamni uzmoqchimisiz?"))return;const uid=state.currentUser?.id;if(!uid)return;try{await updateDoc(doc(db,'users',uid),{phone:null});dispatch({type:'UPDATE_USER',payload:{phone:''}});toast('Telefon raqam uzildi');}catch{toast('Xatolik yuz berdi','error');}}} className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-sm font-semibold rounded-xl transition active:scale-95"><i className="ri-link-unlink-m text-base"/>Raqamni uzish</button></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>Telefon raqam ulash</button>}</div><div><label className="text-sm font-semibold mb-1 block">Email</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?'Saqlanmoqda...':'Saqlash'}</button></div>)}
+        {tab==='info'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">{t('profile_basic_info')}</h3><div className="space-y-4 mb-6"><div><label className="text-sm font-semibold mb-1 block">{t('profile_name')}</label><input value={name} onChange={e=>setName(e.target.value)} className="w-full px-4 py-3 bg-emerald-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div><div><label className="text-sm font-semibold mb-1 block">{t('profile_phone')}</label>{u.phone?<div><div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-xl text-sm font-semibold text-emerald-900 mb-2"><i className="ri-phone-fill text-emerald-600 shrink-0"/><span className="flex-1 truncate">{u.phone}</span><span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0"><i className="ri-checkbox-circle-fill"/>{t('profile_phone_connected')}</span></div><button onClick={async()=>{if(!window.confirm(t('profile_disconnect_confirm')))return;const uid=state.currentUser?.id;if(!uid)return;try{await updateDoc(doc(db,'users',uid),{phone:null});dispatch({type:'UPDATE_USER',payload:{phone:''}});toast(t('profile_disconnected'));}catch{toast(t('error_text'),'error');}}} className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 text-sm font-semibold rounded-xl transition active:scale-95"><i className="ri-link-unlink-m text-base"/>{t('profile_phone_disconnect')}</button></div>:<button onClick={()=>setShowPhoneConnect(true)} className="w-full flex items-center gap-2 px-4 py-3 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-sm font-semibold text-amber-700 hover:bg-amber-100 transition"><i className="ri-phone-line"/>{t('profile_phone_add')}</button>}</div><div><label className="text-sm font-semibold mb-1 block">{t('auth_email')}</label><input value={u.email||''} disabled className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm text-gray-400"/></div></div><button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white font-bold rounded-xl shadow active:scale-95 transition disabled:opacity-50"><i className="ri-save-line"/>{saving?t('profile_saving'):t('profile_save')}</button></div>)}
         {showPhoneConnect&&<PhoneConnectModal onClose={()=>setShowPhoneConnect(false)} onSuccess={p=>{dispatch({type:'UPDATE_USER',payload:{phone:p}});setShowPhoneConnect(false);}}/>}
 
         {/* ── MY LISTINGS ── */}
-        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">Hali e'lonlaringiz yo'q</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">E'lon qo'shish</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600 flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">Ko'rish</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100 flex items-center gap-1"><i className="ri-star-line"/>Premium</button></div></div>)}</div>)}
+        {tab==='listings'&&(<div className="space-y-3">{myListings.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-home-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">{t('profile_no_listings')}</p><button onClick={()=>{dispatch({type:'NAV',payload:'submit'});window.scrollTo({top:0});}} className="mt-4 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm">{t('profile_add_listing')}</button></div>:myListings.map(p=><div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center"><div className="w-16 h-16 rounded-xl overflow-hidden bg-emerald-50 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-400">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div><div className="flex gap-3 text-xs text-gray-400 mt-1"><span><i className="ri-eye-line mr-0.5"/>{p.viewsCount||0} ko'rish</span><span><i className="ri-heart-line mr-0.5"/>{p.favoritesCount||0} saqlagan</span>{p.verified&&<span className="text-emerald-600"><i className="ri-verified-badge-fill mr-0.5"/>Tasdiqlangan</span>}{p.isPremium&&<span className="text-amber-600 flex items-center gap-0.5"><i className="ri-star-fill"/>{p.premiumType?.toUpperCase()}</span>}</div></div><div className="flex gap-2 shrink-0"><button onClick={()=>dispatch({type:'DETAIL',payload:p.id})} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-semibold rounded-lg text-xs hover:bg-emerald-100">{t('profile_view')}</button><button onClick={()=>{setPremiumListing(p);setTab('premium');}} className="px-3 py-1.5 bg-amber-50 text-amber-700 font-semibold rounded-lg text-xs hover:bg-amber-100 flex items-center gap-1"><i className="ri-star-line"/>{t('profile_tab_premium')}</button></div></div>)}</div>)}
 
         {/* ── PREMIUM ── */}
         {tab==='premium'&&(<div>
@@ -2658,7 +2669,10 @@ function FullProfilePage(){
 // ─── STATISTICS PAGE (Module 5) ─────────────────────────────
 function StatisticsPage(){
   const{state,dispatch:_d}=useApp();void _d;
-  const byDistrict=DISTRICTS.map(d=>{
+  const{t}=useTranslation();
+  // Use ALL unique districts from approved listings (not the hardcoded DISTRICTS list)
+  const allDistricts=[...new Set(state.approved.map(p=>p.district).filter(Boolean))];
+  const byDistrict=allDistricts.map(d=>{
     const items=state.approved.filter(p=>p.district===d);
     const rent=items.filter(p=>p.type==='rent');const sale=items.filter(p=>p.type==='sale');
     const avgRent=rent.length?Math.round(rent.reduce((s,p)=>s+p.price,0)/rent.length):0;
@@ -2666,12 +2680,16 @@ function StatisticsPage(){
     return {d,total:items.length,rent:rent.length,sale:sale.length,avgRent,avgSale};
   }).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
   const max=Math.max(...byDistrict.map(x=>x.total),1);
-  return(<div className="max-w-5xl mx-auto px-4 py-10">
-    <div className="mb-8"><h2 className="text-3xl font-extrabold mb-1">Narx statistikasi</h2><p className="text-gray-500">Toshkent tumanlari bo'yicha ko'chmas mulk narxlari</p></div>
-    <div className="grid md:grid-cols-3 gap-4 mb-8">{[{l:"Jami e'lonlar",v:state.approved.length,i:'ri-home-4-line',g:'from-emerald-500 to-emerald-400'},{l:"Ijara o'rtacha",v:`$${state.approved.filter(p=>p.type==='rent').length?Math.round(state.approved.filter(p=>p.type==='rent').reduce((s,p)=>s+p.price,0)/state.approved.filter(p=>p.type==='rent').length):0}/oy`,i:'ri-key-2-line',g:'from-blue-500 to-blue-400'},{l:"Sotuv o'rtacha",v:`$${state.approved.filter(p=>p.type==='sale').length?Math.round(state.approved.filter(p=>p.type==='sale').reduce((s,p)=>s+p.price,0)/state.approved.filter(p=>p.type==='sale').length).toLocaleString():0}`,i:'ri-price-tag-3-line',g:'from-purple-500 to-purple-400'}].map(s=><div key={s.l} className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.g} text-white flex items-center justify-center text-xl shadow`}><i className={s.i}/></div><div><div className="text-gray-500 text-xs">{s.l}</div><div className="text-2xl font-extrabold">{s.v}</div></div></div>)}</div>
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden"><div className="p-5 border-b border-gray-100"><h3 className="font-bold">Tuman bo'yicha statistika</h3></div>
-      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b">{["Tuman","E'lonlar","Ijara","Sotuv","O'rtacha ijara","O'rtacha sotuv","Grafik"].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
-        <tbody>{byDistrict.map(r=><tr key={r.d} className="border-b hover:bg-gray-50 transition"><td className="px-4 py-3 font-semibold">{r.d}</td><td className="px-4 py-3 font-bold text-emerald-700">{r.total}</td><td className="px-4 py-3 text-blue-600">{r.rent}</td><td className="px-4 py-3 text-purple-600">{r.sale}</td><td className="px-4 py-3">{r.avgRent?`$${r.avgRent}/oy`:'—'}</td><td className="px-4 py-3">{r.avgSale?`$${r.avgSale.toLocaleString()}`:'—'}</td><td className="px-4 py-3 w-32"><div className="bg-gray-100 rounded-full h-2 w-full"><div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full" style={{width:`${(r.total/max*100)}%`}}/></div></td></tr>)}
+  const rentItems=state.approved.filter(p=>p.type==='rent');
+  const saleItems=state.approved.filter(p=>p.type==='sale');
+  const avgRent=rentItems.length?Math.round(rentItems.reduce((s,p)=>s+p.price,0)/rentItems.length):0;
+  const avgSale=saleItems.length?Math.round(saleItems.reduce((s,p)=>s+p.price,0)/saleItems.length):0;
+  return(<div className="max-w-5xl mx-auto px-4 py-10 pb-24 md:pb-10">
+    <div className="mb-8"><h2 className="text-3xl font-extrabold mb-1">{t('stats_title')}</h2><p className="text-gray-500">{t('stats_sub')}</p></div>
+    <div className="grid md:grid-cols-3 gap-4 mb-8">{[{l:t('stats_total'),v:state.approved.length,i:'ri-home-4-line',g:'from-emerald-500 to-emerald-400'},{l:t('stats_avg_rent'),v:`$${avgRent}${t('stats_per_month')}`,i:'ri-key-2-line',g:'from-blue-500 to-blue-400'},{l:t('stats_avg_sale'),v:`$${avgSale.toLocaleString()}`,i:'ri-price-tag-3-line',g:'from-purple-500 to-purple-400'}].map(s=><div key={s.l} className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-4"><div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.g} text-white flex items-center justify-center text-xl shadow`}><i className={s.i}/></div><div><div className="text-gray-500 text-xs">{s.l}</div><div className="text-2xl font-extrabold">{s.v}</div></div></div>)}</div>
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden"><div className="p-5 border-b border-gray-100"><h3 className="font-bold">{t('stats_by_district')}</h3></div>
+      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-gray-50 border-b">{[t('stats_col_district'),t('stats_col_listings'),t('stats_col_rent'),t('stats_col_sale'),t('stats_col_avg_rent'),t('stats_col_avg_sale'),t('stats_col_chart')].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
+        <tbody>{byDistrict.map(r=><tr key={r.d} className="border-b hover:bg-gray-50 transition"><td className="px-4 py-3 font-semibold">{r.d}</td><td className="px-4 py-3 font-bold text-emerald-700">{r.total}</td><td className="px-4 py-3 text-blue-600">{r.rent}</td><td className="px-4 py-3 text-purple-600">{r.sale}</td><td className="px-4 py-3">{r.avgRent?`$${r.avgRent}${t('stats_per_month')}`:'—'}</td><td className="px-4 py-3">{r.avgSale?`$${r.avgSale.toLocaleString()}`:'—'}</td><td className="px-4 py-3 w-32"><div className="bg-gray-100 rounded-full h-2 w-full"><div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-2 rounded-full" style={{width:`${(r.total/max*100)}%`}}/></div></td></tr>)}
         </tbody></table></div></div>
   </div>);
 }
@@ -3353,7 +3371,22 @@ async function callGroq(systemPrompt:string, userMsg:string, history:{role:strin
 }
 
 
-const AI_SYSTEM = `Sen UyNest — O'zbekiston ko'chmas mulk platformasining AI yordamchisi.
+function getAiSystem(lang='uz'){
+  if(lang==='ru') return `Ты AI-ассистент UyNest — платформы недвижимости Узбекистана.
+ВАЖНО: Всегда отвечай ТОЛЬКО НА РУССКОМ ЯЗЫКЕ.
+
+Проанализируй сообщение и верни ТОЛЬКО один из JSON-форматов:
+
+Поиск жилья: {"action":"search","type":"ijara|sotuv|null","district":"название района или null","maxPrice":число|null,"minPrice":число|null,"rooms":число|null}
+Статистика цен: {"action":"stats","district":"название района"}
+Обычный вопрос: {"action":"chat","reply":"ответ на русском языке"}
+
+Районы Ташкента: Yunusobod, Chilonzor, Mirzo Ulug'bek, Mirobod, Yakkasaroy, Shayxontohur, Uchtepa, Sergeli, Bektemir, Olmazor
+Города: Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Guliston, Termiz, Chirchiq
+Если пользователь говорит "Ташкент" → district=null (весь город)
+Ориентировочные цены (USD): аренда 1к $150-350/мес, 2к $300-700/мес; продажа 2к $40k-120k, 3к $80k-200k+
+Верни только JSON, ничего лишнего.`;
+  return `Sen UyNest — O'zbekiston ko'chmas mulk platformasining AI yordamchisi.
 MUHIM: Doimo va faqat O'ZBEK TILIDA javob ber. Hech qachon rus yoki ingliz tilida yozma.
 
 Foydalanuvchi xabarini tahlil qilib, quyidagi JSON formatlardan FAQAT birini qaytargin:
@@ -3371,6 +3404,7 @@ Joylar ro'yxati:
 
 Narx taxminlari (USD): ijara 1x $150-350/oy, 2x $300-700/oy; sotuv 2x $40k-120k, 3x $80k-200k+
 Faqat JSON qaytargin, boshqa hech narsa yozma.`;
+}
 
 // ─── LOCAL NLP — Gemini API shart emas ──────────────────────
 // Simple keyword-based query parser — works offline, no quota
@@ -3434,7 +3468,9 @@ interface AiMsg { role:'user'|'assistant'; text:string; listings?:Listing[]; }
 
 function AiChatModal({onClose}:{onClose:()=>void}){
   const{state,dispatch}=useApp();
-  const[msgs,setMsgs]=useState<AiMsg[]>([{role:'assistant',text:'Salom! Men UyNest AI yordamchisiman\n\nYozib yoki mikrofondan gaplab so\'rang:\n"Yunusobodda 2 xonali $500 gacha ijara topib ber"'}]);
+  const{t}=useTranslation();
+  const isRu=i18n.language==='ru';
+  const[msgs,setMsgs]=useState<AiMsg[]>([{role:'assistant',text:isRu?t('ai_welcome_ru'):t('ai_welcome')}]);
   const[input,setInput]=useState('');
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
@@ -3616,7 +3652,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           setLoading(false);return;
         }
         const history=msgs.slice(-4).map(m=>({role:m.role==='user'?'user':'assistant' as const,content:m.text}));
-        raw=await callGroq(AI_SYSTEM,userMsg,history);
+        raw=await callGroq(getAiSystem(i18n.language),userMsg,history);
         parsed=parseAiResponse(raw);
       }
 
@@ -3714,7 +3750,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-700 to-emerald-500 sm:rounded-t-3xl rounded-t-3xl">
           <div className={`w-10 h-10 rounded-xl overflow-hidden ${listening?'animate-pulse ring-2 ring-white':''}`}><img src="/ai-robot.png" alt="AI" className="w-full h-full object-cover"/></div>
-          <div className="flex-1"><div className="font-bold text-white">UyNest AI</div><div className="text-emerald-100 text-xs">{listening?'🎙️ Gapiring... (to\'xtatish uchun bosing)':transcribing?'⏳ Ovoz tanilmoqda...':'Llama 3.3 70B • Yozing yoki gapiring'}</div></div>
+          <div className="flex-1"><div className="font-bold text-white">{t('ai_title')}</div><div className="text-emerald-100 text-xs">{listening?'🎙️':transcribing?`⏳ ${t('ai_transcribing')}`:'Llama 3.3 70B • '+t(isRu?'ai_placeholder_ru':'ai_placeholder')}</div></div>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center hover:bg-white/30"><i className="ri-close-line"/></button>
         </div>
         {/* Messages */}
@@ -3741,7 +3777,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           <div ref={endRef}/>
         </div>
         {/* Suggested prompts */}
-        {msgs.length<=1&&<div className="px-4 py-2 flex gap-2 overflow-x-auto">{['Yunusobodda 2 xonali $500','Chilonzor narxlari','3 xonali sotuv uy'].map(s=><button key={s} onClick={()=>{setInput(s);}} className="shrink-0 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl hover:bg-emerald-100 transition border border-emerald-200 whitespace-nowrap">{s}</button>)}</div>}
+        {msgs.length<=1&&<div className="px-4 py-2 flex gap-2 overflow-x-auto">{(isRu?[t('ai_chip1_ru'),t('ai_chip2_ru'),t('ai_chip3_ru')]:[t('ai_chip1'),t('ai_chip2'),t('ai_chip3')]).map(s=><button key={s} onClick={()=>{setInput(s);}} className="shrink-0 px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl hover:bg-emerald-100 transition border border-emerald-200 whitespace-nowrap">{s}</button>)}</div>}
         {/* Input */}
         <div className="p-4 border-t border-gray-100">
           <div className="flex gap-2">
@@ -3749,7 +3785,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
             <button onClick={startListening} title={listening?"To'xtatish":"Mikrofon bilan gapiring"} disabled={transcribing} className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition active:scale-95 shrink-0 ${listening?'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40':transcribing?'bg-amber-100 text-amber-500':'bg-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600'}`}>
               <i className={transcribing?'ri-loader-4-line animate-spin':listening?'ri-stop-circle-line':'ri-mic-line'}/>
             </button>
-            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder={listening?'🎙️ Gapiring... (tugash uchun bosing)':transcribing?'⏳ Ovoz tanilmoqda...':'Yozing yoki mikrofondan gapiring...'} disabled={transcribing} className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition disabled:opacity-60"/>
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder={transcribing?`⏳ ${t('ai_transcribing')}`:t(isRu?'ai_placeholder_ru':'ai_placeholder')} disabled={transcribing} className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition disabled:opacity-60"/>
             <button id="ai-send-btn" onClick={send} disabled={loading||transcribing||!input.trim()} className="w-11 h-11 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-xl flex items-center justify-center shadow active:scale-95 transition disabled:opacity-40 shrink-0">
               {loading?<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>:<i className="ri-send-plane-fill"/>}
             </button>
