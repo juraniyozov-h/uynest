@@ -1068,22 +1068,37 @@ function ChatPage(){
     setMediaUploading(true);
     try{
       let url='';
-      if(isVideo){
-        // Upload via serverless proxy (avoids CORS — server uploads to Firebase Storage)
-        const buf=await file.arrayBuffer();
-        const b64=btoa(String.fromCharCode(...new Uint8Array(buf)));
-        const r=await fetch('/api/upload-media',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({data:b64,filename:file.name,mimeType:file.type})
-        });
-        if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`Upload failed: ${r.status}`);}
+      // Both images and videos go through the serverless proxy → Firebase Storage
+      // This gives proper HTTPS URLs (no base64 in Firestore), avoids CORS, and
+      // prevents blank cells caused by Firestore's 1MB field limit on base64 strings
+      const buf=await file.arrayBuffer();
+      // For images: compress first to reduce upload size, then encode
+      let finalBuf=buf;
+      if(!isVideo&&file.size>300_000){
+        try{
+          const compressedB64=(await uploadImages([file]))[0];
+          const base64Only=compressedB64.split(',')[1];
+          finalBuf=Uint8Array.from(atob(base64Only),(c)=>c.charCodeAt(0)).buffer;
+        }catch{finalBuf=buf;}
+      }
+      const b64=btoa(String.fromCharCode(...new Uint8Array(finalBuf)));
+      const r=await fetch('/api/upload-media',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({data:b64,filename:file.name,mimeType:isVideo?file.type:'image/jpeg'})
+      });
+      if(!r.ok){
+        const e=await r.json().catch(()=>({}));
+        // Fallback for localhost dev: images use base64 locally if API unavailable
+        if(!isVideo){
+          const localUrls=await uploadImages([file]);
+          url=localUrls[0];
+        } else {
+          throw new Error(e.error||`Upload failed: ${r.status} — video upload requires the Vercel deployment`);
+        }
+      } else {
         const d=await r.json();
         url=d.url;
-      }else{
-        // Images: compress to base64 locally — no Firebase Storage needed
-        const urls=await uploadImages([file]);
-        url=urls[0];
       }
       await ChatAPI.sendMedia(u.id,partnerId,url,isVideo?'video':'image');
       await loadMsgs();

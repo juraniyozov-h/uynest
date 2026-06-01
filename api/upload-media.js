@@ -14,20 +14,25 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(data, 'base64');
     if (buffer.length > 52_428_800) return res.status(413).json({ error: 'File too large (max 50MB)' });
 
-    const bucket = admin.storage().bucket(
-      process.env.VITE_FIREBASE_STORAGE_BUCKET ||
-      `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`
-    );
-    const ext = filename.split('.').pop() || 'bin';
+    // Use default bucket (configured via storageBucket in initializeApp)
+    const bucket = admin.storage().bucket();
+    const ext = (filename.split('.').pop() || 'bin').toLowerCase();
     const destPath = `chat_media/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const file = bucket.file(destPath);
 
-    await file.save(buffer, { contentType: mimeType || 'application/octet-stream', public: true });
-    const url = `https://storage.googleapis.com/${bucket.name}/${destPath}`;
+    await file.save(buffer, {
+      contentType: mimeType || 'application/octet-stream',
+      metadata: { cacheControl: 'public,max-age=31536000' },
+    });
 
+    // Make the file publicly readable
+    await file.makePublic();
+
+    const url = `https://storage.googleapis.com/${bucket.name}/${destPath}`;
+    console.log('Uploaded media:', destPath, 'size:', buffer.length, 'url:', url);
     res.json({ ok: true, url });
   } catch (err) {
-    console.error('Media upload error:', err);
-    res.status(500).json({ error: String(err) });
+    console.error('Media upload error:', err.message, err.stack);
+    res.status(500).json({ error: err.message || String(err) });
   }
 }
