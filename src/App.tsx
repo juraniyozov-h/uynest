@@ -217,7 +217,6 @@ function Navbar(){
     {id:'home',label:t('home'),icon:'ri-home-4-line'},
     {id:'rent',label:t('rent'),icon:'ri-key-2-line'},
     {id:'sale',label:t('sale'),icon:'ri-shopping-bag-3-line'},
-    {id:'saved',label:t('saved'),icon:'ri-heart-line'},
     {id:'map',label:t('map'),icon:'ri-map-2-line'},
     {id:'chat',label:t('chat'),icon:'ri-chat-3-line'},
     {id:'submit',label:t('post'),icon:'ri-add-circle-line'},
@@ -1070,12 +1069,15 @@ function ChatPage(){
     try{
       let url='';
       if(isVideo){
-        const{getStorage,ref,uploadBytes,getDownloadURL}=await import('firebase/storage');
-        const st=getStorage();
-        const r=ref(st,`chat_media/${u.id}_${Date.now()}_${file.name}`);
-        await uploadBytes(r,file);
-        url=await getDownloadURL(r);
+        // Upload video via serverless proxy (avoids Firebase Storage CORS)
+        const fd=new FormData();
+        fd.append('file',file);
+        const r=await fetch('/api/upload-media',{method:'POST',body:fd});
+        if(!r.ok)throw new Error(`Upload failed: ${r.status}`);
+        const data=await r.json();
+        url=data.url;
       }else{
+        // Images: compress to base64 locally — no Firebase Storage needed
         const urls=await uploadImages([file]);
         url=urls[0];
       }
@@ -2537,7 +2539,7 @@ function FullProfilePage(){
   const[showPhoneConnect,setShowPhoneConnect]=useState(false);
   const[saving,setSaving]=useState(false);
   const[viewReqs,setViewReqs]=useState<ViewingRequest[]>([]);
-  const[savedSearches,setSavedSearches]=useState<SavedSearch[]>([]);
+  const[,setSavedSearches]=useState<SavedSearch[]>([]);
   const myListings=state.approved.filter(p=>p.ownerId===u.id);
   const savedItems=state.approved.filter(p=>state.favorites.includes(p.id.toString()));
   const[tgCode,setTgCode]=useState('');
@@ -2594,7 +2596,7 @@ function FullProfilePage(){
     toast(`Premium faollashtirildi! ${days} kun`);
   };
 
-  const tabs=[{id:'info',icon:'ri-user-line',l:t('profile_tab_info')},{id:'listings',icon:'ri-home-4-line',l:t('profile_tab_listings')},{id:'premium',icon:'ri-vip-crown-line',l:t('profile_tab_premium')},{id:'notifications',icon:'ri-notification-3-line',l:t('profile_tab_notifications')},{id:'searches',icon:'ri-search-line',l:t('profile_tab_searches')},{id:'saved',icon:'ri-heart-line',l:t('profile_tab_saved')},{id:'security',icon:'ri-shield-line',l:t('profile_tab_security')}];
+  const tabs=[{id:'info',icon:'ri-user-line',l:t('profile_tab_info')},{id:'listings',icon:'ri-home-4-line',l:t('profile_tab_listings')},{id:'premium',icon:'ri-vip-crown-line',l:t('profile_tab_premium')},{id:'notifications',icon:'ri-notification-3-line',l:t('profile_tab_notifications')},{id:'saved',icon:'ri-heart-line',l:t('profile_tab_saved')},{id:'security',icon:'ri-shield-line',l:t('profile_tab_security')}];
 
   return(<div className="max-w-5xl mx-auto px-4 py-10">
     <div className="flex flex-col md:flex-row gap-6">
@@ -2746,7 +2748,6 @@ function FullProfilePage(){
         </div>)}
 
         {/* ── SEARCHES ── */}
-        {tab==='searches'&&(<div className="bg-white rounded-2xl p-6 shadow-sm"><h3 className="font-bold text-lg mb-5">{t('searches_title')}</h3>{savedSearches.length===0?<div className="text-center py-8 text-gray-400"><i className="ri-search-line text-4xl text-gray-200 block mb-3"/>{t('searches_empty')}<br/><span className="text-xs">{t('searches_hint')}</span></div>:<div className="space-y-3">{savedSearches.map(s=><div key={s.id} className="flex items-center gap-3 p-4 border border-gray-100 rounded-xl"><div className="flex-1"><div className="font-semibold text-sm">{s.filters.type||t('searches_all')} • {s.filters.district||t('all_districts')}</div><div className="text-xs text-gray-400">{s.filters.minPrice&&`$${s.filters.minPrice} — `}{s.filters.maxPrice&&`$${s.filters.maxPrice}`}{s.filters.rooms&&` • ${s.filters.rooms} ${t('rooms_unit')}`}</div></div><button onClick={()=>SavedSearchAPI.remove(s.id).then(()=>setSavedSearches(p=>p.filter(x=>x.id!==s.id)))} className="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100"><i className="ri-delete-bin-line text-sm"/></button></div>)}</div>}</div>)}
 
         {/* ── SAVED ── */}
         {tab==='saved'&&(<div>{savedItems.length===0?<div className="bg-white rounded-2xl p-12 text-center shadow-sm"><i className="ri-heart-line text-4xl text-gray-200 block mb-3"/><p className="text-gray-500">{t('profile_saved_empty')}</p></div>:<div className="grid sm:grid-cols-2 gap-4">{savedItems.map(p=><Card key={p.id} p={p}/>)}</div>}</div>)}
