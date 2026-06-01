@@ -241,6 +241,12 @@ const uz = {
   confirm_btn: 'Tasdiqlash', close_btn: 'Yopish',
   search_placeholder: "Tuman, manzil yoki kalit so'z...",
 
+  // ── New feature strings ──
+  phone_already_connected: 'Telefon raqam allaqachon ulangan. Avval uzib, keyin yangi raqam ulang.',
+  chat_send_media: 'Rasm yoki video yuborish',
+  chat_send_house: 'Uy yuborish',
+  chat_select_house: 'Uy tanlang',
+
   // ── ReviewPage ──
   review_page_title: 'Sharh qoldiring',
   review_page_sub: 'Xizmatimiz haqida fikringiz muhim',
@@ -628,6 +634,11 @@ const ru: typeof uz = {
   cancel_btn: 'Отмена', save_btn: 'Сохранить', send_btn: 'Отправить',
   confirm_btn: 'Подтвердить', close_btn: 'Закрыть',
   search_placeholder: 'Район, адрес или ключевое слово...',
+
+  phone_already_connected: 'Номер телефона уже подключён. Отключите его, чтобы добавить новый.',
+  chat_send_media: 'Отправить фото или видео',
+  chat_send_house: 'Отправить объявление',
+  chat_select_house: 'Выберите объявление',
 
   cat_apartment: 'Квартира', cat_house: 'Дом',
   cat_newbuild: 'Новостройка', cat_commercial: 'Офис/Коммерческая',

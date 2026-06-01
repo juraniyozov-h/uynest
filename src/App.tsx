@@ -101,13 +101,27 @@ const fmtDate=(iso:string)=>new Date(iso).toLocaleDateString('uz-Latn');
 
 // ─── Render message helper ──────────────────────────────────
 function renderMessage(m:ChatMessage){
+  // Dedicated mediaUrl field (images/videos sent via attachment button)
+  if(m.mediaUrl){
+    return(
+      <div>
+        {m.mediaType==='video'
+          ?<video src={m.mediaUrl} controls className="max-w-full rounded-xl mt-1 max-h-64 bg-black/10" style={{maxWidth:260}}/>
+          :<img src={m.mediaUrl} alt="" className="max-w-full rounded-xl mt-1 shadow-sm border border-black/5 max-h-64 object-contain bg-black/5" style={{maxWidth:260}} onClick={()=>window.open(m.mediaUrl,'_blank')}/>
+        }
+        {m.text&&<div className="mt-1 text-sm">{m.text}</div>}
+      </div>
+    );
+  }
   const lines = m.text.split('\n');
   return <>{lines.map((line,i) => {
-    // Regex for URLs ending in image extensions or containing them (Firebase Storage)
     const imgUrlMatch = line.match(/(https?:\/\/[^\s]+(\.jpg|\.jpeg|\.png|\.gif|\.webp)[^\s]*)/i);
-    // Regex for Data URIs
+    const videoUrlMatch = line.match(/(https?:\/\/[^\s]+(\.mp4|\.webm|\.mov)[^\s]*)/i);
     const dataUriMatch = line.match(/(data:image\/[a-zA-Z]*;base64,[^\s]+)/i);
-
+    if(videoUrlMatch){
+      const src=videoUrlMatch[0];
+      return <div key={i}><video src={src} controls className="max-w-full rounded-xl mt-1 max-h-64 bg-black/10"/></div>;
+    }
     if(imgUrlMatch || dataUriMatch){
       const src = imgUrlMatch ? imgUrlMatch[0] : dataUriMatch![0];
       const before = line.substring(0, line.indexOf(src));
@@ -115,7 +129,7 @@ function renderMessage(m:ChatMessage){
       return (
         <div key={i} className="mb-1">
           {before && <span>{before}</span>}
-          <img src={src} alt="" className="max-w-full rounded-xl mt-1.5 shadow-sm border border-black/5 max-h-64 object-contain bg-black/5" />
+          <img src={src} alt="" className="max-w-full rounded-xl mt-1.5 shadow-sm border border-black/5 max-h-64 object-contain bg-black/5" onClick={()=>window.open(src,'_blank')}/>
           {after && <span>{after}</span>}
         </div>
       );
@@ -998,6 +1012,8 @@ function ChatPage(){
   const[complaintImg,setComplaintImg]=useState<File|null>(null);
   const[complaintImgPreview,setComplaintImgPreview]=useState('');
   const[houseSearch,setHouseSearch]=useState('');
+  const[mediaUploading,setMediaUploading]=useState(false);
+  const mediaInputRef=useRef<HTMLInputElement>(null);
 
   const{dispatch}=useApp();
   const adminUser = AuthAPI.getUsers().find(x=>x.role==='admin');
@@ -1044,6 +1060,33 @@ function ChatPage(){
     setText('');await loadMsgs();
   };
 
+  const handleMediaSelect=async(e:React.ChangeEvent<HTMLInputElement>)=>{
+    const file=e.target.files?.[0];
+    if(!file||!partnerId)return;
+    const isVideo=file.type.startsWith('video/');
+    const maxMB=isVideo?50:10;
+    if(file.size>maxMB*1024*1024){toast(`Maksimal hajm: ${maxMB}MB`,'error');return;}
+    setMediaUploading(true);
+    try{
+      let url='';
+      if(isVideo){
+        const{getStorage,ref,uploadBytes,getDownloadURL}=await import('firebase/storage');
+        const st=getStorage();
+        const r=ref(st,`chat_media/${u.id}_${Date.now()}_${file.name}`);
+        await uploadBytes(r,file);
+        url=await getDownloadURL(r);
+      }else{
+        const urls=await uploadImages([file]);
+        url=urls[0];
+      }
+      await ChatAPI.sendMedia(u.id,partnerId,url,isVideo?'video':'image');
+      await loadMsgs();
+      toast(isVideo?'Video yuborildi':'Rasm yuborildi');
+    }catch(err){toast('Yuklash xatosi','error');console.error(err);}
+    setMediaUploading(false);
+    if(mediaInputRef.current)mediaInputRef.current.value='';
+  };
+
   const sendHouse=async(p:Listing)=>{if(!partnerId) return;try{const msg=`Uy topdim: ${p.title} (id:${p.id})\nNarx: $${p.price}${p.type==='rent'?'/oy':''}\nManzil: ${p.address||p.district}\nXonalar: ${p.rooms}\nMaydon: ${p.area} m²\n${p.img}`;setShowHouseModal(false);setText('');await ChatAPI.send(u.id,partnerId,msg);await loadMsgs();toast('Uy yuborildi!');}catch(e){toast('Xatolik yuz berdi','error');console.error('Send house error:',e);}};
 
   const deleteChat = async () => {
@@ -1085,7 +1128,7 @@ function ChatPage(){
           {threads.length===0&&<div className="p-8 text-center text-gray-400 text-sm">Hozircha xabar yo'q</div>}
           {threads.map(t=>{const tu=users.find(x=>x.id===t.userId);const unr=ChatAPI.getAll().filter(m=>m.from===t.userId&&m.to===u.id&&!m.read).length;return(
             <button key={t.userId} onClick={()=>selectThread(t.userId)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===t.userId?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(tu?.name||t.name)}</div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden">{tu?.avatar?<img src={tu.avatar} alt="" className="w-full h-full object-cover"/>:initials(tu?.name||t.name)}</div>
               <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{tu?.name||t.name}{tu?.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{t.lastMsg.text}</div></div>
               <div className="flex flex-col items-end gap-1"><span className="text-[10px] text-gray-400">{fmtTime(t.lastMsg.time)}</span>{unr>0&&<span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}</div>
             </button>
@@ -1110,7 +1153,13 @@ function ChatPage(){
               {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}</div></div></div>)}
               <div ref={endRef}/>
             </div>
-            <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3"><input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder={t('chat_placeholder')} className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/><button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button><button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button></div>
+            <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3 items-center">
+              <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaSelect}/>
+              <button onClick={()=>mediaInputRef.current?.click()} disabled={mediaUploading} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90 disabled:opacity-50" title={t('chat_send_media')}>{mediaUploading?<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"/>:<i className="ri-image-add-line text-lg"/>}</button>
+              <button onClick={()=>setShowHouseModal(true)} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90" title={t('chat_send_house')}><i className="ri-home-4-line text-lg"/></button>
+              <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder={t('chat_placeholder')} className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
+              <button onClick={send} className="w-11 h-11 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button>
+            </div>
           </>
         ):(<div className="flex-1 flex items-center justify-center text-gray-400"><div className="text-center"><i className="ri-chat-smile-3-line text-6xl text-gray-200 block mb-4"/><p className="font-semibold">{t('chat_select_contact')}</p><p className="text-sm">{t('chat_select_sub')}</p></div></div>)}
       </div>
@@ -1119,7 +1168,11 @@ function ChatPage(){
       <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
         {adminContactsList}
         {adminChatPanel}
-        {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}><div className="flex justify-between items-center mb-4"><h3 className="font-bold text-lg">Uy tanlang</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div><div className="grid sm:grid-cols-2 gap-4">{state.approved.slice(0,20).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div></button>)}</div></div></div>}
+        {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-4 shrink-0"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-home-4-line text-emerald-600"/>{t('chat_select_house')}</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div>
+          <div className="relative mb-3 shrink-0"><i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input value={houseSearch} onChange={e=>setHouseSearch(e.target.value)} placeholder={t('search_placeholder')} className="w-full pl-9 pr-4 py-2.5 bg-gray-50 rounded-xl text-sm outline-none focus:ring-2 ring-emerald-200"/></div>
+          <div className="overflow-y-auto flex-1"><div className="grid sm:grid-cols-2 gap-3">{state.approved.filter(p=>!houseSearch||p.title.toLowerCase().includes(houseSearch.toLowerCase())||p.district.toLowerCase().includes(houseSearch.toLowerCase())).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left flex items-center gap-3"><div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500 truncate">{p.district} • ${p.price}{p.type==='rent'?t('per_month'):''}</div></div></button>)}</div></div>
+        </div></div>}
         {showComplaintModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={()=>{setShowComplaintModal(false);setComplaintText('');}}><div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4" onClick={e=>e.stopPropagation()}><h3 className="font-bold text-lg mb-4">Shikoyat</h3><textarea value={complaintText} onChange={e=>setComplaintText(e.target.value)} className="w-full border rounded-xl p-3 text-sm h-28 resize-none outline-none" placeholder="Shikoyat matnini yozing..."/><div className="flex gap-3 mt-4"><button onClick={()=>{setShowComplaintModal(false);setComplaintText('');}} className="flex-1 py-2.5 border rounded-xl text-sm font-semibold">Bekor qilish</button><button onClick={sendComplaint} className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold">Yuborish</button></div></div></div>}
       </div>
     );
@@ -1142,7 +1195,9 @@ function ChatPage(){
   const selectContact=(id:string)=>{dispatch({type:'CHAT_TARGET',payload:id});setMobileView('chat');};
   const backToContacts=()=>{dispatch({type:'CHAT_TARGET',payload:null});setMobileView('contacts');};
 
-  const contactName=partnerId===adminId?'Admin':contacts.find(x=>x.id===partnerId)?.name||adminUser?.name||'Foydalanuvchi';
+  const partnerUser=contacts.find(x=>x.id===partnerId)||adminUser||null;
+  const contactName=partnerId===adminId?'Admin':partnerUser?.name||'Foydalanuvchi';
+  const contactAvatar=partnerUser?.avatar||'';
 
   const contactsList=(
     <div className={`${mobileView==='chat'?'hidden md:flex':'flex'} w-full md:w-80 border-r border-gray-100 flex-col shrink-0`}>
@@ -1151,7 +1206,7 @@ function ChatPage(){
         {contacts.length===0&&<div className="p-8 text-center text-gray-400 text-sm">{t('chat_no_msgs')}.</div>}
         {contacts.map(contact=>{const unr=ChatAPI.getAll().filter(m=>m.from===contact.id&&m.to===u.id&&!m.read).length;return(
           <button key={contact.id} onClick={()=>selectContact(contact.id)} className={`w-full flex items-center gap-3 p-4 hover:bg-emerald-50 transition text-left border-b border-gray-50 ${state.chatTarget===contact.id?'bg-emerald-50 border-l-4 border-l-emerald-500':''}`}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0">{initials(contact.role==='admin'?'Admin':contact.name)}</div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden">{contact.avatar?<img src={contact.avatar} alt="" className="w-full h-full object-cover"/>:initials(contact.role==='admin'?'Admin':contact.name)}</div>
             <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contact.role==='admin'?'Admin':contact.name}{contact.role==='admin'&&<i className="ri-verified-badge-fill text-emerald-500 text-xs ml-1"/>}</div><div className="text-xs text-gray-400 truncate">{contact.role==='admin'?'UyNest Administrator':contact.email||contact.phone||'Kontakt mavjud'}</div></div>
             {unr>0&&<span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">{unr}</span>}
           </button>
@@ -1169,22 +1224,30 @@ function ChatPage(){
         <>
           <div className="h-14 md:h-16 px-3 md:px-6 bg-white border-b border-gray-100 flex items-center gap-3">
             <button onClick={backToContacts} className="md:hidden w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shrink-0 active:scale-90 transition"><i className="ri-arrow-left-line text-lg"/></button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs shrink-0">{initials(contactName)}</div>
-            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contactName}</div><div className="text-[11px] text-emerald-500 font-semibold">{partnerId===adminId?'Admin':'Foydalanuvchi'}</div></div>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">{contactAvatar?<img src={contactAvatar} alt="" className="w-full h-full object-cover"/>:initials(contactName)}</div>
+            <div className="flex-1 min-w-0"><div className="font-bold text-sm truncate">{contactName}</div><div className="text-[11px] text-emerald-500 font-semibold">{partnerId===adminId?'Admin':t('nav_profile')}</div></div>
             <div className="flex gap-1.5 shrink-0">
               <button onClick={deleteChat} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Chatni o'chirish"><i className="ri-delete-bin-line"/></button>
               <button onClick={()=>setShowComplaintModal(true)} className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition" title="Shikoyat"><i className="ri-flag-line"/></button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 bg-gray-50/50">
-            {msgs.length===0&&<div className="text-center py-12 text-gray-400"><i className="ri-chat-3-line text-5xl text-gray-200 block mb-3"/><p className="font-semibold">Suhbatni boshlang</p></div>}
-            {msgs.map(m=><div key={m.id} className={`flex ${m.from===u.id?'justify-end':'justify-start'}`}><div className={`max-w-[80%] md:max-w-[75%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${m.from===u.id?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{m.text.includes('Uy topdim:')?<button onClick={()=>{const id=m.text.match(/\(id:(\d+)\)/)?.[1]||m.text.match(/id:(\d+)/)?.[1];if(id)dispatch({type:'DETAIL',payload:parseInt(id)});}} className={`${m.from===u.id?'text-emerald-200 underline':'text-emerald-700 underline'}`}>{renderMessage(m)}</button>:renderMessage(m)}<div className={`text-[10px] mt-1 ${m.from===u.id?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}{m.from===u.id&&<span className="ml-1">{m.read?'✓✓':'✓'}</span>}</div></div></div>)}
+            {msgs.length===0&&<div className="text-center py-12 text-gray-400"><i className="ri-chat-3-line text-5xl text-gray-200 block mb-3"/><p className="font-semibold">{t('chat_select_contact')}</p></div>}
+            {msgs.map(m=>{
+              const isMe=m.from===u.id;
+              return(<div key={m.id} className={`flex items-end gap-2 ${isMe?'justify-end':'justify-start'}`}>
+                {!isMe&&<div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mb-1 overflow-hidden">{contactAvatar?<img src={contactAvatar} alt="" className="w-full h-full object-cover"/>:initials(contactName)}</div>}
+                <div className={`max-w-[78%] md:max-w-[70%] px-3 md:px-4 py-2.5 md:py-3 rounded-2xl text-sm leading-relaxed ${isMe?'bg-gradient-to-r from-emerald-700 to-emerald-600 text-white rounded-tr-sm':'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'}`}>{m.text.includes('Uy topdim:')?<button onClick={()=>{const id=m.text.match(/\(id:(\d+)\)/)?.[1]||m.text.match(/id:(\d+)/)?.[1];if(id)dispatch({type:'DETAIL',payload:parseInt(id)});}} className={`${isMe?'text-emerald-200 underline':'text-emerald-700 underline'}`}>{renderMessage(m)}</button>:renderMessage(m)}<div className={`text-[10px] mt-1 ${isMe?'text-emerald-200 text-right':'text-gray-400'}`}>{fmtTime(m.time)}{isMe&&<span className="ml-1">{m.read?'✓✓':'✓'}</span>}</div></div>
+                {isMe&&<div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mb-1 overflow-hidden">{u.avatar?<img src={u.avatar} alt="" className="w-full h-full object-cover"/>:initials(u.name||u.email||'')}</div>}
+              </div>);
+            })}
             <div ref={endRef}/>
           </div>
-          <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3">
-            <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder="Xabar yozing..." className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
-            <button onClick={()=>setShowHouseModal(true)} className="w-11 h-11 md:w-12 md:h-12 bg-gray-100 text-gray-600 rounded-2xl flex items-center justify-center hover:bg-gray-200 transition shrink-0" title="Uy tashlash"><i className="ri-home-4-line"/></button>
-            <button onClick={send} className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button>
+          <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3 items-center">
+            <button onClick={()=>mediaInputRef.current?.click()} disabled={mediaUploading} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90 disabled:opacity-50" title={t('chat_send_media')}>{mediaUploading?<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"/>:<i className="ri-image-add-line text-lg"/>}</button>
+            <button onClick={()=>setShowHouseModal(true)} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90" title={t('chat_send_house')}><i className="ri-home-4-line text-lg"/></button>
+            <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder={t('chat_placeholder')} className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
+            <button onClick={send} className="w-11 h-11 bg-gradient-to-r from-emerald-700 to-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 hover:shadow-xl transition active:scale-95 shrink-0"><i className="ri-send-plane-fill"/></button>
           </div>
         </>
       ) : (
@@ -1201,7 +1264,11 @@ function ChatPage(){
     <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
       {contactsList}
       {chatPanel}
-      {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto" onClick={e=>e.stopPropagation()}><div className="flex justify-between items-center mb-4"><h3 className="font-bold text-lg">Uy tanlang</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div><div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5 mb-4"><i className="ri-search-line text-gray-400"/><input className="bg-transparent flex-1 text-sm outline-none" placeholder="Uy qidirish..." value={houseSearch} onChange={e=>setHouseSearch(e.target.value)}/></div><div className="grid sm:grid-cols-2 gap-4">{state.approved.filter(p=>!houseSearch||p.title.toLowerCase().includes(houseSearch.toLowerCase())||p.district.toLowerCase().includes(houseSearch.toLowerCase())).slice(0,20).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500">{p.district} • ${p.price}{p.type==='rent'?'/oy':''}</div></button>)}</div></div></div>}
+      {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4 shrink-0"><h3 className="font-bold text-lg flex items-center gap-2"><i className="ri-home-4-line text-emerald-600"/>{t('chat_select_house')}</h3><button onClick={()=>setShowHouseModal(false)} className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center">✕</button></div>
+        <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-4 py-2.5 mb-3 shrink-0"><i className="ri-search-line text-gray-400"/><input className="bg-transparent flex-1 text-sm outline-none" placeholder={t('search_placeholder')} value={houseSearch} onChange={e=>setHouseSearch(e.target.value)}/></div>
+        <div className="overflow-y-auto flex-1"><div className="grid sm:grid-cols-2 gap-3">{state.approved.filter(p=>!houseSearch||p.title.toLowerCase().includes(houseSearch.toLowerCase())||p.district.toLowerCase().includes(houseSearch.toLowerCase())).map(p=><button key={p.id} onClick={()=>sendHouse(p)} className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:bg-emerald-50 transition text-left flex items-center gap-3"><div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">{p.img&&<img src={p.img} alt="" className="w-full h-full object-cover"/>}</div><div className="min-w-0"><div className="font-bold text-sm truncate">{p.title}</div><div className="text-xs text-gray-500 truncate">{p.district} • ${p.price}{p.type==='rent'?t('per_month'):''}</div></div></button>)}</div></div>
+      </div></div>}
       {showComplaintModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={()=>{setShowComplaintModal(false);setComplaintText('');setComplaintImg(null);setComplaintImgPreview('');}}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4" onClick={e=>e.stopPropagation()}>
@@ -2167,10 +2234,17 @@ function ShareModal({listing,onClose}:{listing:Listing;onClose:()=>void}){
 // ─── PHONE CONNECT MODAL ─────────────────────────────────────
 function PhoneConnectModal({onClose,onSuccess}:{onClose:()=>void;onSuccess:(phone:string)=>void}){
   const{state,dispatch}=useApp();
+  const{t}=useTranslation();
   const[phone,setPhone]=useState('');
   const[loading,setLoading]=useState(false);
 
   const save=async()=>{
+    // Enforce single phone — block if already connected
+    if(state.currentUser?.phone){
+      toast(t('phone_already_connected'),'error');
+      onClose();
+      return;
+    }
     const p=phone.trim().replace(/\s/g,'');
     if(!p.match(/^\+998\d{9}$/)){toast("To'g'ri raqam kiriting: +998XXXXXXXXX",'error');return;}
     setLoading(true);
@@ -3392,39 +3466,62 @@ async function callGroq(systemPrompt:string, userMsg:string, history:{role:strin
 }
 
 
-function getAiSystem(lang='uz'){
+function buildRealStats(listings:Listing[]){
+  // Compute actual min/max/avg from real listings grouped by district+type
+  const map:Record<string,{rent:number[];sale:number[]}>={};
+  listings.forEach(p=>{
+    const k=p.district||'other';
+    if(!map[k])map[k]={rent:[],sale:[]};
+    if(p.type==='rent')map[k].rent.push(p.price);
+    else map[k].sale.push(p.price);
+  });
+  const lines=Object.entries(map)
+    .filter(([,v])=>v.rent.length>0||v.sale.length>0)
+    .sort((a,b)=>(b[1].rent.length+b[1].sale.length)-(a[1].rent.length+a[1].sale.length))
+    .slice(0,15)
+    .map(([d,v])=>{
+      const ra=v.rent.length?Math.round(v.rent.reduce((s,x)=>s+x,0)/v.rent.length):null;
+      const sa=v.sale.length?Math.round(v.sale.reduce((s,x)=>s+x,0)/v.sale.length):null;
+      const parts=[];
+      if(ra)parts.push(`ijara avg $${ra}/oy (${v.rent.length} ta)`);
+      if(sa)parts.push(`sotuv avg $${sa?.toLocaleString()} (${v.sale.length} ta)`);
+      return `  ${d}: ${parts.join(', ')}`;
+    });
+  return lines.join('\n');
+}
+
+function getAiSystem(lang='uz',listings:Listing[]=[]){
+  const stats=buildRealStats(listings);
+  const statsBlock=stats?`\nREAL NARX MA'LUMOTLARI (hozirgi e'lonlardan):\n${stats}`:'';
+  const statsBlockRu=stats?`\nРЕАЛЬНЫЕ ДАННЫЕ О ЦЕНАХ (из текущих объявлений):\n${stats.replace(/ijara avg/g,'аренда avg').replace(/sotuv avg/g,'продажа avg').replace(/oy/g,'мес').replace(/ ta\)/g,' шт.)')}`:'';
+
   if(lang==='ru') return `Ты AI-ассистент UyNest — платформы недвижимости Узбекистана.
-ВАЖНО: Всегда отвечай ТОЛЬКО НА РУССКОМ ЯЗЫКЕ.
+ВАЖНО: Всегда отвечай ТОЛЬКО НА РУССКОМ ЯЗЫКЕ. Используй реальные данные о ценах ниже.
+${statsBlockRu}
 
 Проанализируй сообщение и верни ТОЛЬКО один из JSON-форматов:
-
 Поиск жилья: {"action":"search","type":"ijara|sotuv|null","district":"название района или null","maxPrice":число|null,"minPrice":число|null,"rooms":число|null}
 Статистика цен: {"action":"stats","district":"название района"}
 Обычный вопрос: {"action":"chat","reply":"ответ на русском языке"}
 
 Районы Ташкента: Yunusobod, Chilonzor, Mirzo Ulug'bek, Mirobod, Yakkasaroy, Shayxontohur, Uchtepa, Sergeli, Bektemir, Olmazor
 Города: Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Guliston, Termiz, Chirchiq
-Если пользователь говорит "Ташкент" → district=null (весь город)
-Ориентировочные цены (USD): аренда 1к $150-350/мес, 2к $300-700/мес; продажа 2к $40k-120k, 3к $80k-200k+
-Верни только JSON, ничего лишнего.`;
+Если "Ташкент" → district=null. Верни только JSON.`;
+
   return `Sen UyNest — O'zbekiston ko'chmas mulk platformasining AI yordamchisi.
-MUHIM: Doimo va faqat O'ZBEK TILIDA javob ber. Hech qachon rus yoki ingliz tilida yozma.
+MUHIM: Doimo va faqat O'ZBEK TILIDA javob ber. Haqiqiy narx ma'lumotlaridan foydalaning.
+${statsBlock}
 
 Foydalanuvchi xabarini tahlil qilib, quyidagi JSON formatlardan FAQAT birini qaytargin:
-
 Uy qidirish: {"action":"search","type":"ijara|sotuv|null","district":"joy nomi yoki null","maxPrice":son|null,"minPrice":son|null,"rooms":son|null}
 Narx statistika: {"action":"stats","district":"tuman nomi"}
 Oddiy savol: {"action":"chat","reply":"O'zbek tilidagi javob matni"}
 
-Joylar ro'yxati:
+Joylar:
 - Toshkent tumanlari: Yunusobod, Chilonzor, Mirzo Ulug'bek, Mirobod, Yakkasaroy, Shayxontohur, Uchtepa, Sergeli, Bektemir, Olmazor
 - Viloyat markazlari: Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Guliston, Termiz, Chirchiq
-- Foydalanuvchi "Termiz/Termez" desa → district="termiz"
-- Foydalanuvchi "Toshkent" desa → district=null (butun shahar)
-- Viloyat nomi (masalan "Samarqand viloyati") → district="samarqand"
-
-Narx taxminlari (USD): ijara 1x $150-350/oy, 2x $300-700/oy; sotuv 2x $40k-120k, 3x $80k-200k+
-Faqat JSON qaytargin, boshqa hech narsa yozma.`;
+- "Toshkent" desa → district=null
+Faqat JSON qaytargin.`;
 }
 
 // ─── LOCAL NLP — Gemini API shart emas ──────────────────────
@@ -3673,7 +3770,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           setLoading(false);return;
         }
         const history=msgs.slice(-4).map(m=>({role:m.role==='user'?'user':'assistant' as const,content:m.text}));
-        raw=await callGroq(getAiSystem(i18n.language),userMsg,history);
+        raw=await callGroq(getAiSystem(i18n.language,state.approved),userMsg,history);
         parsed=parseAiResponse(raw);
       }
 
@@ -3923,8 +4020,8 @@ export default function App(){
   return(
     <AppCtx.Provider value={{state,dispatch}}>
       <div id="tw" style={{position:'fixed',top:18,right:18,zIndex:500,display:'flex',flexDirection:'column',gap:9,pointerEvents:'none'}}/>
-      {/* AI Chat floating button — hidden on map page (has its own AI panel) */}
-      {!showAiChat&&state.page!=='map'&&(
+      {/* AI Chat floating button — only on home page; map has its own AI panel */}
+      {!showAiChat&&state.page==='home'&&(
         <button onClick={()=>setShowAiChat(true)} className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[350] w-14 h-14 md:w-16 md:h-16 rounded-2xl shadow-2xl shadow-emerald-500/40 overflow-hidden hover:scale-110 active:scale-95 transition-transform border-2 border-emerald-400" title="AI Maslahatchi">
           <img src="/ai-robot.png" alt="AI Maslahatchi" className="w-full h-full object-cover"/>
         </button>

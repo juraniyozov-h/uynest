@@ -29,6 +29,7 @@ export interface User {
 export interface ChatMessage {
   id:string; from:string; to:string; text:string; time:string; read:boolean;
   threadId?:string; participants?:string[];
+  mediaUrl?:string; mediaType?:'image'|'video';
 }
 export interface ChatThread {
   odak: string; // other user id
@@ -402,6 +403,12 @@ export const ChatAPI = {
   async send(from:string,to:string,text:string){
     const msg:ChatMessage={id:"m_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),from,to,text,time:new Date().toISOString(),read:false,threadId:getThreadId(from,to),participants:[from,to]};
     _msgsCache = [..._msgsCache, msg];
+    await this.sendRemote(msg);
+    return msg;
+  },
+  async sendMedia(from:string,to:string,mediaUrl:string,mediaType:'image'|'video',caption=''){
+    const msg:ChatMessage={id:"m_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),from,to,text:caption,mediaUrl,mediaType,time:new Date().toISOString(),read:false,threadId:getThreadId(from,to),participants:[from,to]};
+    _msgsCache=[..._msgsCache,msg];
     await this.sendRemote(msg);
     return msg;
   },
