@@ -1069,13 +1069,17 @@ function ChatPage(){
     try{
       let url='';
       if(isVideo){
-        // Upload video via serverless proxy (avoids Firebase Storage CORS)
-        const fd=new FormData();
-        fd.append('file',file);
-        const r=await fetch('/api/upload-media',{method:'POST',body:fd});
-        if(!r.ok)throw new Error(`Upload failed: ${r.status}`);
-        const data=await r.json();
-        url=data.url;
+        // Upload via serverless proxy (avoids CORS — server uploads to Firebase Storage)
+        const buf=await file.arrayBuffer();
+        const b64=btoa(String.fromCharCode(...new Uint8Array(buf)));
+        const r=await fetch('/api/upload-media',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({data:b64,filename:file.name,mimeType:file.type})
+        });
+        if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`Upload failed: ${r.status}`);}
+        const d=await r.json();
+        url=d.url;
       }else{
         // Images: compress to base64 locally — no Firebase Storage needed
         const urls=await uploadImages([file]);

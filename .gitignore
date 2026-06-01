@@ -73,3 +73,5 @@ dist-ssr/
 .dataconnect
 
 .vercel
+
+.env*
