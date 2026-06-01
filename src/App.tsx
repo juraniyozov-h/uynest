@@ -1175,7 +1175,6 @@ function ChatPage(){
               <div ref={endRef}/>
             </div>
             <div className="p-3 md:p-4 bg-white border-t border-gray-100 flex gap-2 md:gap-3 items-center">
-              <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaSelect}/>
               <button onClick={()=>mediaInputRef.current?.click()} disabled={mediaUploading} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90 disabled:opacity-50" title={t('chat_send_media')}>{mediaUploading?<div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"/>:<i className="ri-image-add-line text-lg"/>}</button>
               <button onClick={()=>setShowHouseModal(true)} className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition shrink-0 active:scale-90" title={t('chat_send_house')}><i className="ri-home-4-line text-lg"/></button>
               <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} placeholder={t('chat_placeholder')} className="flex-1 px-3 md:px-4 py-3 bg-gray-50 rounded-2xl text-sm outline-none focus:bg-white focus:ring-2 ring-emerald-200 transition"/>
@@ -1187,6 +1186,7 @@ function ChatPage(){
     );
     return(
       <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
+        <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaSelect}/>
         {adminContactsList}
         {adminChatPanel}
         {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
@@ -1283,6 +1283,8 @@ function ChatPage(){
 
   return(
     <div className="flex h-[calc(100vh-60px-56px)] md:h-[calc(100vh-68px)] bg-white">
+      {/* Hidden file input shared by all chat panels */}
+      <input ref={mediaInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleMediaSelect}/>
       {contactsList}
       {chatPanel}
       {showHouseModal&&<div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={()=>setShowHouseModal(false)}><div className="bg-white rounded-3xl p-6 w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
