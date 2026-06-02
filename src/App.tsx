@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from './i18n';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -13,6 +13,7 @@ import {
 } from './store/appStore';
 import { updateDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { supabase } from './supabaseClient';
 import { uploadImages, uploadComplaintImage } from './store/imageUpload';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -1059,15 +1060,6 @@ function ChatPage(){
     setText('');await loadMsgs();
   };
 
-  // Safe chunked base64 encoder — avoids RangeError for large files
-  const toBase64=(buf:ArrayBuffer)=>{
-    const bytes=new Uint8Array(buf);
-    let bin='';
-    for(let i=0;i<bytes.length;i+=8192)
-      bin+=String.fromCharCode(...bytes.subarray(i,i+8192));
-    return btoa(bin);
-  };
-
   const handleMediaSelect=async(e:React.ChangeEvent<HTMLInputElement>)=>{
     const file=e.target.files?.[0];
     if(!file||!partnerId)return;
@@ -1077,41 +1069,45 @@ function ChatPage(){
     setMediaUploading(true);
     try{
       let url='';
-      const onLocalhost=window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1';
 
-      if(onLocalhost&&isVideo){
-        // Videos need server-side upload — only works on Vercel
-        throw new Error("Video faqat saytda ishlaydi: uynest.vercel.app. Rasmlar ishlaydi.");
+      if(!isVideo&&file.size<=5_000_000){
+        // Small images: compress to base64 data URI (fast, no storage needed)
+        try{
+          const compressed=await uploadImages([file]);
+          url=compressed[0];
+        }catch{ /* fall through to Storage upload */ }
       }
 
-      if(onLocalhost&&!isVideo){
-        // On localhost: compress image to base64 (no server needed, images are small)
-        const compressed=await uploadImages([file]);
-        url=compressed[0];
-      } else {
-        // On Vercel: upload via serverless API (server-side → no CORS issues)
-        let finalBuf=await file.arrayBuffer();
-        // Compress images before upload to keep base64 payload small
+      if(!url){
+        // Upload to Supabase Storage directly via client SDK
+        let uploadFile=file;
+        // Compress large images before uploading
         if(!isVideo&&file.size>200_000){
           try{
             const cb64=(await uploadImages([file]))[0];
             const b=atob(cb64.split(',')[1]);
             const arr=new Uint8Array(b.length);
             for(let i=0;i<b.length;i++)arr[i]=b.charCodeAt(i);
-            finalBuf=arr.buffer;
-          }catch{/* use original */}
+            uploadFile=new File([arr],'compressed.jpg',{type:'image/jpeg'});
+          }catch{ /* use original */ }
         }
-        const b64=toBase64(finalBuf);
-        const r=await fetch('/api/upload-media',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({data:b64,filename:file.name,mimeType:isVideo?file.type:'image/jpeg'})
-        });
-        if(!r.ok){
-          const errData=await r.json().catch(()=>({}));
-          throw new Error(errData.error||`Server xatosi: ${r.status}`);
-        }
-        url=(await r.json()).url;
+        const ext=(file.name.split('.').pop()||'bin').toLowerCase();
+        const path=`${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        
+        const { error } = await supabase.storage
+          .from('chat-media')
+          .upload(path, uploadFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (error) throw error;
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('chat-media')
+          .getPublicUrl(path);
+          
+        url = publicUrlData.publicUrl;
       }
 
       if(!url)throw new Error('URL qaytarilmadi');

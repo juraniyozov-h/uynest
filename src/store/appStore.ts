@@ -210,7 +210,7 @@ function normalizeMessage(data:any, fallbackId:string):ChatMessage{
   const time = typeof rawTime === 'string'
     ? rawTime
     : rawTime?.toDate?.().toISOString?.() || new Date().toISOString();
-  return {
+  const msg: ChatMessage = {
     id: typeof data?.id === 'string' && data.id ? data.id : fallbackId,
     from: String(data?.from || ''),
     to: String(data?.to || ''),
@@ -220,6 +220,10 @@ function normalizeMessage(data:any, fallbackId:string):ChatMessage{
     threadId: typeof data?.threadId === 'string' ? data.threadId : getThreadId(String(data?.from || ''), String(data?.to || '')),
     participants: Array.isArray(data?.participants) ? data.participants.map((x:string)=>String(x)) : [String(data?.from || ''), String(data?.to || '')],
   };
+  // Preserve media fields for image/video messages
+  if(data?.mediaUrl) msg.mediaUrl = String(data.mediaUrl);
+  if(data?.mediaType === 'image' || data?.mediaType === 'video') msg.mediaType = data.mediaType;
+  return msg;
 }
 
 function normalizeListing(data:any, fallbackId:string):Listing{
