@@ -1108,10 +1108,38 @@ function ChatPage(){
           .getPublicUrl(path);
           
         url = publicUrlData.publicUrl;
+
+        // Auto-cleanup oldest files in the background to prevent exceeding Supabase free limit (max 80 files)
+        void (async () => {
+          try {
+            const { data: files } = await supabase.storage
+              .from('chat-media')
+              .list('', {
+                limit: 100,
+                sortBy: { column: 'created_at', order: 'desc' }
+              });
+            if (files && files.length > 80) {
+              const toDelete = files.slice(80).map(f => f.name).filter(Boolean);
+              if (toDelete.length > 0) {
+                await supabase.storage.from('chat-media').remove(toDelete);
+              }
+            }
+          } catch (e) {
+            console.warn('Storage cleanup error:', e);
+          }
+        })();
       }
 
       if(!url)throw new Error('URL qaytarilmadi');
       await ChatAPI.sendMedia(u.id,partnerId,url,isVideo?'video':'image');
+
+      // Telegram notification for media
+      if(!isAdmin(u)&&partnerId===adminId){
+        notifyAdmin(`🖼️ <b>Yangi media</b>\n👤 ${u.name||u.email||'Foydalanuvchi'}: ${isVideo?'Video':'Rasm'} yubordi\n👉 <a href="${url}">Ko'rish</a>`);
+      } else if(isAdmin(u)){
+        notifyUser(partnerId,`🖼️ <b>Admin media yubordi</b>\n${isVideo?'Video':'Rasm'} yuborildi\n\n👉 https://uynest.vercel.app`);
+      }
+
       await loadMsgs();
       toast(isVideo?'Video yuborildi':'Rasm yuborildi');
     }catch(err:any){
