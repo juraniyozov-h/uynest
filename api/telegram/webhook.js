@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       );
     } catch (err) {
       console.error('Webhook error:', err);
-      await sendTelegramMessage(chatId, '❌ Server xatosi yuz berdi. Keyinroq urinib ko\'ring.');
+      await sendTelegramMessage(chatId, `❌ Server xatosi yuz berdi: ${err.message || err}\n${err.stack ? err.stack.slice(0, 200) : ''}`);
     }
   } else if (parts[0] === '/start') {
     await sendTelegramMessage(chatId,
