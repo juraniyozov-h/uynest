@@ -1059,6 +1059,15 @@ function ChatPage(){
     setText('');await loadMsgs();
   };
 
+  // Safe chunked base64 encoder — avoids RangeError for large files
+  const toBase64=(buf:ArrayBuffer)=>{
+    const bytes=new Uint8Array(buf);
+    let bin='';
+    for(let i=0;i<bytes.length;i+=8192)
+      bin+=String.fromCharCode(...bytes.subarray(i,i+8192));
+    return btoa(bin);
+  };
+
   const handleMediaSelect=async(e:React.ChangeEvent<HTMLInputElement>)=>{
     const file=e.target.files?.[0];
     if(!file||!partnerId)return;
@@ -1068,42 +1077,51 @@ function ChatPage(){
     setMediaUploading(true);
     try{
       let url='';
-      // Both images and videos go through the serverless proxy → Firebase Storage
-      // This gives proper HTTPS URLs (no base64 in Firestore), avoids CORS, and
-      // prevents blank cells caused by Firestore's 1MB field limit on base64 strings
-      const buf=await file.arrayBuffer();
-      // For images: compress first to reduce upload size, then encode
-      let finalBuf=buf;
-      if(!isVideo&&file.size>300_000){
-        try{
-          const compressedB64=(await uploadImages([file]))[0];
-          const base64Only=compressedB64.split(',')[1];
-          finalBuf=Uint8Array.from(atob(base64Only),(c)=>c.charCodeAt(0)).buffer;
-        }catch{finalBuf=buf;}
+      const onLocalhost=window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1';
+
+      if(onLocalhost&&isVideo){
+        // Videos need server-side upload — only works on Vercel
+        throw new Error("Video faqat saytda ishlaydi: uynest.vercel.app. Rasmlar ishlaydi.");
       }
-      const b64=btoa(String.fromCharCode(...new Uint8Array(finalBuf)));
-      const r=await fetch('/api/upload-media',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({data:b64,filename:file.name,mimeType:isVideo?file.type:'image/jpeg'})
-      });
-      if(!r.ok){
-        const e=await r.json().catch(()=>({}));
-        // Fallback for localhost dev: images use base64 locally if API unavailable
-        if(!isVideo){
-          const localUrls=await uploadImages([file]);
-          url=localUrls[0];
-        } else {
-          throw new Error(e.error||`Upload failed: ${r.status} — video upload requires the Vercel deployment`);
-        }
+
+      if(onLocalhost&&!isVideo){
+        // On localhost: compress image to base64 (no server needed, images are small)
+        const compressed=await uploadImages([file]);
+        url=compressed[0];
       } else {
-        const d=await r.json();
-        url=d.url;
+        // On Vercel: upload via serverless API (server-side → no CORS issues)
+        let finalBuf=await file.arrayBuffer();
+        // Compress images before upload to keep base64 payload small
+        if(!isVideo&&file.size>200_000){
+          try{
+            const cb64=(await uploadImages([file]))[0];
+            const b=atob(cb64.split(',')[1]);
+            const arr=new Uint8Array(b.length);
+            for(let i=0;i<b.length;i++)arr[i]=b.charCodeAt(i);
+            finalBuf=arr.buffer;
+          }catch{/* use original */}
+        }
+        const b64=toBase64(finalBuf);
+        const r=await fetch('/api/upload-media',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({data:b64,filename:file.name,mimeType:isVideo?file.type:'image/jpeg'})
+        });
+        if(!r.ok){
+          const errData=await r.json().catch(()=>({}));
+          throw new Error(errData.error||`Server xatosi: ${r.status}`);
+        }
+        url=(await r.json()).url;
       }
+
+      if(!url)throw new Error('URL qaytarilmadi');
       await ChatAPI.sendMedia(u.id,partnerId,url,isVideo?'video':'image');
       await loadMsgs();
       toast(isVideo?'Video yuborildi':'Rasm yuborildi');
-    }catch(err){toast('Yuklash xatosi','error');console.error(err);}
+    }catch(err:any){
+      toast(err?.message||'Yuklash xatosi','error');
+      console.error('handleMediaSelect error:',err);
+    }
     setMediaUploading(false);
     if(mediaInputRef.current)mediaInputRef.current.value='';
   };

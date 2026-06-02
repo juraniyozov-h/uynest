@@ -12,6 +12,7 @@
     "@types/leaflet": "^1.9.21",
     "clsx": "^2.1.1",
     "firebase": "^12.12.1",
+    "firebase-admin": "^13.10.0",
     "formidable": "^3.5.4",
     "i18next": "^26.3.0",
     "leaflet": "^1.9.4",
