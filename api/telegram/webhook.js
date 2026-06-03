@@ -13,7 +13,12 @@ export default async function handler(req, res) {
   const parts = text.split(/\s+/);
 
   try {
+    console.log('Firebase import starting...');
+    console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✓' : '✗');
+    console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '✓' : '✗');
+    console.log('FIREBASE_PRIVATE_KEY length:', process.env.FIREBASE_PRIVATE_KEY?.length || 0);
     const { db } = await import('../../lib/firebase.js');
+    console.log('Firebase import success!');
 
     if (parts[0] === '/start' && parts[1]) {
       const code = parts[1];
@@ -70,8 +75,8 @@ export default async function handler(req, res) {
       );
     }
   } catch (err) {
-    console.error('Firebase init error:', err);
-    await sendTelegramMessage(chatId, '❌ Xizmat vaqtiinchalik ishlamayapti. Keyinroq qayta urinib ko\'ring.');
+    console.error('Firebase init error:', err.message, err.code);
+    await sendTelegramMessage(chatId, `❌ Firebase: ${err.message || err.code || 'Unknown error'}`);
   }
 
   res.status(200).json({ ok: true });
