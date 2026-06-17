@@ -2471,22 +2471,14 @@ function InfraMap({lat,lng}:{lat:number;lng:number}){
   const load=async()=>{
     setLoading(true);
     try{
-      const q=`[out:json][timeout:15];(node["amenity"="school"](around:1000,${lat},${lng});node["amenity"="hospital"](around:1000,${lat},${lng});node["amenity"="supermarket"](around:1000,${lat},${lng});node["railway"="station"](around:1000,${lat},${lng});node["highway"="bus_stop"](around:800,${lat},${lng});node["leisure"="park"](around:1000,${lat},${lng}););out body;`;
-      // overpass-api.de hozir 406 qaytaryapti — ishlaydigan mirrorlarni navbat bilan sinaymiz
-      const endpoints=['https://overpass.kumi.systems/api/interpreter','https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
-      let data:any=null;
-      for(const ep of endpoints){
-        try{
-          // Har bir mirrorga 12s timeout — aks holda javob bermasa abadiy aylanadi
-          const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),12000);
-          const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q),signal:ctrl.signal});
-          clearTimeout(tid);
-          if(!r.ok)continue;
-          data=await r.json();
-          break;
-        }catch{/* timeout yoki xato — keyingi mirrorni sinaymiz */}
-      }
-      if(!data)throw new Error('overpass mirrors unavailable');
+      // Ommaviy Overpass mirrorlari brauzerdan CORS/504/406 sabab ishonchsiz —
+      // o'z serverless proxy'imiz (api/overpass) orqali o'tamiz: u mirrorlarni
+      // server tomonda navbat bilan sinaydi va natijani keshlaydi
+      const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),25000);
+      const r=await fetch(`/api/overpass?lat=${lat}&lng=${lng}`,{signal:ctrl.signal});
+      clearTimeout(tid);
+      if(!r.ok)throw new Error('overpass '+r.status);
+      const data=await r.json();
       const typeMap:Record<string,string>={'school':'🏫 Maktab','hospital':'🏥 Klinika','supermarket':'🛒 Supermarket','station':'🚇 Metro','bus_stop':'🚌 Avtobus','park':'🌳 Park'};
       const items=data.elements.map((e:any)=>{
         const t=e.tags?.amenity||e.tags?.railway||e.tags?.highway||e.tags?.leisure||'';
