@@ -2477,11 +2477,14 @@ function InfraMap({lat,lng}:{lat:number;lng:number}){
       let data:any=null;
       for(const ep of endpoints){
         try{
-          const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});
+          // Har bir mirrorga 12s timeout — aks holda javob bermasa abadiy aylanadi
+          const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),12000);
+          const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q),signal:ctrl.signal});
+          clearTimeout(tid);
           if(!r.ok)continue;
           data=await r.json();
           break;
-        }catch{/* keyingi mirrorni sinaymiz */}
+        }catch{/* timeout yoki xato — keyingi mirrorni sinaymiz */}
       }
       if(!data)throw new Error('overpass mirrors unavailable');
       const typeMap:Record<string,string>={'school':'🏫 Maktab','hospital':'🏥 Klinika','supermarket':'🛒 Supermarket','station':'🚇 Metro','bus_stop':'🚌 Avtobus','park':'🌳 Park'};
