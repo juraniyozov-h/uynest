@@ -3469,9 +3469,7 @@ function PaymentModal({purpose,onSuccess,onClose}:{purpose:PaymentPurpose;onSucc
 
 // ─── AI MASLAHATCHI ──────────────────────────────────────────
 // Groq — bepul, 30 RPM, 14,400 RPD
-// Kalitni tozalaymiz: env qiymatiga tushib qolgan BOM/zero-width yoki boshqa
-// ASCII bo'lmagan belgilar fetch headerini sindiradi ("non ISO-8859-1 code point")
-const GROQ_KEY = (((import.meta as any).env?.VITE_GROQ_API_KEY as string)||'').replace(/[^\x20-\x7E]/g,'').trim();
+// Kalit endi serverda (api/groq-chat, api/groq-voice) — client bundle'iga chiqmaydi
 
 // Hardcoded Uzbekistan city coords — prevents Nominatim from returning
 // streets named after cities (e.g. "Termez ko'chasi" in Tashkent)
@@ -3495,19 +3493,16 @@ const UZBEK_CITY_COORDS:Record<string,[number,number]>={
   'denov':[38.2747,67.8884],'muborak':[38.9853,65.2264],
   'toshkent':[41.2995,69.2401],'tashkent':[41.2995,69.2401],
 };
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile'; // aniqroq, ko'p tilli, 30 RPM bepul
 
 // Groq OpenAI-compatible formatda so'rov yuboradi
 // Quick Groq helper — bitta savol, bitta javob
 async function groqAsk(prompt:string,maxTokens=400,systemPrompt=''):Promise<string>{
-  const key=GROQ_KEY;
-  if(!key)return '';
   try{
     const msgs:any[]=[...(systemPrompt?[{role:'system',content:systemPrompt}]:[]),{role:'user',content:prompt}];
-    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    const r=await fetch('/api/groq-chat',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:GROQ_MODEL,messages:msgs,temperature:0.4,max_tokens:maxTokens})
     });
     if(!r.ok)return '';
@@ -3517,9 +3512,9 @@ async function groqAsk(prompt:string,maxTokens=400,systemPrompt=''):Promise<stri
 }
 
 async function callGroq(systemPrompt:string, userMsg:string, history:{role:string;content:string}[]=[]){
-  const res=await fetch(GROQ_URL,{
+  const res=await fetch('/api/groq-chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       model:GROQ_MODEL,
       messages:[
@@ -3682,7 +3677,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
       return;
     }
     // Try MediaRecorder + Groq Whisper first (skip if Whisper already failed this session)
-    if(navigator.mediaDevices?.getUserMedia&&GROQ_KEY&&!whisperFailed){
+    if(navigator.mediaDevices?.getUserMedia&&!whisperFailed){
       try{
         const stream=await navigator.mediaDevices.getUserMedia({audio:true});
         const mimeType=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':
@@ -3697,18 +3692,11 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           if(blob.size<2000){return;}// too short
           setTranscribing(true);
           try{
-            const fd=new FormData();
+            // Kalit serverda — audio blobni xom holda proxy'ga yuboramiz
             const ext=mimeType.split('/')[1].split(';')[0];
-            fd.append('file',blob,'voice.'+ext);
-            fd.append('model','whisper-large-v3');
-            fd.append('language','uz');
-            fd.append('response_format','text');
-            // Vocabulary hint — tells Whisper to expect these words, greatly improves accuracy
-            fd.append('prompt',"Termiz, Toshkent, Samarqand, Buxoro, Namangan, Andijon, Farg'ona, Qarshi, Nukus, Urgench, Navoiy, Jizzax, Chirchiq, Yunusobod, Chilonzor, Olmazor, Mirobod, ijara, sotuv, kvartira, xonadon, xona, narx, dollar, arzon, qimmat");
-            const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{
+            const r=await fetch('/api/groq-voice?ext='+ext,{
               method:'POST',
-              headers:{'Authorization':'Bearer '+GROQ_KEY},
-              body:fd
+              body:blob
             });
             if(!r.ok){const body=await r.text().catch(()=>'');const err:any=new Error('Whisper '+r.status);err.status=r.status;err.body=body;throw err;}
             // Correct common Whisper misrecognitions of Uzbek city names
@@ -3844,7 +3832,6 @@ function AiChatModal({onClose}:{onClose:()=>void}){
 
   const send=async()=>{
     if(!input.trim()||loading)return;
-    if(!GROQ_KEY){toast('VITE_GROQ_API_KEY topilmadi. .env ga qo\'shing.','error');return;}
     const userMsg=input.trim();setInput('');
     setMsgs(p=>[...p,{role:'user',text:userMsg}]);
     setLoading(true);
@@ -3855,10 +3842,6 @@ function AiChatModal({onClose}:{onClose:()=>void}){
 
       // 2. Faqat umumiy chat uchun Groq API (30 RPM bepul)
       if(!parsed){
-        if(!GROQ_KEY){
-          setMsgs(p=>[...p,{role:'assistant',text:'Uy qidirish uchun tuman, narx va xona sonini yozing. Masalan: "Yunusobodda 2 xonali $500 gacha"'}]);
-          setLoading(false);return;
-        }
         const history=msgs.slice(-4).map(m=>({role:m.role==='user'?'user':'assistant' as const,content:m.text}));
         raw=await callGroq(getAiSystem(i18n.language,state.approved),userMsg,history);
         parsed=parseAiResponse(raw);
