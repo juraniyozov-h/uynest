@@ -3474,7 +3474,9 @@ function PaymentModal({purpose,onSuccess,onClose}:{purpose:PaymentPurpose;onSucc
 
 // ─── AI MASLAHATCHI ──────────────────────────────────────────
 // Groq — bepul, 30 RPM, 14,400 RPD
-const GROQ_KEY = ((import.meta as any).env?.VITE_GROQ_API_KEY as string)||'';
+// Kalitni tozalaymiz: env qiymatiga tushib qolgan BOM/zero-width yoki boshqa
+// ASCII bo'lmagan belgilar fetch headerini sindiradi ("non ISO-8859-1 code point")
+const GROQ_KEY = (((import.meta as any).env?.VITE_GROQ_API_KEY as string)||'').replace(/[^\x20-\x7E]/g,'').trim();
 
 // Hardcoded Uzbekistan city coords — prevents Nominatim from returning
 // streets named after cities (e.g. "Termez ko'chasi" in Tashkent)
@@ -3504,7 +3506,7 @@ const GROQ_MODEL = 'llama-3.3-70b-versatile'; // aniqroq, ko'p tilli, 30 RPM bep
 // Groq OpenAI-compatible formatda so'rov yuboradi
 // Quick Groq helper — bitta savol, bitta javob
 async function groqAsk(prompt:string,maxTokens=400,systemPrompt=''):Promise<string>{
-  const key=((import.meta as any).env?.VITE_GROQ_API_KEY as string)||'';
+  const key=GROQ_KEY;
   if(!key)return '';
   try{
     const msgs:any[]=[...(systemPrompt?[{role:'system',content:systemPrompt}]:[]),{role:'user',content:prompt}];
@@ -3739,8 +3741,25 @@ function AiChatModal({onClose}:{onClose:()=>void}){
           finally{setTranscribing(false);}
         };
         mediaRecorderRef.current=mr;
+        // Avtomatik to'xtash: gapirib bo'lgach jimlikni aniqlab o'zi to'xtaydi
+        const ac=new ((window as any).AudioContext||(window as any).webkitAudioContext)();
+        const analyser=ac.createAnalyser();analyser.fftSize=512;
+        ac.createMediaStreamSource(stream).connect(analyser);
+        const buf=new Uint8Array(analyser.fftSize);
+        let spoke=false,silenceStart=0;const startedAt=Date.now();
+        const tick=()=>{
+          if(mr.state==='inactive'){ac.close().catch(()=>{});return;}
+          analyser.getByteTimeDomainData(buf);
+          let sum=0;for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;sum+=v*v;}
+          const rms=Math.sqrt(sum/buf.length),now=Date.now();
+          if(rms>0.045){spoke=true;silenceStart=0;}
+          else if(spoke){if(!silenceStart)silenceStart=now;else if(now-silenceStart>1300){try{mr.stop();}catch{};ac.close().catch(()=>{});return;}}
+          if(now-startedAt>15000){try{mr.stop();}catch{};ac.close().catch(()=>{});return;}// maks 15s
+          requestAnimationFrame(tick);
+        };
         mr.start();
         setListening(true);
+        requestAnimationFrame(tick);
         return;
       }catch{/* fall through to Web Speech API */}
     }
