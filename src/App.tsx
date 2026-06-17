@@ -2472,8 +2472,18 @@ function InfraMap({lat,lng}:{lat:number;lng:number}){
     setLoading(true);
     try{
       const q=`[out:json][timeout:15];(node["amenity"="school"](around:1000,${lat},${lng});node["amenity"="hospital"](around:1000,${lat},${lng});node["amenity"="supermarket"](around:1000,${lat},${lng});node["railway"="station"](around:1000,${lat},${lng});node["highway"="bus_stop"](around:800,${lat},${lng});node["leisure"="park"](around:1000,${lat},${lng}););out body;`;
-      const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:q});
-      const data=await r.json();
+      // overpass-api.de hozir 406 qaytaryapti — ishlaydigan mirrorlarni navbat bilan sinaymiz
+      const endpoints=['https://overpass.kumi.systems/api/interpreter','https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+      let data:any=null;
+      for(const ep of endpoints){
+        try{
+          const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});
+          if(!r.ok)continue;
+          data=await r.json();
+          break;
+        }catch{/* keyingi mirrorni sinaymiz */}
+      }
+      if(!data)throw new Error('overpass mirrors unavailable');
       const typeMap:Record<string,string>={'school':'🏫 Maktab','hospital':'🏥 Klinika','supermarket':'🛒 Supermarket','station':'🚇 Metro','bus_stop':'🚌 Avtobus','park':'🌳 Park'};
       const items=data.elements.map((e:any)=>{
         const t=e.tags?.amenity||e.tags?.railway||e.tags?.highway||e.tags?.leisure||'';
@@ -3703,7 +3713,7 @@ function AiChatModal({onClose}:{onClose:()=>void}){
               headers:{'Authorization':'Bearer '+GROQ_KEY},
               body:fd
             });
-            if(!r.ok)throw new Error('Whisper '+r.status);
+            if(!r.ok){const body=await r.text().catch(()=>'');const err:any=new Error('Whisper '+r.status);err.status=r.status;err.body=body;throw err;}
             // Correct common Whisper misrecognitions of Uzbek city names
             const VOICE_FIX:Record<string,string>={
               'hermes':'termiz','hermès':'termiz','termas':'termiz','ermas':'termiz',
@@ -3719,10 +3729,12 @@ function AiChatModal({onClose}:{onClose:()=>void}){
               setInput(t);
               setTimeout(()=>{(document.getElementById('ai-send-btn') as HTMLButtonElement|null)?.click();},200);
             }
-          }catch(e){
-            console.warn('Whisper failed:',e);
-            setWhisperFailed(true);
-            toast("Ovoz API xatosi — brauzer ovozi ishlatilmoqda, qayta bosing",'warn');
+          }catch(e:any){
+            console.warn('Whisper failed:',e?.status,e?.body||e);
+            // Faqat kalit/ruxsat xatosida (401/403) doimiy brauzer ovoziga o'tamiz;
+            // vaqtinchalik tarmoq xatosida Whisper'ni qayta urinishga qoldiramiz
+            if(e?.status===401||e?.status===403)setWhisperFailed(true);
+            toast(e?.status?`Ovoz xatosi (${e.status}) — qayta urinib ko'ring`:"Mikrofon yoki tarmoq xatosi — qayta bosing",'warn');
           }
           finally{setTranscribing(false);}
         };
